@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby-Tracking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --color-pink: #F2668B;
+            --color-teal-dark: #025E73;
+            --color-teal-darker: #011F26;
+            --color-teal-medium: #026873;
+            --color-teal-light: #03A688;
+        }
+        
+        body {
+            background: #f8f9fa;
+            padding-bottom: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        .navbar {
+            background: var(--color-teal-darker) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-large {
+            min-height: 80px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn-large:active {
+            transform: translateY(0);
+        }
+        
+        .btn-sleep {
+            background: var(--color-teal-dark);
+            color: white;
+        }
+        
+        .btn-sleep:hover {
+            background: var(--color-teal-medium);
+            color: white;
+        }
+        
+        .btn-feeding {
+            background: var(--color-pink);
+            color: white;
+        }
+        
+        .btn-feeding:hover {
+            background: #e0557a;
+            color: white;
+        }
+        
+        .btn-bottle {
+            background: var(--color-teal-medium);
+            color: white;
+        }
+        
+        .btn-bottle:hover {
+            background: #037a8a;
+            color: white;
+        }
+        
+        .btn-diaper {
+            background: var(--color-teal-light);
+            color: white;
+        }
+        
+        .btn-diaper:hover {
+            background: #02b896;
+            color: white;
+        }
+        
+        .btn-temperature {
+            background: var(--color-teal-light);
+            color: white;
+        }
+        
+        .btn-temperature:hover {
+            background: #02b896;
+            color: white;
+        }
+        
+        .btn-medicine {
+            background: var(--color-teal-dark);
+            color: white;
+        }
+        
+        .btn-medicine:hover {
+            background: var(--color-teal-medium);
+            color: white;
+        }
+        
+        .activity-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+            transition: transform 0.2s ease;
+        }
+        
+        .activity-card:hover {
+            transform: translateX(4px);
+        }
+        
+        .activity-card.sleep {
+            border-left-color: var(--color-teal-dark);
+        }
+        
+        .activity-card.feeding {
+            border-left-color: var(--color-pink);
+        }
+        
+        .activity-card.bottle {
+            border-left-color: var(--color-teal-medium);
+        }
+        
+        .activity-card.diaper {
+            border-left-color: var(--color-teal-light);
+        }
+        
+        .activity-card.temperature {
+            border-left-color: var(--color-teal-light);
+        }
+        
+        .activity-card.medicine {
+            border-left-color: var(--color-teal-dark);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.sleeping {
+            background: var(--color-teal-light);
+            color: white;
+        }
+        
+        .status-badge.awake {
+            background: #e9ecef;
+            color: var(--color-teal-darker);
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--color-teal-darker);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .entry-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+        }
+        
+        .entry-item:first-child {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        
+        .entry-item:last-child {
+            border-bottom: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        
+        .entry-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .time-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .card-modern {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark navbar-expand-lg mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-heart-fill"></i> Baby-Tracking
+            </span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="d-flex flex-column flex-lg-row gap-2 ms-lg-auto mt-3 mt-lg-0">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-house"></i> Übersicht
+                    </a>
+                    <a href="{{ url_for('trends.trends') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-graph-up"></i> Trends
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

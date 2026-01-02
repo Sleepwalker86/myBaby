@@ -1,0 +1,26 @@
+from flask import Blueprint, request, redirect, url_for, flash
+from app.models.models import Feeding
+from datetime import datetime
+import pytz
+
+tz_berlin = pytz.timezone('Europe/Berlin')
+
+def get_local_now():
+    """Gibt die aktuelle Zeit in der Berliner Zeitzone zurück"""
+    return datetime.now(tz_berlin)
+
+bp = Blueprint('feeding', __name__, url_prefix='/feeding')
+
+@bp.route('/create', methods=['POST'])
+def create():
+    """Erstellt einen Still-Eintrag"""
+    side = request.form.get('side')
+    if side not in ['links', 'rechts']:
+        flash('Ungültige Brustseite', 'error')
+        return redirect(url_for('main.index'))
+    
+    timestamp = get_local_now().isoformat()
+    Feeding.create(timestamp, side)
+    flash(f'Stillen ({side}) erfasst', 'success')
+    return redirect(url_for('main.index'))
+

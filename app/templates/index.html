@@ -1,0 +1,635 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-3">
+    <!-- Schlafstatus -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">
+                                <i class="bi bi-moon-stars"></i> Schlafstatus
+                            </h5>
+                            <p class="mb-0 text-muted">Schlafdauer heute: <strong>{{ sleep_duration }} Stunden</strong></p>
+                        </div>
+                        <div>
+                            <span class="status-badge {{ 'sleeping' if sleep_status == 'schläft' else 'awake' }}">
+                                {{ sleep_status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status-Übersicht (3 Spalten) -->
+    <div class="row mb-4">
+        <div class="col-4 mb-3">
+            <div class="card card-modern text-center">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <i class="bi bi-sun" style="font-size: 2.5rem; color: var(--color-teal-light);"></i>
+                    </div>
+                    <div class="fw-bold mb-1">Wach seit</div>
+                    <div class="text-muted small">
+                        {% if active_sleep %}
+                            <span class="text-muted">Schläft</span>
+                        {% else %}
+                            {{ awake_since }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-4 mb-3">
+            <div class="card card-modern text-center">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 40px; height: 40px; color: var(--color-pink);">
+                            <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                            <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                            <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                            <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                        </svg>
+                    </div>
+                    <div class="fw-bold mb-1">Letztes Stillen</div>
+                    <div class="text-muted small">{{ feeding_ago }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-4 mb-3">
+            <div class="card card-modern text-center">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 40px; height: 40px; color: var(--color-teal-light);">
+                            <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                            <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                            <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                            <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                            <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                        </svg>
+                    </div>
+                    <div class="fw-bold mb-1">Letzte Windel</div>
+                    <div class="text-muted small">{{ diaper_ago }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schnellaktionen - 3 Spalten -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="section-title">
+                <i class="bi bi-lightning-fill"></i> Schnellaktionen
+            </h6>
+        </div>
+        
+        <!-- Spalte 1 -->
+        <div class="col-4 mb-3">
+            <!-- Schlaf -->
+            {% if active_sleep %}
+            <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2">
+                <button type="submit" class="btn btn-sleep btn-large w-100">
+                    <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
+                    <small>Schlaf beenden</small>
+                </button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('sleep.start_nap') }}" class="mb-2">
+                <button type="submit" class="btn btn-sleep btn-large w-100">
+                    <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
+                    <small>Nickerchen</small>
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('sleep.start_night_sleep') }}">
+                <button type="submit" class="btn btn-sleep btn-large w-100">
+                    <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
+                    <small>Nachtschlaf</small>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <!-- Spalte 2 -->
+        <div class="col-4 mb-3">
+            <!-- Stillen -->
+            <form method="POST" action="{{ url_for('feeding.create') }}" class="mb-2">
+                <input type="hidden" name="side" value="links">
+                <button type="submit" class="btn btn-feeding btn-large w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                        <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                        <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                        <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                        <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                    </svg><br>
+                    <small>Stillen (L)</small>
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('feeding.create') }}" class="mb-2">
+                <input type="hidden" name="side" value="rechts">
+                <button type="submit" class="btn btn-feeding btn-large w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                        <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                        <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                        <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                        <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                    </svg><br>
+                    <small>Stillen (R)</small>
+                </button>
+            </form>
+            <!-- Flasche -->
+            <button type="button" class="btn btn-bottle btn-large w-100" data-bs-toggle="modal" data-bs-target="#bottleModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                    <!-- Flaschenkörper -->
+                    <rect x="20" y="18" width="24" height="36" rx="4" fill="currentColor"/>
+                    <!-- Sauger -->
+                    <ellipse cx="32" cy="12" rx="8" ry="6" fill="currentColor"/>
+                    <!-- Flaschenhals -->
+                    <rect x="24" y="12" width="16" height="6" fill="currentColor"/>
+                    <!-- Markierungen (optional) -->
+                    <line x1="26" y1="28" x2="38" y2="28" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                    <line x1="26" y1="38" x2="38" y2="38" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                </svg><br>
+                <small>Flasche</small>
+            </button>
+        </div>
+        
+        <!-- Spalte 3 -->
+        <div class="col-4 mb-3">
+            <!-- Windel -->
+            <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
+                <input type="hidden" name="type" value="nass">
+                <button type="submit" class="btn btn-diaper btn-large w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                        <!-- Windelkörper -->
+                        <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                        <!-- Bündchen oben -->
+                        <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                        <!-- Bündchen links -->
+                        <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                        <!-- Bündchen rechts -->
+                        <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                        <!-- Verschluss (Klettverschluss) -->
+                        <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                    </svg><br>
+                    <small>Windel (nass)</small>
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
+                <input type="hidden" name="type" value="groß">
+                <button type="submit" class="btn btn-diaper btn-large w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                        <!-- Windelkörper -->
+                        <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                        <!-- Bündchen oben -->
+                        <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                        <!-- Bündchen links -->
+                        <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                        <!-- Bündchen rechts -->
+                        <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                        <!-- Verschluss (Klettverschluss) -->
+                        <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                    </svg><br>
+                    <small>Windel (groß)</small>
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
+                <input type="hidden" name="type" value="beides">
+                <button type="submit" class="btn btn-diaper btn-large w-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                        <!-- Windelkörper -->
+                        <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                        <!-- Bündchen oben -->
+                        <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                        <!-- Bündchen links -->
+                        <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                        <!-- Bündchen rechts -->
+                        <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                        <!-- Verschluss (Klettverschluss) -->
+                        <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                    </svg><br>
+                    <small>Windel (beides)</small>
+                </button>
+            </form>
+            <!-- Temperatur -->
+            <button type="button" class="btn btn-temperature btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#temperatureModal">
+                <i class="bi bi-thermometer-half" style="font-size: 1.5rem;"></i><br>
+                <small>Temperatur</small>
+            </button>
+            <!-- Medizin -->
+            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
+                <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
+                <small>Medizin</small>
+            </button>
+        </div>
+    </div>
+
+    <!-- Einträge -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="section-title mb-0">
+                    <i class="bi bi-list-ul"></i> Einträge
+                </h6>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('main.index', date=prev_date) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                    <span class="fw-bold">{{ date_display }}</span>
+                    {% if not is_today %}
+                    <a href="{{ url_for('main.index', date=next_date) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-primary">
+                        Heute
+                    </a>
+                    {% else %}
+                    <span class="btn btn-sm btn-outline-secondary disabled">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card card-modern">
+                <div class="card-body p-0">
+                    {% if today_entries %}
+                        {% for entry in today_entries %}
+                        <div class="entry-item">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-shrink-0">
+                                    {% if entry.category == 'sleep' %}
+                                        <i class="bi bi-moon-stars" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                    {% elif entry.category == 'feeding' %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-pink);">
+                                            <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                                            <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                                            <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                                            <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                        </svg>
+                                    {% elif entry.category == 'bottle' %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-teal-medium);">
+                                            <rect x="20" y="18" width="24" height="36" rx="4" fill="currentColor"/>
+                                            <ellipse cx="32" cy="12" rx="8" ry="6" fill="currentColor"/>
+                                            <rect x="24" y="12" width="16" height="6" fill="currentColor"/>
+                                            <line x1="26" y1="28" x2="38" y2="28" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                                            <line x1="26" y1="38" x2="38" y2="38" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                                        </svg>
+                                    {% elif entry.category == 'diaper' %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-teal-light);">
+                                            <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                                            <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                                            <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                                            <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                                            <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                                        </svg>
+                                    {% elif entry.category == 'temperature' %}
+                                        <i class="bi bi-thermometer-half" style="font-size: 1.5rem; color: var(--color-teal-light);"></i>
+                                    {% elif entry.category == 'medicine' %}
+                                        <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold mb-1">{{ entry.display }}</div>
+                                    {% if entry.category == 'sleep' and entry.end_time %}
+                                        <div class="time-text">
+                                            {{ entry.timestamp|format_datetime_de }} - 
+                                            {{ entry.end_time|format_datetime_de }}
+                                        </div>
+                                    {% else %}
+                                        <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ entry.category }}{{ entry.id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    {% if entry.category == 'sleep' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_sleep', sleep_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% elif entry.category == 'feeding' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_feeding', feeding_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% elif entry.category == 'bottle' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_bottle', bottle_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% elif entry.category == 'diaper' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_diaper', diaper_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% elif entry.category == 'temperature' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_temperature', temp_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% elif entry.category == 'medicine' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_medicine', med_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Modal für {{ entry.category }} -->
+                        {% if entry.category == 'sleep' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Schlaf bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_sleep_type" class="form-label">Typ</label>
+                                                <select class="form-select" id="edit_sleep_type" name="type" required>
+                                                    <option value="nap" {{ 'selected' if entry.type == 'nap' else '' }}>Nickerchen</option>
+                                                    <option value="night" {{ 'selected' if entry.type == 'night' else '' }}>Nachtschlaf</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_sleep_start" class="form-label">Startzeit</label>
+                                                <input type="datetime-local" class="form-control" id="edit_sleep_start" name="start_time" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_sleep_end" class="form-label">Endzeit (optional)</label>
+                                                <input type="datetime-local" class="form-control" id="edit_sleep_end" name="end_time" 
+                                                       value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif entry.category == 'feeding' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Stillen bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_feeding', feeding_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_feeding_timestamp" class="form-label">Zeitpunkt</label>
+                                                <input type="datetime-local" class="form-control" id="edit_feeding_timestamp" name="timestamp" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_feeding_side" class="form-label">Brustseite</label>
+                                                <select class="form-select" id="edit_feeding_side" name="side" required>
+                                                    <option value="links" {{ 'selected' if entry.side == 'links' else '' }}>Links</option>
+                                                    <option value="rechts" {{ 'selected' if entry.side == 'rechts' else '' }}>Rechts</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif entry.category == 'bottle' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Flasche bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_bottle', bottle_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_bottle_timestamp" class="form-label">Zeitpunkt</label>
+                                                <input type="datetime-local" class="form-control" id="edit_bottle_timestamp" name="timestamp" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_bottle_amount" class="form-label">Menge (ml)</label>
+                                                <input type="number" class="form-control" id="edit_bottle_amount" name="amount" 
+                                                       min="1" max="500" value="{{ entry.amount }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif entry.category == 'diaper' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Windel bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_diaper', diaper_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_diaper_timestamp" class="form-label">Zeitpunkt</label>
+                                                <input type="datetime-local" class="form-control" id="edit_diaper_timestamp" name="timestamp" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_diaper_type" class="form-label">Art</label>
+                                                <select class="form-select" id="edit_diaper_type" name="type" required>
+                                                    <option value="nass" {{ 'selected' if entry.type == 'nass' else '' }}>Nass</option>
+                                                    <option value="groß" {{ 'selected' if entry.type == 'groß' else '' }}>Groß</option>
+                                                    <option value="beides" {{ 'selected' if entry.type == 'beides' else '' }}>Beides</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif entry.category == 'temperature' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Temperatur bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_temperature', temp_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_temp_timestamp" class="form-label">Zeitpunkt</label>
+                                                <input type="datetime-local" class="form-control" id="edit_temp_timestamp" name="timestamp" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_temp_value" class="form-label">Temperatur (°C)</label>
+                                                <input type="number" class="form-control" id="edit_temp_value" name="value" 
+                                                       step="0.1" min="30" max="45" value="{{ entry.value }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif entry.category == 'medicine' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Medizin bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_medicine', med_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_med_timestamp" class="form-label">Zeitpunkt</label>
+                                                <input type="datetime-local" class="form-control" id="edit_med_timestamp" name="timestamp" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_med_name" class="form-label">Medikamentenname</label>
+                                                <input type="text" class="form-control" id="edit_med_name" name="name" 
+                                                       value="{{ entry.name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_med_dose" class="form-label">Dosis</label>
+                                                <input type="text" class="form-control" id="edit_med_dose" name="dose" 
+                                                       value="{{ entry.dose }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="entry-item text-center text-muted">
+                            <p class="mb-0">Noch keine Einträge heute</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Flasche Modal -->
+<div class="modal fade" id="bottleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Flasche erfassen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('bottle.create') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Menge (ml)</label>
+                        <input type="number" class="form-control form-control-lg" id="amount" name="amount" 
+                               min="1" max="500" value="100" required autofocus>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-medium); color: white;">Erfassen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Temperatur Modal -->
+<div class="modal fade" id="temperatureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Temperatur erfassen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('temperature.create') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="value" class="form-label">Temperatur (°C)</label>
+                        <input type="number" class="form-control form-control-lg" id="value" name="value" 
+                               step="0.1" min="30" max="45" value="37.0" required autofocus>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-light); color: white;">Erfassen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Medizin Modal -->
+<div class="modal fade" id="medicineModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Medizin erfassen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('medicine.create') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Medikamentenname</label>
+                        <input type="text" class="form-control form-control-lg" id="name" name="name" 
+                               required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dose" class="form-label">Dosis</label>
+                        <input type="text" class="form-control form-control-lg" id="dose" name="dose" 
+                               placeholder="z.B. 5ml, 1 Tablette" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-dark); color: white;">Erfassen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

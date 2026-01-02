@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-3">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i class="bi bi-graph-up"></i> Trends & Statistiken
+            </h4>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Zeitraum wählen</h5>
+                    <form method="GET" action="{{ url_for('trends.trends') }}" class="row g-3">
+                        <div class="col-md-5">
+                            <label for="start_date" class="form-label">Von</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ start_date }}" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="end_date" class="form-label">Bis</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ end_date }}" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-filter"></i> Filtern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Übersichtskarten -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card card-modern">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Gesamtschlaf</h6>
+                    <h3 class="mb-0">{{ stats.total_sleep }}h</h3>
+                    <small class="text-muted">{{ stats.total_days }} Tage</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-modern">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Ø täglicher Schlaf</h6>
+                    <h3 class="mb-0">{{ stats.avg_daily_sleep }}h</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-modern">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Ø Aufwachzeit</h6>
+                    <h3 class="mb-0">{{ stats.avg_wake_time_formatted }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card card-modern">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Ø Einschlafzeit</h6>
+                    <h3 class="mb-0">{{ stats.avg_sleep_time_formatted }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gesamtschlaf über Zeit -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Gesamtschlaf pro Tag</h5>
+                    <canvas id="totalSleepChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schlafverteilung -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Schlafverteilung</h5>
+                    <canvas id="sleepDistributionChart"></canvas>
+                    <div class="mt-3 text-center">
+                        <p class="mb-1"><strong>Nachtschlaf:</strong> {{ stats.night_hours }}h ({{ stats.night_percentage }}%)</p>
+                        <p class="mb-0"><strong>Nickerchen:</strong> {{ stats.nap_hours }}h ({{ stats.nap_percentage }}%)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Aufwachzeiten</h5>
+                    <canvas id="wakeTimesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Einschlafzeiten -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Einschlafzeiten</h5>
+                    <canvas id="sleepTimesChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Temperaturverlauf -->
+    {% if temp_stats.count > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Temperaturverlauf</h5>
+                    <div class="row mb-3">
+                        <div class="col-4 col-md-4 text-center">
+                            <small class="text-muted">Ø Temperatur</small>
+                            <div class="fw-bold">{{ temp_stats.avg_temp }}°C</div>
+                        </div>
+                        <div class="col-4 col-md-4 text-center">
+                            <small class="text-muted">Min</small>
+                            <div class="fw-bold">{{ temp_stats.min_temp }}°C</div>
+                        </div>
+                        <div class="col-4 col-md-4 text-center">
+                            <small class="text-muted">Max</small>
+                            <div class="fw-bold">{{ temp_stats.max_temp }}°C</div>
+                        </div>
+                    </div>
+                    <canvas id="temperatureChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Chart.js Konfiguration
+    Chart.defaults.color = '#6c757d';
+    Chart.defaults.borderColor = '#e9ecef';
+    
+    // Gesamtschlaf Chart
+    const dailySleepData = {{ stats.daily_sleep|tojson }};
+    const dates = Object.keys(dailySleepData).sort();
+    const sleepHours = dates.length > 0 ? dates.map(date => dailySleepData[date]) : [0];
+    
+    if (dates.length > 0) {
+    new Chart(document.getElementById('totalSleepChart'), {
+        type: 'line',
+        data: {
+            labels: dates.map(d => new Date(d).toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'})),
+            datasets: [{
+                label: 'Schlafstunden',
+                data: sleepHours,
+                borderColor: 'rgb(2, 94, 115)',
+                backgroundColor: 'rgba(2, 94, 115, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Stunden'
+                    }
+                }
+            }
+        }
+    });
+    } else {
+        document.getElementById('totalSleepChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+    }
+    
+    // Schlafverteilung Chart
+    if ({{ stats.total_sleep }} > 0) {
+    new Chart(document.getElementById('sleepDistributionChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Nachtschlaf', 'Nickerchen'],
+            datasets: [{
+                data: [{{ stats.night_hours }}, {{ stats.nap_hours }}],
+                backgroundColor: [
+                    'rgb(2, 94, 115)',
+                    'rgb(3, 166, 136)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    } else {
+        document.getElementById('sleepDistributionChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+    }
+    
+    // Aufwachzeiten Histogramm
+    const wakeTimes = {{ stats.wake_times|tojson }};
+    const wakeTimeBins = Array(24).fill(0);
+    if (wakeTimes.length > 0) {
+        wakeTimes.forEach(time => {
+            const hour = Math.floor(time);
+            if (hour >= 0 && hour < 24) {
+                wakeTimeBins[hour]++;
+            }
+        });
+    }
+    
+    if (wakeTimes.length > 0) {
+    new Chart(document.getElementById('wakeTimesChart'), {
+        type: 'bar',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => i + ':00'),
+            datasets: [{
+                label: 'Anzahl',
+                data: wakeTimeBins,
+                backgroundColor: 'rgba(3, 166, 136, 0.6)',
+                borderColor: 'rgb(3, 166, 136)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    } else {
+        document.getElementById('wakeTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+    }
+    
+    // Einschlafzeiten Chart
+    const sleepTimes = {{ stats.sleep_times|tojson }};
+    const sleepTimeBins = Array(24).fill(0);
+    if (sleepTimes.length > 0) {
+        sleepTimes.forEach(time => {
+            const hour = Math.floor(time);
+            if (hour >= 0 && hour < 24) {
+                sleepTimeBins[hour]++;
+            }
+        });
+    }
+    
+    if (sleepTimes.length > 0) {
+    new Chart(document.getElementById('sleepTimesChart'), {
+        type: 'bar',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => i + ':00'),
+            datasets: [{
+                label: 'Anzahl',
+                data: sleepTimeBins,
+                backgroundColor: 'rgba(242, 102, 139, 0.6)',
+                borderColor: 'rgb(242, 102, 139)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    } else {
+        document.getElementById('sleepTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+    }
+    
+    // Temperaturverlauf Chart
+    {% if temp_stats.count > 0 %}
+    const allTemps = {{ temp_stats.all_temps|tojson }};
+    
+    if (allTemps.length > 0) {
+        // Sortiere nach Zeitstempel
+        allTemps.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        // Labels und Werte extrahieren
+        const tempLabels = allTemps.map(t => {
+            const dt = new Date(t.timestamp);
+            // Wenn nur ein Tag gefiltert wird, zeige Zeit, sonst Datum + Zeit
+            const isSingleDay = '{{ start_date }}' === '{{ end_date }}';
+            if (isSingleDay) {
+                return dt.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'});
+            } else {
+                return dt.toLocaleString('de-DE', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
+            }
+        });
+        const tempValues = allTemps.map(t => t.value);
+        
+        new Chart(document.getElementById('temperatureChart'), {
+            type: 'line',
+            data: {
+                labels: tempLabels,
+                datasets: [{
+                    label: 'Temperatur (°C)',
+                    data: tempValues,
+                    borderColor: 'rgb(242, 102, 139)',
+                    backgroundColor: 'rgba(242, 102, 139, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                const temp = allTemps[index];
+                                const dt = new Date(temp.timestamp);
+                                return dt.toLocaleString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}) + ': ' + temp.value + '°C';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Temperatur (°C)'
+                        },
+                        min: Math.min(...tempValues) - 0.5,
+                        max: Math.max(...tempValues) + 0.5
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}
+
