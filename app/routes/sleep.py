@@ -15,7 +15,18 @@ bp = Blueprint('sleep', __name__, url_prefix='/sleep')
 @bp.route('/nap/start', methods=['POST'])
 def start_nap():
     """Startet ein Nickerchen"""
-    timestamp = get_local_now().isoformat()
+    # Prüfe ob eine Startzeit übergeben wurde
+    if 'start_time' in request.form and request.form['start_time']:
+        try:
+            # Parse die übergebene Zeit
+            timestamp = datetime.fromisoformat(request.form['start_time'])
+            if timestamp.tzinfo is None:
+                timestamp = tz_berlin.localize(timestamp)
+            timestamp = timestamp.isoformat()
+        except (ValueError, TypeError):
+            timestamp = get_local_now().isoformat()
+    else:
+        timestamp = get_local_now().isoformat()
     sleep_id = Sleep.create_nap(timestamp)
     flash('Nickerchen gestartet', 'success')
     return redirect(url_for('main.index'))
@@ -35,7 +46,18 @@ def end_nap():
 @bp.route('/night/start', methods=['POST'])
 def start_night_sleep():
     """Startet den Nachtschlaf"""
-    timestamp = get_local_now().isoformat()
+    # Prüfe ob eine Startzeit übergeben wurde
+    if 'start_time' in request.form and request.form['start_time']:
+        try:
+            # Parse die übergebene Zeit
+            timestamp = datetime.fromisoformat(request.form['start_time'])
+            if timestamp.tzinfo is None:
+                timestamp = tz_berlin.localize(timestamp)
+            timestamp = timestamp.isoformat()
+        except (ValueError, TypeError):
+            timestamp = get_local_now().isoformat()
+    else:
+        timestamp = get_local_now().isoformat()
     sleep_id = Sleep.create_night_sleep(timestamp)
     flash('Nachtschlaf gestartet', 'success')
     return redirect(url_for('main.index'))

@@ -2,7 +2,7 @@
 
 Eine einfache, lokale Web-App zum Tracking von Baby-Aktivitäten wie Schlaf, Stillen, Flasche, Windel, Temperatur und Medizin.
 
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-sleepwalker86%2FmyBaby-blue)](https://hub.docker.com/r/sleepwalker86/myBaby)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-sleepwalker86%2Fmybaby-blue)](https://hub.docker.com/r/sleepwalker86/mybaby)
 [![GitHub](https://img.shields.io/badge/GitHub-sleepwalker86%2FmyBaby-black)](https://github.com/sleepwalker86/myBaby)
 
 ## Features
@@ -33,7 +33,7 @@ Eine einfache, lokale Web-App zum Tracking von Baby-Aktivitäten wie Schlaf, Sti
      --name myBaby \
      -p 8000:8000 \
      -v $(pwd)/data:/data \
-     sleepwalker86/myBaby:v1.0.0
+     sleepwalker86/mybaby:v1.0.0
    ```
 
 2. **App öffnen:**
@@ -65,11 +65,11 @@ Die SQLite-Datenbank wird persistent im `./data` Verzeichnis gespeichert.
 ### Docker Hub
 
 Das Image ist auf Docker Hub verfügbar:
-- **Image**: `sleepwalker86/myBaby:v1.0.0`
-- **Latest**: `sleepwalker86/myBaby:latest`
+- **Image**: `sleepwalker86/mybaby:v1.0.0`
+- **Latest**: `sleepwalker86/mybaby:latest`
 - **Multi-Architecture**: Unterstützt `linux/amd64` und `linux/arm64`
 
-**Docker Hub Repository**: https://hub.docker.com/r/sleepwalker86/myBaby
+**Docker Hub Repository**: https://hub.docker.com/r/sleepwalker86/mybaby
 
 ### Ohne Docker (lokal)
 

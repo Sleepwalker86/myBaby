@@ -40,33 +40,33 @@
 
     <!-- Übersichtskarten -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card card-modern">
+        <div class="col-md-3 mb-3 d-flex">
+            <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2">Gesamtschlaf</h6>
-                    <h3 class="mb-0">{{ stats.total_sleep }}h</h3>
+                    <h6 class="text-muted mb-2">Ø Gesamtschlaf</h6>
+                    <h3 class="mb-0">{{ stats.avg_daily_sleep }}h</h3>
                     <small class="text-muted">{{ stats.total_days }} Tage</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card card-modern">
+        <div class="col-md-3 mb-3 d-flex">
+            <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
                     <h6 class="text-muted mb-2">Ø täglicher Schlaf</h6>
                     <h3 class="mb-0">{{ stats.avg_daily_sleep }}h</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card card-modern">
+        <div class="col-md-3 mb-3 d-flex">
+            <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
                     <h6 class="text-muted mb-2">Ø Aufwachzeit</h6>
                     <h3 class="mb-0">{{ stats.avg_wake_time_formatted }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card card-modern">
+        <div class="col-md-3 mb-3 d-flex">
+            <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
                     <h6 class="text-muted mb-2">Ø Einschlafzeit</h6>
                     <h3 class="mb-0">{{ stats.avg_sleep_time_formatted }}</h3>

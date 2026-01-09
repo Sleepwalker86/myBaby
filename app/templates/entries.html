@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-3">
+    <!-- Header mit Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="section-title mb-0">
+                    <i class="bi bi-list-ul"></i> Alle Einträge
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <!-- View Toggle -->
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('entries.entries', view='day', date=selected_date.isoformat()) }}" 
+                           class="btn btn-sm {{ 'btn-primary' if view == 'day' else 'btn-outline-primary' }}">
+                            <i class="bi bi-calendar-day"></i> Tag
+                        </a>
+                        <a href="{{ url_for('entries.entries', view='week', date=selected_date.isoformat()) }}" 
+                           class="btn btn-sm {{ 'btn-primary' if view == 'week' else 'btn-outline-primary' }}">
+                            <i class="bi bi-calendar-week"></i> Woche
+                        </a>
+                    </div>
+                    
+                    <!-- Datum Navigation -->
+                    <a href="{{ url_for('entries.entries', view=view, date=prev_date.isoformat()) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                    <span class="fw-bold">{{ date_display }}</span>
+                    {% if view == 'day' and selected_date < today %}
+                    <a href="{{ url_for('entries.entries', view=view, date=next_date.isoformat()) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    {% elif view == 'week' %}
+                    <a href="{{ url_for('entries.entries', view=view, date=next_date.isoformat()) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="btn btn-sm btn-outline-secondary disabled">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                    {% endif %}
+                    <a href="{{ url_for('entries.entries', view=view) }}" class="btn btn-sm btn-outline-primary">
+                        Heute
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Einträge -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body p-0">
+                    {% if entries %}
+                        {% if view == 'week' %}
+                            {% set current_day_obj = None %}
+                            {% set first_entry = True %}
+                            {% for entry in entries %}
+                                {% set entry_day = entry.day %}
+                                {% if entry_day != current_day_obj %}
+                                    {% if not first_entry %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% set first_entry = False %}
+                                    {% set current_day_obj = entry_day %}
+                                    {% set current_day = entry_day %}
+                                    <div class="day-group border-bottom">
+                                        <div class="fw-bold text-primary mb-2 px-3 pt-3 pb-2">
+                                            {% if current_day == today %}
+                                                Heute, {{ current_day.strftime('%d.%m.%Y') }}
+                                            {% elif current_day == today - timedelta(days=1) %}
+                                                Gestern, {{ current_day.strftime('%d.%m.%Y') }}
+                                            {% elif current_day == today - timedelta(days=2) %}
+                                                Vorgestern, {{ current_day.strftime('%d.%m.%Y') }}
+                                            {% else %}
+                                                {{ weekday_names[current_day.weekday()] }}, {{ current_day.strftime('%d.%m.%Y') }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="entry-group">
+                                {% endif %}
+                                <div class="entry-item">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="flex-shrink-0">
+                                            {% if entry.category == 'sleep' %}
+                                                <i class="bi bi-moon-stars" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                            {% elif entry.category == 'feeding' %}
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-pink);">
+                                                    <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                                                    <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                                                    <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                                                    <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                                </svg>
+                                            {% elif entry.category == 'bottle' %}
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-teal-medium);">
+                                                    <rect x="20" y="18" width="24" height="36" rx="4" fill="currentColor"/>
+                                                    <ellipse cx="32" cy="12" rx="8" ry="6" fill="currentColor"/>
+                                                    <rect x="24" y="12" width="16" height="6" fill="currentColor"/>
+                                                    <line x1="26" y1="28" x2="38" y2="28" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                                                    <line x1="26" y1="38" x2="38" y2="38" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                                                </svg>
+                                            {% elif entry.category == 'diaper' %}
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-teal-light);">
+                                                    <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                                                    <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                                                    <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                                                    <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                                                    <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                                                </svg>
+                                            {% elif entry.category == 'temperature' %}
+                                                <i class="bi bi-thermometer-half" style="font-size: 1.5rem; color: var(--color-teal-light);"></i>
+                                            {% elif entry.category == 'medicine' %}
+                                                <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold mb-1">{{ entry.display }}</div>
+                                            {% if entry.category == 'sleep' and entry.end_time %}
+                                                <div class="time-text">
+                                                    {{ entry.timestamp|format_datetime_de }} - 
+                                                    {{ entry.end_time|format_datetime_de }}
+                                                </div>
+                                            {% else %}
+                                                <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            {% if not first_entry %}
+                                        </div>
+                                    </div>
+                            {% endif %}
+                        {% else %}
+                            <!-- Tagesansicht: Tag einmal am Anfang anzeigen -->
+                            <div class="entry-item border-bottom bg-light">
+                                <div class="fw-bold text-primary mb-2 px-3 pt-3 pb-2">
+                                    {% if selected_date == today %}
+                                        Heute, {{ selected_date.strftime('%d.%m.%Y') }}
+                                    {% elif selected_date == today - timedelta(days=1) %}
+                                        Gestern, {{ selected_date.strftime('%d.%m.%Y') }}
+                                    {% elif selected_date == today - timedelta(days=2) %}
+                                        Vorgestern, {{ selected_date.strftime('%d.%m.%Y') }}
+                                    {% else %}
+                                        {{ weekday_names[selected_date.weekday()] }}, {{ selected_date.strftime('%d.%m.%Y') }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% for entry in entries %}
+                            <div class="entry-item">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="flex-shrink-0">
+                                        {% if entry.category == 'sleep' %}
+                                            <i class="bi bi-moon-stars" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                        {% elif entry.category == 'feeding' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-pink);">
+                                                <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                                                <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                                                <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                                                <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                            </svg>
+                                        {% elif entry.category == 'bottle' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-teal-medium);">
+                                                <rect x="20" y="18" width="24" height="36" rx="4" fill="currentColor"/>
+                                                <ellipse cx="32" cy="12" rx="8" ry="6" fill="currentColor"/>
+                                                <rect x="24" y="12" width="16" height="6" fill="currentColor"/>
+                                                <line x1="26" y1="28" x2="38" y2="28" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                                                <line x1="26" y1="38" x2="38" y2="38" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+                                            </svg>
+                                        {% elif entry.category == 'diaper' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-teal-light);">
+                                                <path d="M16 20 L16 50 C16 54, 20 58, 24 58 L40 58 C44 58, 48 54, 48 50 L48 20 Z" fill="currentColor"/>
+                                                <ellipse cx="32" cy="20" rx="16" ry="4" fill="currentColor" opacity="0.7"/>
+                                                <ellipse cx="16" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                                                <ellipse cx="48" cy="35" rx="4" ry="16" fill="currentColor" opacity="0.7"/>
+                                                <rect x="28" y="24" width="8" height="3" rx="1" fill="currentColor" opacity="0.5"/>
+                                            </svg>
+                                        {% elif entry.category == 'temperature' %}
+                                            <i class="bi bi-thermometer-half" style="font-size: 1.5rem; color: var(--color-teal-light);"></i>
+                                        {% elif entry.category == 'medicine' %}
+                                            <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold mb-1">{{ entry.display }}</div>
+                                        {% if entry.category == 'sleep' and entry.end_time %}
+                                            <div class="time-text">
+                                                {{ entry.timestamp|format_datetime_de }} - 
+                                                {{ entry.end_time|format_datetime_de }}
+                                            </div>
+                                        {% else %}
+                                            <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% else %}
+                        <div class="entry-item text-center text-muted">
+                            <p class="mb-0">Keine Einträge gefunden</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

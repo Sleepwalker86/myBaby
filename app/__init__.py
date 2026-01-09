@@ -15,7 +15,7 @@ def create_app():
     app.teardown_appcontext(close_db)
     
     # Routes registrieren
-    from app.routes import main, sleep, feeding, bottle, diaper, temperature, medicine, edit, trends
+    from app.routes import main, sleep, feeding, bottle, diaper, temperature, medicine, edit, trends, entries
     app.register_blueprint(main.bp)
     app.register_blueprint(sleep.bp)
     app.register_blueprint(feeding.bp)
@@ -25,6 +25,7 @@ def create_app():
     app.register_blueprint(medicine.bp)
     app.register_blueprint(edit.bp)
     app.register_blueprint(trends.bp)
+    app.register_blueprint(entries.bp)
     
     return app
 

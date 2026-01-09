@@ -6,7 +6,7 @@
 set -e
 
 DOCKER_USER="sleepwalker86"
-IMAGE_NAME="myBaby"
+IMAGE_NAME="mybaby"
 VERSION="v1.0.0"
 
 echo "🚀 Building and pushing ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}"

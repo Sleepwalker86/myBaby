@@ -8,7 +8,7 @@ git init
 
 # Git-Konfiguration (optional, falls noch nicht gesetzt)
 git config user.name "sleepwalker86"
-git config user.email "deine-email@example.com"
+git config user.email "sascha.moritz@web.de"
 
 # Alle Dateien hinzufügen
 git add .
@@ -77,8 +77,8 @@ docker buildx inspect --bootstrap
 # Build und Push für Multi-Architecture (amd64, arm64)
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --tag sleepwalker86/myBaby:v1.0.0 \
-  --tag sleepwalker86/myBaby:latest \
+  --tag sleepwalker86/mybaby:v1.0.0 \
+  --tag sleepwalker86/mybaby:latest \
   --push \
   .
 ```
@@ -98,7 +98,7 @@ Für automatische Builds bei neuen Tags:
 ## Schritt 7: Verifizierung
 
 ### Docker Hub
-- Öffne: https://hub.docker.com/r/sleepwalker86/myBaby
+- Öffne: https://hub.docker.com/r/sleepwalker86/mybaby
 - Prüfe, ob die Tags `v1.0.0` und `latest` vorhanden sind
 - Prüfe, ob Multi-Architecture Support aktiviert ist (amd64, arm64)
 
@@ -111,17 +111,17 @@ Für automatische Builds bei neuen Tags:
 
 ```bash
 # Lokales Image entfernen (falls vorhanden)
-docker rmi sleepwalker86/myBaby:v1.0.0 2>/dev/null || true
+docker rmi sleepwalker86/mybaby:v1.0.0 2>/dev/null || true
 
 # Image von Docker Hub pullen
-docker pull sleepwalker86/myBaby:v1.0.0
+docker pull sleepwalker86/mybaby:v1.0.0
 
 # Container starten
 docker run -d \
   --name myBaby-test \
   -p 8000:8000 \
   -v $(pwd)/data:/data \
-  sleepwalker86/myBaby:v1.0.0
+  sleepwalker86/mybaby:v1.0.0
 
 # Testen: http://localhost:8000
 

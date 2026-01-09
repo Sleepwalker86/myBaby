@@ -1,6 +1,9 @@
 """Datenmodelle für die Baby-Tracking App"""
 from app.models.database import get_db
 from datetime import datetime, date, timedelta
+import pytz
+
+tz_berlin = pytz.timezone('Europe/Berlin')
 
 class Sleep:
     """Schlaf-Tracking"""
@@ -49,51 +52,155 @@ class Sleep:
     def get_today_sleep_duration(selected_date=None):
         """Berechnet die Schlafdauer für einen bestimmten Tag in Stunden"""
         db = get_db()
+        
+        # Normalisiere selected_date zu einem date-Objekt
         if selected_date is None:
             selected_date = date.today()
         elif isinstance(selected_date, str):
             selected_date = date.fromisoformat(selected_date)
-        target_date = selected_date.isoformat()
+        elif not isinstance(selected_date, date):
+            selected_date = date.fromisoformat(str(selected_date))
         
-        # Schlaf-Einträge, die am Tag gestartet haben
-        rows = db.execute(
-            '''SELECT start_time, end_time FROM sleep 
-               WHERE date(start_time) = ? AND end_time IS NOT NULL''',
-            (target_date,)
+        total_seconds = 0.0
+        
+        # Hole ALLE beendeten Schlaf-Einträge
+        all_rows = db.execute(
+            '''SELECT type, start_time, end_time FROM sleep 
+               WHERE end_time IS NOT NULL'''
         ).fetchall()
         
-        # Schlaf-Einträge, die am vorherigen Tag gestartet haben, aber am Tag enden
-        prev_date = (selected_date - timedelta(days=1)).isoformat()
-        rows_prev = db.execute(
-            '''SELECT start_time, end_time FROM sleep 
-               WHERE date(start_time) = ? AND date(end_time) = ? AND end_time IS NOT NULL''',
-            (prev_date, target_date)
-        ).fetchall()
+        # Hilfsfunktion zum Parsen von Zeitstempeln - EINFACH und DIREKT
+        def parse_to_berlin(dt_str):
+            """Parst einen Zeitstempel-String und konvertiert ihn zur Berliner Zeitzone"""
+            if not dt_str:
+                return None
+            
+            dt_str = str(dt_str).strip()
+            
+            # Format in DB: 2026-01-02T19:59 (ohne Sekunden, ohne Zeitzone)
+            # Entferne Zeitzone-Info falls vorhanden
+            if dt_str.endswith('Z'):
+                dt_str = dt_str[:-1]
+            elif '+' in dt_str:
+                plus_pos = dt_str.rfind('+')
+                if plus_pos > 10:
+                    dt_str = dt_str[:plus_pos]
+            elif dt_str.count('-') > 2:
+                # Prüfe ob letztes '-' eine Zeitzone ist (Format: -HH:MM)
+                parts = dt_str.rsplit('-', 1)
+                if len(parts) == 2 and ':' in parts[1] and len(parts[1]) <= 6:
+                    dt_str = parts[0]
+            
+            # Entferne Mikrosekunden
+            if '.' in dt_str:
+                dt_str = dt_str.split('.')[0]
+            
+            # Parse - versuche zuerst mit Sekunden, dann ohne
+            dt = None
+            for fmt in ['%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']:
+                try:
+                    dt = datetime.strptime(dt_str, fmt)
+                    break
+                except ValueError:
+                    continue
+            
+            if dt is None:
+                return None
+            
+            # Konvertiere zu Berliner Zeitzone (immer, da DB keine Zeitzone hat)
+            dt = tz_berlin.localize(dt)
+            
+            return dt
         
-        total_seconds = 0
-        
-        # Einträge, die am Tag gestartet haben
-        for row in rows:
+        # Verarbeite jeden Eintrag
+        for row in all_rows:
             try:
-                start = datetime.fromisoformat(row['start_time'].replace('Z', '+00:00'))
-                end = datetime.fromisoformat(row['end_time'].replace('Z', '+00:00'))
-                total_seconds += (end - start).total_seconds()
-            except (ValueError, AttributeError):
+                # Hole Spalten - verwende direkten Zugriff
+                sleep_type = str(row['type']).strip()
+                start_str = str(row['start_time']).strip()
+                end_str = str(row['end_time']).strip()
+                
+                # Parse Zeitstempel
+                start_dt = parse_to_berlin(start_str)
+                end_dt = parse_to_berlin(end_str)
+                
+                if start_dt is None or end_dt is None:
+                    # Wenn Parsing fehlschlägt, versuche es mit einem einfacheren Ansatz
+                    # Manchmal sind die Werte bereits datetime-Objekte
+                    if isinstance(row['start_time'], datetime):
+                        start_dt = row['start_time']
+                        if start_dt.tzinfo is None:
+                            start_dt = tz_berlin.localize(start_dt)
+                        else:
+                            start_dt = start_dt.astimezone(tz_berlin)
+                    if isinstance(row['end_time'], datetime):
+                        end_dt = row['end_time']
+                        if end_dt.tzinfo is None:
+                            end_dt = tz_berlin.localize(end_dt)
+                        else:
+                            end_dt = end_dt.astimezone(tz_berlin)
+                    
+                    if start_dt is None or end_dt is None:
+                        continue
+                
+                # Hole Datum von Start und Ende
+                start_date = start_dt.date()
+                end_date = end_dt.date()
+                
+                # Prüfe ob dieser Eintrag für den ausgewählten Tag relevant ist
+                # WICHTIG: Eintrag ist relevant, wenn er am ausgewählten Tag ENDET
+                if end_date == selected_date:
+                    # Für alle Schlaf-Einträge (Nickerchen und Nachtschlaf): Gesamte Dauer von Start bis Ende zählen
+                    duration_seconds = (end_dt - start_dt).total_seconds()
+                    total_seconds += duration_seconds
+                            
+            except Exception as e:
+                # Bei Fehler: Weiter mit nächstem Eintrag
                 continue
         
-        # Einträge, die am vorherigen Tag gestartet haben, aber am Tag enden
-        # Nur der Teil, der am Tag liegt
-        for row in rows_prev:
-            try:
-                start = datetime.fromisoformat(row['start_time'].replace('Z', '+00:00'))
-                end = datetime.fromisoformat(row['end_time'].replace('Z', '+00:00'))
-                # Nur der Teil vom Tagbeginn bis zum Ende zählen
-                day_start = datetime.combine(selected_date, datetime.min.time())
-                if end > day_start:
-                    sleep_duration = (end - day_start).total_seconds()
-                    total_seconds += sleep_duration
-            except (ValueError, AttributeError):
-                continue
+        # Aktive Schlaf-Einträge (noch nicht beendet) - nur für heute relevant
+        if selected_date == date.today():
+            active_sleep_rows = db.execute(
+                '''SELECT type, start_time FROM sleep 
+                   WHERE end_time IS NULL'''
+            ).fetchall()
+            
+            day_start_dt = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time()))
+            day_end_dt = tz_berlin.localize(datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59)))
+            
+            for row in active_sleep_rows:
+                try:
+                    try:
+                        sleep_type = row['type']
+                    except (KeyError, IndexError):
+                        sleep_type = 'night'
+                    
+                    start_dt = parse_to_berlin(row['start_time'])
+                    if start_dt is None:
+                        continue
+                    
+                    start_date = start_dt.date()
+                    
+                    # Prüfe ob der aktive Schlaf für den ausgewählten Tag relevant ist
+                    if start_date <= selected_date:
+                        # Für aktive Schlaf-Einträge: Bis zum aktuellen Zeitpunkt oder Tagesende zählen
+                        now = datetime.now(tz_berlin)
+                        end_time = min(day_end_dt, now)
+                        
+                        # Für aktive Schlaf-Einträge: Nur die Zeit vom Start bis jetzt zählen
+                        # Prüfe ob der Start am ausgewählten Tag liegt
+                        if start_date == selected_date:
+                            # Gestartet am ausgewählten Tag: Zeit vom Start bis jetzt zählen
+                            if end_time > start_dt:
+                                duration_seconds = (end_time - start_dt).total_seconds()
+                                total_seconds += duration_seconds
+                        elif start_date < selected_date and sleep_type == 'night':
+                            # Nachtschlaf gestartet am Vortag: Gesamte Dauer vom Start bis jetzt zählen
+                            if end_time > start_dt:
+                                duration_seconds = (end_time - start_dt).total_seconds()
+                                total_seconds += duration_seconds
+                except Exception:
+                    continue
         
         return round(total_seconds / 3600, 1) if total_seconds > 0 else 0.0
     
@@ -160,50 +267,58 @@ class Sleep:
                 start = datetime.fromisoformat(row['start_time'].replace('Z', '+00:00'))
                 end = datetime.fromisoformat(row['end_time'].replace('Z', '+00:00'))
                 
-                # Wenn der Schlaf über Mitternacht geht, aufteilen
-                if start.date() != end.date():
-                    # Teil 1: Vom Start bis Mitternacht
-                    day1_key = start.date().isoformat()
-                    if start_date <= day1_key <= end_date:
-                        midnight_day1 = datetime.combine(start.date(), datetime.max.time().replace(hour=23, minute=59, second=59))
-                        duration_day1 = (midnight_day1 - start).total_seconds() / 3600
-                        if day1_key not in daily_sleep:
-                            daily_sleep[day1_key] = 0
-                        daily_sleep[day1_key] += duration_day1
-                    
-                    # Teil 2: Von Mitternacht bis Ende
-                    day2_key = end.date().isoformat()
-                    if start_date <= day2_key <= end_date:
-                        midnight_day2 = datetime.combine(end.date(), datetime.min.time())
-                        duration_day2 = (end - midnight_day2).total_seconds() / 3600
-                        if day2_key not in daily_sleep:
-                            daily_sleep[day2_key] = 0
-                        daily_sleep[day2_key] += duration_day2
-                    
-                    # Gesamtdauer für Typ-Berechnung
-                    duration_hours = (end - start).total_seconds() / 3600
-                else:
-                    # Schlaf innerhalb eines Tages
-                    day_key = start.date().isoformat()
+                # Konvertiere zu Berliner Zeitzone falls nötig
+                if start.tzinfo is None:
+                    start = tz_berlin.localize(start.replace(tzinfo=None))
+                elif start.tzinfo != tz_berlin:
+                    start = start.astimezone(tz_berlin)
+                
+                if end.tzinfo is None:
+                    end = tz_berlin.localize(end.replace(tzinfo=None))
+                elif end.tzinfo != tz_berlin:
+                    end = end.astimezone(tz_berlin)
+                
+                # Gesamtdauer berechnen
+                duration_hours = (end - start).total_seconds() / 3600
+                
+                # Bei Nachtschlaf: Gesamte Dauer dem Tag zurechnen, an dem aufgewacht wird
+                # Bei Nickerchen: Dauer dem Tag zurechnen, an dem das Nickerchen endet
+                if row['type'] == 'night':
+                    # Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen
+                    day_key = end.date().isoformat()
                     if start_date <= day_key <= end_date:
-                        duration_hours = (end - start).total_seconds() / 3600
                         if day_key not in daily_sleep:
                             daily_sleep[day_key] = 0
                         daily_sleep[day_key] += duration_hours
+                else:
+                    # Nickerchen: Wenn über Mitternacht, aufteilen (oder auch dem End-Tag zurechnen?)
+                    # Für Konsistenz: Auch Nickerchen dem End-Tag zurechnen
+                    if start.date() != end.date():
+                        # Über Mitternacht: Dem End-Tag zurechnen
+                        day_key = end.date().isoformat()
+                        if start_date <= day_key <= end_date:
+                            if day_key not in daily_sleep:
+                                daily_sleep[day_key] = 0
+                            daily_sleep[day_key] += duration_hours
                     else:
-                        duration_hours = 0
+                        # Innerhalb eines Tages
+                        day_key = start.date().isoformat()
+                        if start_date <= day_key <= end_date:
+                            if day_key not in daily_sleep:
+                                daily_sleep[day_key] = 0
+                            daily_sleep[day_key] += duration_hours
                 
                 if row['type'] == 'nap':
                     nap_hours += duration_hours
                 else:
                     night_hours += duration_hours
-                
-                # Aufwachzeit (end_time) - nur wenn im Zeitraum
-                if start_date <= end.date().isoformat() <= end_date:
-                    wake_times.append(end.hour + end.minute / 60.0)
-                # Einschlafzeit (start_time) - nur wenn im Zeitraum
-                if start_date <= start.date().isoformat() <= end_date:
-                    sleep_times.append(start.hour + start.minute / 60.0)
+                    # Aufwachzeit und Einschlafzeit: Nur für Nachtschlaf
+                    # Aufwachzeit (end_time) - nur wenn im Zeitraum
+                    if start_date <= end.date().isoformat() <= end_date:
+                        wake_times.append(end.hour + end.minute / 60.0)
+                    # Einschlafzeit (start_time) - nur wenn im Zeitraum
+                    if start_date <= start.date().isoformat() <= end_date:
+                        sleep_times.append(start.hour + start.minute / 60.0)
                 
             except (ValueError, AttributeError):
                 continue
@@ -214,41 +329,55 @@ class Sleep:
                 start = datetime.fromisoformat(row['start_time'].replace('Z', '+00:00'))
                 end = datetime.fromisoformat(row['end_time'].replace('Z', '+00:00'))
                 
-                # Nur der Teil vom Zeitraumbeginn bis zum Ende zählt
-                start_of_period = datetime.combine(date.fromisoformat(start_date), datetime.min.time())
-                if start < start_of_period:
-                    # Nur der Teil im Zeitraum zählen
-                    duration_hours = (end - start_of_period).total_seconds() / 3600
-                    
-                    # Auf die Tage im Zeitraum aufteilen
-                    current_date = start_of_period.date()
-                    remaining_duration = duration_hours
-                    
-                    while current_date <= end.date() and current_date <= date.fromisoformat(end_date):
-                        day_key = current_date.isoformat()
-                        if current_date == end.date():
-                            # Letzter Tag: von Tagesbeginn bis Endzeit
-                            day_start = datetime.combine(current_date, datetime.min.time())
-                            day_duration = (end - day_start).total_seconds() / 3600
-                        else:
-                            # Vollständiger Tag
-                            day_duration = 24.0
-                        
+                # Konvertiere zu Berliner Zeitzone falls nötig
+                if start.tzinfo is None:
+                    start = tz_berlin.localize(start.replace(tzinfo=None))
+                elif start.tzinfo != tz_berlin:
+                    start = start.astimezone(tz_berlin)
+                
+                if end.tzinfo is None:
+                    end = tz_berlin.localize(end.replace(tzinfo=None))
+                elif end.tzinfo != tz_berlin:
+                    end = end.astimezone(tz_berlin)
+                
+                # Gesamtdauer berechnen
+                duration_hours = (end - start).total_seconds() / 3600
+                
+                # Bei Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen
+                # Bei Nickerchen: Auch dem End-Tag zurechnen
+                if row['type'] == 'night':
+                    # Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen (auch wenn vor Zeitraum gestartet)
+                    day_key = end.date().isoformat()
+                    if start_date <= day_key <= end_date:
                         if day_key not in daily_sleep:
                             daily_sleep[day_key] = 0
-                        daily_sleep[day_key] += day_duration
-                        remaining_duration -= day_duration
-                        current_date += timedelta(days=1)
+                        daily_sleep[day_key] += duration_hours
                 else:
-                    duration_hours = (end - start).total_seconds() / 3600
+                    # Nickerchen: Nur der Teil im Zeitraum
+                    start_of_period = tz_berlin.localize(datetime.combine(date.fromisoformat(start_date), datetime.min.time()))
+                    if start < start_of_period:
+                        # Nur der Teil im Zeitraum zählen
+                        day_key = end.date().isoformat()
+                        if start_date <= day_key <= end_date:
+                            day_start = tz_berlin.localize(datetime.combine(end.date(), datetime.min.time()))
+                            day_duration = (end - day_start).total_seconds() / 3600
+                            if day_key not in daily_sleep:
+                                daily_sleep[day_key] = 0
+                            daily_sleep[day_key] += day_duration
+                    else:
+                        # Gesamte Dauer dem End-Tag zurechnen
+                        day_key = end.date().isoformat()
+                        if start_date <= day_key <= end_date:
+                            if day_key not in daily_sleep:
+                                daily_sleep[day_key] = 0
+                            daily_sleep[day_key] += duration_hours
                 
                 if row['type'] == 'nap':
                     nap_hours += duration_hours
                 else:
                     night_hours += duration_hours
-                
-                # Aufwachzeit (end_time)
-                wake_times.append(end.hour + end.minute / 60.0)
+                    # Aufwachzeit: Nur für Nachtschlaf
+                    wake_times.append(end.hour + end.minute / 60.0)
                 
             except (ValueError, AttributeError):
                 continue

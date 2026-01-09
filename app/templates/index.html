@@ -12,7 +12,7 @@
                             <h5 class="mb-1">
                                 <i class="bi bi-moon-stars"></i> Schlafstatus
                             </h5>
-                            <p class="mb-0 text-muted">Schlafdauer heute: <strong>{{ sleep_duration }} Stunden</strong></p>
+                            <p class="mb-0 text-muted">Schlafdauer heute: <strong>{{ sleep_duration }}</strong></p>
                         </div>
                         <div>
                             <span class="status-badge {{ 'sleeping' if sleep_status == 'schläft' else 'awake' }}">
@@ -27,16 +27,26 @@
 
     <!-- Status-Übersicht (3 Spalten) -->
     <div class="row mb-4">
-        <div class="col-4 mb-3">
-            <div class="card card-modern text-center">
+        <div class="col-4 mb-3 d-flex">
+            <div class="card card-modern text-center status-card w-100">
                 <div class="card-body">
                     <div class="mb-2">
-                        <i class="bi bi-sun" style="font-size: 2.5rem; color: var(--color-teal-light);"></i>
+                        {% if active_sleep %}
+                            <i class="bi bi-moon-stars" style="font-size: 2.5rem; color: var(--color-purple);"></i>
+                        {% else %}
+                            <i class="bi bi-sun" style="font-size: 2.5rem; color: var(--color-teal-light);"></i>
+                        {% endif %}
                     </div>
-                    <div class="fw-bold mb-1">Wach seit</div>
+                    <div class="fw-bold mb-1">
+                        {% if active_sleep %}
+                            Schläft seit
+                        {% else %}
+                            Wach seit
+                        {% endif %}
+                    </div>
                     <div class="text-muted small">
                         {% if active_sleep %}
-                            <span class="text-muted">Schläft</span>
+                            {{ sleep_since }}
                         {% else %}
                             {{ awake_since }}
                         {% endif %}
@@ -44,8 +54,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-4 mb-3">
-            <div class="card card-modern text-center">
+        <div class="col-4 mb-3 d-flex">
+            <div class="card card-modern text-center status-card w-100">
                 <div class="card-body">
                     <div class="mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 40px; height: 40px; color: var(--color-pink);">
@@ -60,8 +70,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-4 mb-3">
-            <div class="card card-modern text-center">
+        <div class="col-4 mb-3 d-flex">
+            <div class="card card-modern text-center status-card w-100">
                 <div class="card-body">
                     <div class="mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 40px; height: 40px; color: var(--color-teal-light);">
@@ -78,6 +88,254 @@
             </div>
         </div>
     </div>
+
+    <!-- Kreisdiagramm Timeline (für alle Tage) -->
+    {% if timeline_events %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h6 class="section-title mb-3">
+                        <i class="bi bi-clock-history"></i> Tagesverlauf (24h)
+                    </h6>
+                    <div class="d-flex justify-content-center">
+                        <div id="timeline-circle" style="position: relative; width: 100%; max-width: 400px; aspect-ratio: 1;">
+                            <svg viewBox="0 0 400 400" id="timeline-svg" style="width: 100%; height: 100%;">
+                                <!-- Hintergrundkreis -->
+                                <circle cx="200" cy="200" r="150" fill="none" stroke="#e9ecef" stroke-width="8"/>
+                                
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Timeline-Ereignisse von Jinja2
+        const timelineEvents = {{ timeline_events | tojson }};
+        const svg = document.getElementById('timeline-svg');
+        const centerX = 200;
+        const centerY = 200;
+        const radius = 150;
+        const eventRadius = 160; // Radius für Event-Positionen
+        
+        // Icon-Mapping
+        const iconMap = {
+            'feeding': { emoji: '🍼', color: 'var(--color-pink)' },
+            'bottle': { emoji: '🍼', color: 'var(--color-teal-medium)' },
+            'diaper': { emoji: '👶', color: 'var(--color-teal-light)' },
+            'sleep': { emoji: '😴', color: 'var(--color-teal-dark)' },
+            'temperature': { emoji: '🌡️', color: 'var(--color-pink)' },
+            'medicine': { emoji: '💊', color: 'var(--color-pink)' }
+        };
+        
+        // Hilfsfunktion: Berechne Winkel aus Uhrzeit (24-Stunden-Kreis)
+        // Wie eine normale Uhr: 0° = oben (12:00), 90° = rechts (03:00), 180° = unten (06:00), 270° = links (09:00)
+        // In SVG ist 0° rechts, daher müssen wir -90° abziehen, damit 0° oben ist
+        function timeToAngle(hour, minute) {
+            // Auf einer Uhr: jede Stunde = 30°, jede Minute = 0.5°
+            // 12:00 = 0° (oben), 3:00 = 90° (rechts), 6:00 = 180° (unten), 9:00 = 270° (links)
+            // Berechne Winkel relativ zu 12:00
+            let angle = (hour * 30) + (minute * 0.5);
+            // In SVG ist 0° rechts, daher -90° damit 0° oben ist
+            angle = angle - 90;
+            // Normalisiere auf 0-360°
+            if (angle < 0) angle += 360;
+            if (angle >= 360) angle -= 360;
+            return angle;
+        }
+        
+        // Zeichne jedes Event
+        timelineEvents.forEach(event => {
+            // Prüfe ob es ein Nachtschlaf-Eintrag ist (mit event_type)
+            if (event.category === 'sleep' && event.type === 'night' && event.event_type) {
+                // Nachtschlaf: Berechne Winkel aus tatsächlicher Uhrzeit
+                const angle = timeToAngle(event.hour, event.minute);
+                const radians = (angle * Math.PI) / 180;
+                
+                // Position direkt auf dem Kreis
+                const x = centerX + radius * Math.cos(radians);
+                const y = centerY + radius * Math.sin(radians);
+                
+                // Event-Gruppe direkt auf dem Kreis
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${x}, ${y})`);
+                
+                // Icon-Hintergrund
+                const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                bgCircle.setAttribute('r', '18');
+                bgCircle.setAttribute('fill', 'white');
+                bgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
+                bgCircle.setAttribute('stroke-width', '2');
+                g.appendChild(bgCircle);
+                
+                // Icon-Emoji
+                const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                iconText.setAttribute('x', '0');
+                iconText.setAttribute('y', '5');
+                iconText.setAttribute('text-anchor', 'middle');
+                iconText.setAttribute('font-size', '14');
+                iconText.textContent = event.event_type === 'sleep_start' ? '🌙' : '☀️';  // Mond für Einschlafen, Sonne für Aufwachen
+                g.appendChild(iconText);
+                
+                // Zeit außerhalb des Kreises (vom Zentrum weg)
+                const textOffset = 25;
+                const textX = -textOffset * Math.cos(radians);
+                const textY = -textOffset * Math.sin(radians);
+                const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                timeText.setAttribute('x', textX);
+                timeText.setAttribute('y', textY + 4);
+                timeText.setAttribute('text-anchor', 'middle');
+                timeText.setAttribute('font-size', '10');
+                timeText.setAttribute('fill', '#666');
+                timeText.textContent = event.time_str;
+                g.appendChild(timeText);
+                
+                svg.appendChild(g);
+            } else if (event.category === 'sleep' && event.start_hour !== undefined && event.end_hour !== undefined) {
+                // Nickerchen: Zeichne Bogen zwischen Start und Ende
+                const startAngle = timeToAngle(event.start_hour, event.start_minute);
+                const endAngle = timeToAngle(event.end_hour, event.end_minute);
+                const startRadians = (startAngle * Math.PI) / 180;
+                const endRadians = (endAngle * Math.PI) / 180;
+                
+                // Berechne Start- und Endposition auf dem Kreis
+                const startX = centerX + radius * Math.cos(startRadians);
+                const startY = centerY + radius * Math.sin(startRadians);
+                const endX = centerX + radius * Math.cos(endRadians);
+                const endY = centerY + radius * Math.sin(endRadians);
+                
+                // Zeichne Bogen (Arc) zwischen Start und Ende
+                // Berechne Winkel-Differenz (kann über 180° sein, wenn über Mitternacht)
+                let angleDiff = endAngle - startAngle;
+                if (angleDiff < 0) angleDiff += 360;
+                const largeArcFlag = angleDiff > 180 ? 1 : 0;
+                const sweepFlag = angleDiff <= 180 ? 1 : 0;
+                const arcPath = `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX} ${endY}`;
+                
+                const arc = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                arc.setAttribute('d', arcPath);
+                arc.setAttribute('fill', 'none');
+                arc.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
+                arc.setAttribute('stroke-width', '8');
+                arc.setAttribute('opacity', '0.6');
+                svg.appendChild(arc);
+                
+                // Zeichne Start-Marker direkt auf dem Kreis
+                const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                startG.setAttribute('transform', `translate(${startX}, ${startY})`);
+                
+                const startBgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                startBgCircle.setAttribute('r', '18');
+                startBgCircle.setAttribute('fill', 'white');
+                startBgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
+                startBgCircle.setAttribute('stroke-width', '2');
+                startG.appendChild(startBgCircle);
+                
+                const startIconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                startIconText.setAttribute('x', '0');
+                startIconText.setAttribute('y', '5');
+                startIconText.setAttribute('text-anchor', 'middle');
+                startIconText.setAttribute('font-size', '14');
+                startIconText.textContent = iconMap[event.category]?.emoji || '😴';
+                startG.appendChild(startIconText);
+                
+                const startTimeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const startTextOffset = 25;
+                const startTextX = -startTextOffset * Math.cos(startRadians);
+                const startTextY = -startTextOffset * Math.sin(startRadians);
+                startTimeText.setAttribute('x', startTextX);
+                startTimeText.setAttribute('y', startTextY + 4);
+                startTimeText.setAttribute('text-anchor', 'middle');
+                startTimeText.setAttribute('font-size', '9');
+                startTimeText.setAttribute('fill', '#666');
+                startTimeText.textContent = event.start_time;
+                startG.appendChild(startTimeText);
+                
+                svg.appendChild(startG);
+                
+                // Zeichne End-Marker direkt auf dem Kreis
+                const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                endG.setAttribute('transform', `translate(${endX}, ${endY})`);
+                
+                const endBgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                endBgCircle.setAttribute('r', '18');
+                endBgCircle.setAttribute('fill', 'white');
+                endBgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
+                endBgCircle.setAttribute('stroke-width', '2');
+                endG.appendChild(endBgCircle);
+                
+                const endIconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                endIconText.setAttribute('x', '0');
+                endIconText.setAttribute('y', '5');
+                endIconText.setAttribute('text-anchor', 'middle');
+                endIconText.setAttribute('font-size', '14');
+                endIconText.textContent = iconMap[event.category]?.emoji || '😴';
+                endG.appendChild(endIconText);
+                
+                const endTimeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const endTextOffset = 25;
+                const endTextX = -endTextOffset * Math.cos(endRadians);
+                const endTextY = -endTextOffset * Math.sin(endRadians);
+                endTimeText.setAttribute('x', endTextX);
+                endTimeText.setAttribute('y', endTextY + 4);
+                endTimeText.setAttribute('text-anchor', 'middle');
+                endTimeText.setAttribute('font-size', '9');
+                endTimeText.setAttribute('fill', '#666');
+                endTimeText.textContent = event.end_time;
+                endG.appendChild(endTimeText);
+                
+                svg.appendChild(endG);
+            } else {
+                // Normales Event: Berechne Winkel aus tatsächlicher Uhrzeit
+                const angle = timeToAngle(event.hour, event.minute);
+                const radians = (angle * Math.PI) / 180;
+                
+                // Position direkt auf dem Kreis
+                const x = centerX + radius * Math.cos(radians);
+                const y = centerY + radius * Math.sin(radians);
+                
+                // Event-Gruppe direkt auf dem Kreis
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${x}, ${y})`);
+                
+                // Icon-Hintergrund
+                const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                bgCircle.setAttribute('r', '18');
+                bgCircle.setAttribute('fill', 'white');
+                bgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-medium)');
+                bgCircle.setAttribute('stroke-width', '2');
+                g.appendChild(bgCircle);
+                
+                // Icon-Emoji
+                const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                iconText.setAttribute('x', '0');
+                iconText.setAttribute('y', '5');
+                iconText.setAttribute('text-anchor', 'middle');
+                iconText.setAttribute('font-size', '14');
+                iconText.textContent = iconMap[event.category]?.emoji || '•';
+                g.appendChild(iconText);
+                
+                // Zeit außerhalb des Kreises (in Richtung Zentrum)
+                const textRadius = radius + 25;
+                const textX = (textRadius - radius) * Math.cos(radians);
+                const textY = (textRadius - radius) * Math.sin(radians);
+                const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                timeText.setAttribute('x', textX);
+                timeText.setAttribute('y', textY + 4);
+                timeText.setAttribute('text-anchor', 'middle');
+                timeText.setAttribute('font-size', '10');
+                timeText.setAttribute('fill', '#666');
+                timeText.textContent = event.time_str;
+                g.appendChild(timeText);
+                
+                svg.appendChild(g);
+            }
+        });
+    </script>
+    {% endif %}
 
     <!-- Schnellaktionen - 3 Spalten -->
     <div class="row mb-4">
@@ -97,20 +355,16 @@
                     <small>Schlaf beenden</small>
                 </button>
             </form>
-            {% else %}
-            <form method="POST" action="{{ url_for('sleep.start_nap') }}" class="mb-2">
-                <button type="submit" class="btn btn-sleep btn-large w-100">
-                    <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
-                    <small>Nickerchen</small>
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('sleep.start_night_sleep') }}">
-                <button type="submit" class="btn btn-sleep btn-large w-100">
-                    <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
-                    <small>Nachtschlaf</small>
-                </button>
-            </form>
             {% endif %}
+            <!-- Buttons zum Starten eines neuen Schlafs sind immer sichtbar (auch für nachträgliche Einträge) -->
+            <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startNapModal">
+                <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
+                <small>Nickerchen</small>
+            </button>
+            <button type="button" class="btn btn-sleep btn-large w-100" data-bs-toggle="modal" data-bs-target="#startNightSleepModal">
+                <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
+                <small>Nachtschlaf</small>
+            </button>
         </div>
         
         <!-- Spalte 2 -->
@@ -632,4 +886,147 @@
         </div>
     </div>
 </div>
+
+<!-- Nickerchen Start Modal -->
+<div class="modal fade" id="startNapModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nickerchen starten</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('sleep.start_nap') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nap_start_time" class="form-label">Startzeit</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="nap_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="nap_start_time" name="start_time" required readonly>
+                                <small class="text-muted">Minuten anpassen</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="nap_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Start</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Nachtschlaf Start Modal -->
+<div class="modal fade" id="startNightSleepModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nachtschlaf starten</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('sleep.start_night_sleep') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="night_start_time" class="form-label">Startzeit</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="night_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="night_start_time" name="start_time" required readonly>
+                                <small class="text-muted">Minuten anpassen</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="night_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Start</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialisiere Zeit für Nickerchen Modal
+    document.getElementById('startNapModal').addEventListener('show.bs.modal', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('nap_start_time').value = timeString;
+    });
+
+    // Plus/Minus Buttons für Nickerchen
+    document.getElementById('nap_plus_minute').addEventListener('click', function() {
+        const input = document.getElementById('nap_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    document.getElementById('nap_minus_minute').addEventListener('click', function() {
+        const input = document.getElementById('nap_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() - 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Initialisiere Zeit für Nachtschlaf Modal
+    document.getElementById('startNightSleepModal').addEventListener('show.bs.modal', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('night_start_time').value = timeString;
+    });
+
+    // Plus/Minus Buttons für Nachtschlaf
+    document.getElementById('night_plus_minute').addEventListener('click', function() {
+        const input = document.getElementById('night_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    document.getElementById('night_minus_minute').addEventListener('click', function() {
+        const input = document.getElementById('night_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() - 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Auto-Refresh: Seite alle 60 Sekunden neu laden
+    setTimeout(function() {
+        window.location.reload();
+    }, 60000); // 60000 Millisekunden = 60 Sekunden
+</script>
 {% endblock %}

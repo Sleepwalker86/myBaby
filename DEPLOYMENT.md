@@ -18,7 +18,7 @@
    Das Skript:
    - Erstellt einen Multi-Architecture Builder (falls nicht vorhanden)
    - Baut das Image für `linux/amd64` und `linux/arm64`
-   - Taggt als `sleepwalker86/myBaby:v1.0.0` und `sleepwalker86/myBaby:latest`
+   - Taggt als `sleepwalker86/mybaby:v1.0.0` und `sleepwalker86/mybaby:latest`
    - Pusht beide Tags zu Docker Hub
 
 ### Manueller Build (ohne Skript)
@@ -31,8 +31,8 @@ docker buildx inspect --bootstrap
 # Build und Push
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --tag sleepwalker86/myBaby:v1.0.0 \
-  --tag sleepwalker86/myBaby:latest \
+  --tag sleepwalker86/mybaby:v1.0.0 \
+  --tag sleepwalker86/mybaby:latest \
   --push \
   .
 ```
@@ -88,7 +88,7 @@ git push origin v1.0.0
 
 ## Docker Hub Repository
 
-- **Repository**: https://hub.docker.com/r/sleepwalker86/myBaby
+- **Repository**: https://hub.docker.com/r/sleepwalker86/mybaby
 - **Tags**: 
   - `v1.0.0` - Version 1.0.0
   - `latest` - Neueste Version
@@ -97,14 +97,14 @@ git push origin v1.0.0
 
 ```bash
 # Image pullen
-docker pull sleepwalker86/myBaby:v1.0.0
+docker pull sleepwalker86/mybaby:v1.0.0
 
 # Container starten
 docker run -d \
   --name myBaby \
   -p 8000:8000 \
   -v $(pwd)/data:/data \
-  sleepwalker86/myBaby:v1.0.0
+  sleepwalker86/mybaby:v1.0.0
 ```
 
 ## Multi-Architecture Support

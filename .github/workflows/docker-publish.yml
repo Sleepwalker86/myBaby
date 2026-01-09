@@ -39,8 +39,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            sleepwalker86/myBaby:${{ steps.version.outputs.version }}
-            sleepwalker86/myBaby:latest
-          cache-from: type=registry,ref=sleepwalker86/myBaby:buildcache
-          cache-to: type=registry,ref=sleepwalker86/myBaby:buildcache,mode=max
+            sleepwalker86/mybaby:${{ steps.version.outputs.version }}
+            sleepwalker86/mybaby:latest
+          cache-from: type=registry,ref=sleepwalker86/mybaby:buildcache
+          cache-to: type=registry,ref=sleepwalker86/mybaby:buildcache,mode=max
 
