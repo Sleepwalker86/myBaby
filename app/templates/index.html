@@ -89,6 +89,73 @@
         </div>
     </div>
 
+    <!-- Nickerchen-Vorschläge -->
+    {% if is_today %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="section-title mb-0">
+                            <i class="bi bi-moon-stars"></i> Nickerchen-Vorschlag
+                        </h6>
+                        {% if baby_age_months is not none %}
+                        <small class="text-muted">
+                            Alter: {{ baby_age_months }} Monat{% if baby_age_months != 1 %}e{% endif %}
+                        </small>
+                        {% endif %}
+                    </div>
+                    {% if nap_suggestions %}
+                        {% for suggestion in nap_suggestions %}
+                        <div class="alert alert-info mb-0">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <strong>Nächstes Nickerchen empfohlen:</strong><br>
+                                    <span class="fs-5">{{ suggestion.suggested_time.strftime('%H:%M') }} Uhr</span>
+                                    <small class="text-muted d-block">
+                                        Dauer: ca. {{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">
+                                        {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} Nickerchen heute
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        Noch {{ suggestion.remaining_day_sleep|round(1) }}h Tagschlaf empfohlen
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle"></i> 
+                            Alle empfohlenen Nickerchen für heute sind bereits abgeschlossen!
+                        </div>
+                    {% endif %}
+                    {% if baby_age_months is none %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <small>
+                            <i class="bi bi-info-circle"></i> 
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-underline" data-bs-toggle="modal" data-bs-target="#birthDateModal">
+                                Geburtsdatum setzen
+                            </button>
+                            , um personalisierte Vorschläge zu erhalten.
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#birthDateModal">
+                            <i class="bi bi-gear"></i> Geburtsdatum ändern
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Kreisdiagramm Timeline (für alle Tage) -->
     {% if timeline_events %}
     <div class="row mb-4">
@@ -1029,4 +1096,33 @@
         window.location.reload();
     }, 60000); // 60000 Millisekunden = 60 Sekunden
 </script>
+
+<!-- Modal für Geburtsdatum -->
+<div class="modal fade" id="birthDateModal" tabindex="-1" aria-labelledby="birthDateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="birthDateModalLabel">
+                    <i class="bi bi-calendar"></i> Geburtsdatum setzen
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('main.set_birth_date') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="birth_date" class="form-label">Geburtsdatum</label>
+                        <input type="date" class="form-control" id="birth_date" name="birth_date" required>
+                        <small class="form-text text-muted">
+                            Das Alter wird automatisch berechnet und für personalisierte Nickerchen-Vorschläge verwendet.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

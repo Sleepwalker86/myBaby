@@ -44,10 +44,21 @@ def entries():
             time_str = entry.get('timestamp') or entry.get('start_time', '2000-01-01T00:00:00')
             try:
                 if isinstance(time_str, str):
-                    return datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-                return time_str
+                    dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+                    if dt.tzinfo is None:
+                        dt = tz_berlin.localize(dt.replace(tzinfo=None))
+                    elif dt.tzinfo != tz_berlin:
+                        dt = dt.astimezone(tz_berlin)
+                    return dt
+                elif isinstance(time_str, datetime):
+                    if time_str.tzinfo is None:
+                        return tz_berlin.localize(time_str.replace(tzinfo=None))
+                    elif time_str.tzinfo != tz_berlin:
+                        return time_str.astimezone(tz_berlin)
+                    return time_str
+                return tz_berlin.localize(datetime(2000, 1, 1))
             except (ValueError, AttributeError):
-                return datetime(2000, 1, 1)
+                return tz_berlin.localize(datetime(2000, 1, 1))
         entries.sort(key=get_entry_time)
         date_display = selected_date.strftime('%d.%m.%Y')
         if selected_date == date.today():
@@ -141,9 +152,15 @@ def entries():
                     elif dt.tzinfo != tz_berlin:
                         dt = dt.astimezone(tz_berlin)
                     return dt
-                return time_str
+                elif isinstance(time_str, datetime):
+                    if time_str.tzinfo is None:
+                        return tz_berlin.localize(time_str.replace(tzinfo=None))
+                    elif time_str.tzinfo != tz_berlin:
+                        return time_str.astimezone(tz_berlin)
+                    return time_str
+                return tz_berlin.localize(datetime(2000, 1, 1))
             except (ValueError, AttributeError):
-                return datetime(2000, 1, 1, tzinfo=tz_berlin)
+                return tz_berlin.localize(datetime(2000, 1, 1))
         
         # Stelle sicher, dass alle entry['day'] Werte date-Objekte sind
         for entry in all_entries:
