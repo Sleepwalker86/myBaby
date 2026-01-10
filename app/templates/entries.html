@@ -121,6 +121,9 @@
                                                 <div class="time-text">
                                                     {{ entry.timestamp|format_datetime_de }} - 
                                                     {{ entry.end_time|format_datetime_de }}
+                                                    <span class="text-muted ms-2">
+                                                        ({{ entry.timestamp|calculate_duration(entry.end_time) }})
+                                                    </span>
                                                 </div>
                                             {% else %}
                                                 <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
@@ -189,6 +192,9 @@
                                             <div class="time-text">
                                                 {{ entry.timestamp|format_datetime_de }} - 
                                                 {{ entry.end_time|format_datetime_de }}
+                                                <span class="text-muted ms-2">
+                                                    ({{ entry.timestamp|calculate_duration(entry.end_time) }})
+                                                </span>
                                             </div>
                                         {% else %}
                                             <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>

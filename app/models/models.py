@@ -899,6 +899,15 @@ class BabyInfo:
         return None
     
     @staticmethod
+    def get_name():
+        """Holt den Namen des Babys"""
+        db = get_db()
+        row = db.execute('SELECT name FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        if row and row['name']:
+            return row['name']
+        return None
+    
+    @staticmethod
     def set_birth_date(birth_date):
         """Setzt das Geburtsdatum des Babys"""
         db = get_db()
@@ -917,6 +926,61 @@ class BabyInfo:
         db.commit()
     
     @staticmethod
+    def set_name(name):
+        """Setzt den Namen des Babys"""
+        db = get_db()
+        # Prüfe ob bereits ein Eintrag existiert
+        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        if existing:
+            db.execute(
+                'UPDATE baby_info SET name = ?, updated_at = ? WHERE id = ?',
+                (name, datetime.now(tz_berlin).isoformat(), existing['id'])
+            )
+        else:
+            db.execute(
+                'INSERT INTO baby_info (name) VALUES (?)',
+                (name,)
+            )
+        db.commit()
+    
+    @staticmethod
+    def set_baby_info(name=None, birth_date=None):
+        """Setzt Name und/oder Geburtsdatum des Babys"""
+        db = get_db()
+        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        updates = []
+        values = []
+        
+        if name is not None:
+            updates.append('name = ?')
+            values.append(name)
+        if birth_date is not None:
+            updates.append('birth_date = ?')
+            values.append(birth_date.isoformat())
+        
+        if updates:
+            updates.append('updated_at = ?')
+            values.append(datetime.now(tz_berlin).isoformat())
+            
+            if existing:
+                values.append(existing['id'])
+                db.execute(
+                    f'UPDATE baby_info SET {", ".join(updates)} WHERE id = ?',
+                    tuple(values)
+                )
+            else:
+                # Wenn kein Eintrag existiert, erstelle einen
+                if name is None:
+                    name = ''
+                if birth_date is None:
+                    birth_date = date.today() - timedelta(days=180)  # Standard: 6 Monate
+                db.execute(
+                    'INSERT INTO baby_info (name, birth_date, updated_at) VALUES (?, ?, ?)',
+                    (name, birth_date.isoformat(), datetime.now(tz_berlin).isoformat())
+                )
+            db.commit()
+    
+    @staticmethod
     def get_age_months():
         """Berechnet das Alter des Babys in Monaten"""
         birth_date = BabyInfo.get_birth_date()
@@ -930,34 +994,41 @@ class BabyInfo:
     
     @staticmethod
     def get_sleep_recommendations():
-        """Gibt die empfohlenen Schlafzeiten basierend auf dem Alter zurück"""
+        """Gibt die empfohlenen Schlafzeiten basierend auf dem Alter zurück (nach Irina Kaiser / babyschlaffee.de)"""
         age_months = BabyInfo.get_age_months()
         
-        # Empfohlene Gesamtschlafdauer und Tagschlaf basierend auf Alter
-        recommendations = {
-            0: {'total': 16, 'night': 8.5, 'day': 8, 'naps': (3, 5)},
-            1: {'total': 15.5, 'night': 8.5, 'day': 7, 'naps': (3, 5)},
-            3: {'total': 15, 'night': 9.5, 'day': 4.5, 'naps': (2, 4)},
-            4: {'total': 15, 'night': 9.5, 'day': 4.5, 'naps': (3, 5)},
-            5: {'total': 15, 'night': 9.5, 'day': 4.5, 'naps': (2, 5)},
-            6: {'total': 14, 'night': 10, 'day': 4, 'naps': (2, 4)},
-            7: {'total': 14, 'night': 10, 'day': 4, 'naps': (2, 4)},
-            8: {'total': 14, 'night': 11, 'day': 3, 'naps': (1, 3)},
-            9: {'total': 14, 'night': 11, 'day': 3, 'naps': (1, 3)},
-            10: {'total': 14, 'night': 11, 'day': 3, 'naps': (1, 3)},
-            11: {'total': 14, 'night': 11, 'day': 3, 'naps': (1, 3)},
-            12: {'total': 14, 'night': 11, 'day': 3, 'naps': (1, 2)},
-            16: {'total': 13.5, 'night': 11, 'day': 2.5, 'naps': (1, 1)},
-            18: {'total': 13.5, 'night': 11, 'day': 2.5, 'naps': (1, 1)},
-            24: {'total': 13, 'night': 11, 'day': 2, 'naps': (1, 1)},
-        }
-        
-        # Finde die passende Empfehlung (nächstkleineres Alter)
-        age_keys = sorted([k for k in recommendations.keys() if k <= age_months], reverse=True)
-        if age_keys:
-            return recommendations[age_keys[0]]
-        # Fallback für ältere Kinder
-        return {'total': 12, 'night': 11, 'day': 1, 'naps': (0, 1)}
+        # Empfohlene Schlafzeiten basierend auf Alter (nach Irina Kaiser)
+        # Format: {'total': Gesamtschlaf, 'night': Nachtschlaf, 'day': Tagschlaf, 'naps': (min, max), 'wake_window': (min, max)}
+        if age_months < 6:
+            # Für Babys unter 6 Monaten: alte Werte beibehalten
+            recommendations = {
+                0: {'total': 16, 'night': 8.5, 'day': 8, 'naps': (3, 5), 'wake_window': (1.0, 1.5)},
+                1: {'total': 15.5, 'night': 8.5, 'day': 7, 'naps': (3, 5), 'wake_window': (1.0, 1.5)},
+                3: {'total': 15, 'night': 9.5, 'day': 4.5, 'naps': (2, 4), 'wake_window': (1.5, 2.0)},
+                4: {'total': 15, 'night': 9.5, 'day': 4.5, 'naps': (3, 5), 'wake_window': (1.5, 2.0)},
+                5: {'total': 15, 'night': 9.5, 'day': 4.5, 'naps': (2, 5), 'wake_window': (1.5, 2.5)},
+            }
+            age_keys = sorted([k for k in recommendations.keys() if k <= age_months], reverse=True)
+            if age_keys:
+                return recommendations[age_keys[0]]
+        elif age_months <= 7:
+            # 6-7 Monate: 2-3 Nickerchen, Tagschlaf 2-3,5h, Wachzeiten 2-3h
+            return {'total': 14, 'night': 11, 'day': 2.75, 'naps': (2, 3), 'wake_window': (2.0, 3.0)}
+        elif age_months <= 11:
+            # 8-11 Monate: 2 Nickerchen, Tagschlaf 2-3h, Wachzeiten 3-3,5h
+            return {'total': 13.5, 'night': 11, 'day': 2.5, 'naps': (2, 2), 'wake_window': (3.0, 3.5)}
+        elif age_months <= 18:
+            # 12-18 Monate: 1-2 Nickerchen, Tagschlaf 2-3h, Wachzeiten 3,5-4,5h
+            return {'total': 13, 'night': 11, 'day': 2.5, 'naps': (1, 2), 'wake_window': (3.5, 4.5)}
+        elif age_months <= 23:
+            # 19-23 Monate: 1 Nickerchen, Tagschlaf 1-3h, Wachzeiten 4,5-5h
+            return {'total': 12.5, 'night': 11, 'day': 2.0, 'naps': (1, 1), 'wake_window': (4.5, 5.0)}
+        elif age_months <= 36:
+            # 24-36 Monate: 1 Nickerchen, Tagschlaf 1-2h, Wachzeiten 5-6h
+            return {'total': 12, 'night': 11, 'day': 1.5, 'naps': (1, 1), 'wake_window': (5.0, 6.0)}
+        else:
+            # Fallback für ältere Kinder
+            return {'total': 11, 'night': 11, 'day': 1, 'naps': (0, 1), 'wake_window': (6.0, 7.0)}
     
     @staticmethod
     def get_nap_suggestions(selected_date=None):
@@ -965,10 +1036,18 @@ class BabyInfo:
         if selected_date is None:
             selected_date = date.today()
         
+        # Prüfe ob ein aktives Nickerchen existiert
+        active_sleep = Sleep.get_active_sleep()
+        if active_sleep and active_sleep.get('type') == 'nap':
+            # Wenn ein Nickerchen aktiv ist, gib einen Hinweis zurück
+            return [{'waiting_for_nap_end': True}]
+        
         recommendations = BabyInfo.get_sleep_recommendations()
         min_naps, max_naps = recommendations['naps']
-        # Berechne empfohlene Anzahl (Mittelwert, gerundet)
-        target_naps = round((min_naps + max_naps) / 2)
+        # Berechne empfohlene Anzahl (Mittelwert, aufgerundet für bessere Empfehlung)
+        # Bei 2-3 Nickerchen sollte 3 empfohlen werden, nicht 2
+        avg_naps = (min_naps + max_naps) / 2
+        target_naps = int(avg_naps + 0.5)  # Aufrunden wenn >= 0.5
         target_day_sleep = recommendations['day']
         
         # Hole alle Nickerchen des Tages
@@ -999,104 +1078,161 @@ class BabyInfo:
                 continue
         
         # Prüfe ob noch ein Nickerchen empfohlen wird
+        # WICHTIG: Berücksichtige sowohl Anzahl als auch Dauer!
         suggestions = []
         
-        if completed_naps < target_naps:
-            # Berechne verbleibende Tagschlafdauer
-            remaining_day_sleep = target_day_sleep - total_day_sleep_hours
+        # Berechne verbleibende Tagschlafdauer
+        remaining_day_sleep = target_day_sleep - total_day_sleep_hours
+        
+        # Entscheidungskriterien für ein weiteres Nickerchen:
+        # 1. Anzahl noch nicht erreicht UND
+        # 2. Verbleibende Tagschlafdauer > 0.5 Stunden (mindestens 30 Minuten)
+        # Wenn die empfohlene Tagschlafdauer bereits erreicht ist, wird kein weiteres Nickerchen empfohlen
+        should_suggest_nap = (completed_naps < target_naps) and (remaining_day_sleep > 0.5)
+        
+        if should_suggest_nap:
+            # Berechne nächste empfohlene Zeit basierend auf letztem Aufwachen
+            now = datetime.now(tz_berlin)
+            last_wake_time = None
             
-            if remaining_day_sleep > 0.5:  # Mindestens 30 Minuten
-                # Berechne nächste empfohlene Zeit basierend auf letztem Aufwachen
-                now = datetime.now(tz_berlin)
-                last_wake_time = None
-                
-                # Finde letztes Aufwachen (Ende eines Nickerchens oder Nachtschlafs)
-                last_sleep_end = db.execute(
-                    '''SELECT end_time FROM sleep 
-                       WHERE end_time IS NOT NULL 
-                       AND date(end_time) = ?
-                       ORDER BY end_time DESC LIMIT 1''',
-                    (selected_date.isoformat(),)
-                ).fetchone()
-                
-                if last_sleep_end:
-                    try:
-                        last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
-                        if last_wake_time.tzinfo is None:
-                            last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
-                    except (ValueError, AttributeError):
-                        pass
-                
-                # Wenn kein Aufwachen heute, nimm aktuelles Datum/Zeit
-                if not last_wake_time or last_wake_time.date() != selected_date:
-                    last_wake_time = now
-                
-                # Empfohlene Wachzeit vor nächstem Nickerchen
-                # Berücksichtigt: Alter, Tageszeit und Anzahl der bereits gemachten Nickerchen
-                age_months = BabyInfo.get_age_months()
-                current_hour = last_wake_time.hour
-                
-                # Basis-Wachzeit basierend auf Alter
-                if age_months <= 3:
-                    base_wake_window = 1.0  # 1 Stunde
-                elif age_months <= 4:
-                    base_wake_window = 1.5  # 1.5 Stunden
-                elif age_months <= 6:
-                    base_wake_window = 2.0  # 2 Stunden
-                elif age_months <= 9:
-                    base_wake_window = 2.5  # 2.5 Stunden
-                elif age_months <= 12:
-                    base_wake_window = 3.0  # 3 Stunden
-                else:
-                    base_wake_window = 3.5  # 3.5 Stunden
-                
-                # Anpassung basierend auf Tageszeit
-                # Morgens (6-10 Uhr): kürzere Wachzeit
-                # Mittags (10-14 Uhr): mittlere Wachzeit
-                # Nachmittags (14-18 Uhr): längere Wachzeit
-                if current_hour < 10:
-                    time_adjustment = -0.25  # 15 Minuten kürzer morgens
-                elif current_hour < 14:
-                    time_adjustment = 0.0  # Keine Anpassung mittags
-                else:
-                    time_adjustment = 0.5  # 30 Minuten länger nachmittags
-                
-                # Anpassung basierend auf Anzahl der bereits gemachten Nickerchen
-                # Je mehr Nickerchen bereits gemacht wurden, desto länger die Wachzeit
-                nap_adjustment = completed_naps * 0.25  # +15 Minuten pro bereits gemachtem Nickerchen
-                
-                # Berechne finale Wachzeit
-                wake_window = base_wake_window + time_adjustment + nap_adjustment
-                
-                # Stelle sicher, dass die Wachzeit nicht zu kurz wird (Minimum 1 Stunde)
-                wake_window = max(1.0, wake_window)
-                
-                # Berechne nächste empfohlene Nickerchen-Zeit
-                suggested_time = last_wake_time + timedelta(hours=wake_window)
-                
-                # Stelle sicher, dass die Zeit nicht in der Vergangenheit liegt
-                if suggested_time < now:
-                    suggested_time = now + timedelta(minutes=15)  # Mindestens 15 Minuten ab jetzt
-                
-                # Empfohlene Dauer des Nickerchens
-                if age_months <= 3:
-                    nap_duration = 1.5  # 1.5 Stunden
-                elif age_months <= 6:
-                    nap_duration = 1.5  # 1.5 Stunden
-                elif age_months <= 12:
-                    nap_duration = 1.0  # 1 Stunde
-                else:
-                    nap_duration = 1.0  # 1 Stunde
-                
-                suggestions.append({
-                    'suggested_time': suggested_time,
-                    'nap_duration': nap_duration,
-                    'remaining_day_sleep': remaining_day_sleep,
-                    'completed_naps': completed_naps,
-                    'target_naps': target_naps,
-                    'min_naps': min_naps,
-                    'max_naps': max_naps
-                })
+            # Finde letztes Aufwachen (Ende eines Nickerchens oder Nachtschlafs)
+            last_sleep_end = db.execute(
+                '''SELECT end_time FROM sleep 
+                   WHERE end_time IS NOT NULL 
+                   AND date(end_time) = ?
+                   ORDER BY end_time DESC LIMIT 1''',
+                (selected_date.isoformat(),)
+            ).fetchone()
+            
+            if last_sleep_end:
+                try:
+                    last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
+                    if last_wake_time.tzinfo is None:
+                        last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
+                except (ValueError, AttributeError):
+                    pass
+            
+            # Wenn kein Aufwachen heute, nimm aktuelles Datum/Zeit
+            if not last_wake_time or last_wake_time.date() != selected_date:
+                last_wake_time = now
+            
+            # Prüfe ob bereits ein Vorschlag für heute existiert (in der Datenbank gespeichert)
+            # Dies verhindert, dass die Zeit nach hinten geschoben wird
+            existing_suggestion = db.execute(
+                '''SELECT suggested_time FROM nap_suggestions 
+                   WHERE date = ? AND suggested_time > ? 
+                   ORDER BY created_at DESC LIMIT 1''',
+                (selected_date.isoformat(), now.isoformat())
+            ).fetchone()
+            
+            if existing_suggestion:
+                # Verwende die bereits berechnete Zeit (verhindert Verschiebung nach hinten)
+                try:
+                    suggested_time = datetime.fromisoformat(existing_suggestion['suggested_time'].replace('Z', '+00:00'))
+                    if suggested_time.tzinfo is None:
+                        suggested_time = tz_berlin.localize(suggested_time.replace(tzinfo=None))
+                    # Prüfe ob die Zeit noch in der Zukunft liegt
+                    if suggested_time > now:
+                        # Verwende die alte Zeit, aber aktualisiere die restlichen Werte
+                        # (z.B. wenn ein neues Nickerchen hinzugefügt wurde)
+                        age_months = BabyInfo.get_age_months()
+                        if age_months <= 3:
+                            nap_duration = 1.5
+                        elif age_months <= 6:
+                            nap_duration = 1.5
+                        elif age_months <= 12:
+                            nap_duration = 1.0
+                        else:
+                            nap_duration = 1.0
+                        
+                        suggestions.append({
+                            'suggested_time': suggested_time,
+                            'nap_duration': nap_duration,
+                            'remaining_day_sleep': remaining_day_sleep,
+                            'completed_naps': completed_naps,
+                            'target_naps': target_naps,
+                            'min_naps': min_naps,
+                            'max_naps': max_naps
+                        })
+                        return suggestions
+                except (ValueError, AttributeError):
+                    # Falls Fehler beim Parsen, berechne neu
+                    pass
+            
+            # Neue Berechnung (nur wenn noch kein Vorschlag existiert oder dieser in der Vergangenheit liegt)
+            # Empfohlene Wachzeit vor nächstem Nickerchen (nach Irina Kaiser / babyschlaffee.de)
+            recommendations = BabyInfo.get_sleep_recommendations()
+            min_wake_window, max_wake_window = recommendations.get('wake_window', (2.0, 3.0))
+            age_months = BabyInfo.get_age_months()
+            
+            # Verwende den Mittelwert der Wachzeit-Spanne als Basis
+            base_wake_window = (min_wake_window + max_wake_window) / 2
+            
+            # Anpassung basierend auf Tageszeit
+            # Morgens (6-10 Uhr): kürzere Wachzeit (näher am Minimum)
+            # Mittags (10-14 Uhr): mittlere Wachzeit (Mittelwert)
+            # Nachmittags (14-18 Uhr): längere Wachzeit (näher am Maximum)
+            current_hour = last_wake_time.hour
+            if current_hour < 10:
+                # Morgens: verwende eher das Minimum
+                wake_window = min_wake_window + (max_wake_window - min_wake_window) * 0.2
+            elif current_hour < 14:
+                # Mittags: verwende den Mittelwert
+                wake_window = base_wake_window
+            else:
+                # Nachmittags: verwende eher das Maximum
+                wake_window = min_wake_window + (max_wake_window - min_wake_window) * 0.8
+            
+            # Anpassung basierend auf Anzahl der bereits gemachten Nickerchen
+            # Je mehr Nickerchen bereits gemacht wurden, desto länger die Wachzeit
+            # Erhöhe die Wachzeit um 10-15% pro bereits gemachtem Nickerchen
+            nap_adjustment = completed_naps * (max_wake_window - min_wake_window) * 0.15
+            wake_window = wake_window + nap_adjustment
+            
+            # Stelle sicher, dass die Wachzeit innerhalb der empfohlenen Spanne bleibt
+            wake_window = max(min_wake_window, min(wake_window, max_wake_window * 1.2))
+            
+            # Berechne nächste empfohlene Nickerchen-Zeit
+            suggested_time = last_wake_time + timedelta(hours=wake_window)
+            
+            # Stelle sicher, dass die Zeit nicht in der Vergangenheit liegt
+            if suggested_time < now:
+                suggested_time = now + timedelta(minutes=15)  # Mindestens 15 Minuten ab jetzt
+            
+            # Empfohlene Dauer des Nickerchens
+            if age_months <= 3:
+                nap_duration = 1.5  # 1.5 Stunden
+            elif age_months <= 6:
+                nap_duration = 1.5  # 1.5 Stunden
+            elif age_months <= 12:
+                nap_duration = 1.0  # 1 Stunde
+            else:
+                nap_duration = 1.0  # 1 Stunde
+            
+            # Speichere den Vorschlag in der Datenbank (verhindert Verschiebung nach hinten)
+            try:
+                # Lösche alte Vorschläge für heute
+                db.execute('DELETE FROM nap_suggestions WHERE date = ?', (selected_date.isoformat(),))
+                # Füge neuen Vorschlag hinzu
+                db.execute(
+                    '''INSERT INTO nap_suggestions (date, suggested_time, created_at) 
+                       VALUES (?, ?, ?)''',
+                    (selected_date.isoformat(), suggested_time.isoformat(), now.isoformat())
+                )
+                db.commit()
+            except Exception:
+                # Falls Tabelle noch nicht existiert, ignoriere Fehler
+                pass
+            
+            suggestions.append({
+                'suggested_time': suggested_time,
+                'nap_duration': nap_duration,
+                'remaining_day_sleep': remaining_day_sleep,
+                'completed_naps': completed_naps,
+                'target_naps': target_naps,
+                'min_naps': min_naps,
+                'max_naps': max_naps
+            })
         
         return suggestions
 

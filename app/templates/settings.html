@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-4">
+            <i class="bi bi-gear"></i> Einstellungen
+        </h4>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card card-modern">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Baby-Informationen</h5>
+                <form method="POST" action="{{ url_for('settings.update_settings') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ baby_name or '' }}" placeholder="Name des Kindes">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="birth_date" class="form-label">Geburtsdatum</label>
+                        <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                               value="{{ baby_birth_date.isoformat() if baby_birth_date else '' }}">
+                        {% if baby_age_months is not none %}
+                        <small class="form-text text-muted">
+                            Alter: {{ baby_age_months }} Monat{% if baby_age_months != 1 %}e{% endif %}
+                        </small>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Speichern
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card card-modern">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Darstellung</h5>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <label for="darkModeToggle" class="form-label mb-0">Dark Mode</label>
+                        <small class="form-text text-muted d-block">
+                            Dunkles Farbschema aktivieren
+                        </small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="darkModeToggle" role="switch" style="width: 3em; height: 1.5em;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Dark Mode Toggle
+    (function() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+        
+        // Lade gespeicherte Präferenz
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            html.setAttribute('data-theme', savedTheme);
+            if (darkModeToggle) {
+                darkModeToggle.checked = (savedTheme === 'dark');
+            }
+        }
+        
+        // Toggle Dark Mode
+        function toggleTheme() {
+            const currentTheme = html.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            if (darkModeToggle) {
+                darkModeToggle.checked = (newTheme === 'dark');
+            }
+        }
+        
+        // Event Listener
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', toggleTheme);
+        }
+        
+        // Theme beim Laden anwenden
+        loadTheme();
+    })();
+</script>
+{% endblock %}
+

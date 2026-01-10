@@ -7,6 +7,81 @@ tz_berlin = pytz.timezone('Europe/Berlin')
 
 bp = Blueprint('entries', __name__, url_prefix='/entries')
 
+@bp.app_template_filter('format_datetime_de')
+def format_datetime_de(value):
+    """Formatiert einen ISO-Datetime-String ins deutsche Format DD.MM.YYYY HH:MM"""
+    if not value:
+        return ""
+    try:
+        if isinstance(value, str):
+            dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        else:
+            dt = value
+        
+        # Konvertiere zu Berliner Zeitzone falls nötig
+        if dt.tzinfo is None:
+            # Keine Zeitzone - annehmen dass es bereits lokale Zeit ist
+            dt = tz_berlin.localize(dt.replace(tzinfo=None))
+        elif dt.tzinfo != tz_berlin:
+            # Konvertiere zu Berliner Zeitzone
+            dt = dt.astimezone(tz_berlin)
+        
+        # Entferne Zeitzone für Formatierung
+        dt_local = dt.replace(tzinfo=None)
+        return dt_local.strftime('%d.%m.%Y %H:%M')
+    except (ValueError, AttributeError):
+        return value
+
+@bp.app_template_filter('calculate_duration')
+def calculate_duration(start_time, end_time):
+    """Berechnet die Dauer zwischen zwei Zeitstempeln und gibt sie als 'Xh Ym' zurück"""
+    if not start_time or not end_time:
+        return ""
+    try:
+        # Parse start_time
+        if isinstance(start_time, str):
+            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+        else:
+            start_dt = start_time
+        
+        # Parse end_time
+        if isinstance(end_time, str):
+            end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+        else:
+            end_dt = end_time
+        
+        # Konvertiere zu Berliner Zeitzone falls nötig
+        if start_dt.tzinfo is None:
+            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
+        elif start_dt.tzinfo != tz_berlin:
+            start_dt = start_dt.astimezone(tz_berlin)
+        
+        if end_dt.tzinfo is None:
+            end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+        elif end_dt.tzinfo != tz_berlin:
+            end_dt = end_dt.astimezone(tz_berlin)
+        
+        # Berechne Differenz
+        duration = end_dt - start_dt
+        total_seconds = int(duration.total_seconds())
+        
+        if total_seconds < 0:
+            return ""
+        
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        
+        if hours > 0 and minutes > 0:
+            return f"{hours}h {minutes}m"
+        elif hours > 0:
+            return f"{hours}h"
+        elif minutes > 0:
+            return f"{minutes}m"
+        else:
+            return "< 1m"
+    except (ValueError, AttributeError, TypeError):
+        return ""
+
 @bp.route('/')
 def entries():
     """Zeigt alle Einträge mit Tages- oder Wochenansicht"""

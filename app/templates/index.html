@@ -39,9 +39,9 @@
                     </div>
                     <div class="fw-bold mb-1">
                         {% if active_sleep %}
-                            Schläft seit
+                            {% if baby_name %}{{ baby_name }} schläft{% else %}Schläft{% endif %} seit
                         {% else %}
-                            Wach seit
+                            {% if baby_name %}{{ baby_name }} ist{% else %}Wach{% endif %} seit
                         {% endif %}
                     </div>
                     <div class="text-muted small">
@@ -97,7 +97,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="section-title mb-0">
-                            <i class="bi bi-moon-stars"></i> Nickerchen-Vorschlag
+                            <i class="bi bi-moon-stars"></i> Nickerchen-Vorschlag{% if baby_name %} für {{ baby_name }}{% endif %}
                         </h6>
                         {% if baby_age_months is not none %}
                         <small class="text-muted">
@@ -107,25 +107,33 @@
                     </div>
                     {% if nap_suggestions %}
                         {% for suggestion in nap_suggestions %}
-                        <div class="alert alert-info mb-0">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <div>
-                                    <strong>Nächstes Nickerchen empfohlen:</strong><br>
-                                    <span class="fs-5">{{ suggestion.suggested_time.strftime('%H:%M') }} Uhr</span>
-                                    <small class="text-muted d-block">
-                                        Dauer: ca. {{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m
-                                    </small>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">
-                                        {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} Nickerchen heute
-                                    </small>
-                                    <small class="text-muted d-block">
-                                        Noch {{ suggestion.remaining_day_sleep|round(1) }}h Tagschlaf empfohlen
-                                    </small>
+                            {% if suggestion.waiting_for_nap_end %}
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-hourglass-split"></i>
+                                <strong>Nickerchen läuft...</strong><br>
+                                <small>Der nächste Vorschlag wird berechnet, sobald das aktuelle Nickerchen beendet ist.</small>
+                            </div>
+                            {% elif suggestion.suggested_time %}
+                            <div class="alert alert-info mb-0">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <div>
+                                        <strong>Nächstes Nickerchen empfohlen:</strong><br>
+                                        <span class="fs-5">{{ suggestion.suggested_time.strftime('%H:%M') }} Uhr</span>
+                                        <small class="text-muted d-block">
+                                            Dauer: ca. {{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">
+                                            {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} Nickerchen heute
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            Noch {{ suggestion.remaining_day_sleep|round(1) }}h Tagschlaf empfohlen
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                            {% endif %}
                         {% endfor %}
                     {% else %}
                         <div class="alert alert-success mb-0">
@@ -137,17 +145,11 @@
                     <div class="alert alert-warning mt-3 mb-0">
                         <small>
                             <i class="bi bi-info-circle"></i> 
-                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-underline" data-bs-toggle="modal" data-bs-target="#birthDateModal">
-                                Geburtsdatum setzen
-                            </button>
+                            <a href="{{ url_for('settings.settings') }}" class="text-decoration-underline">
+                                Geburtsdatum in den Einstellungen setzen
+                            </a>
                             , um personalisierte Vorschläge zu erhalten.
                         </small>
-                    </div>
-                    {% else %}
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#birthDateModal">
-                            <i class="bi bi-gear"></i> Geburtsdatum ändern
-                        </button>
                     </div>
                     {% endif %}
                 </div>
@@ -198,28 +200,131 @@
             'medicine': { emoji: '💊', color: 'var(--color-pink)' }
         };
         
-        // Hilfsfunktion: Berechne Winkel aus Uhrzeit (24-Stunden-Kreis)
-        // Wie eine normale Uhr: 0° = oben (12:00), 90° = rechts (03:00), 180° = unten (06:00), 270° = links (09:00)
-        // In SVG ist 0° rechts, daher müssen wir -90° abziehen, damit 0° oben ist
+        // Finde Einschlafen- und Aufwachen-Zeit für Kalibrierung
+        let sleepStartTime = null; // Einschlafen (soll bei 170° sein)
+        let sleepEndTime = null;   // Aufwachen (soll bei 190° sein)
+        
+        timelineEvents.forEach(event => {
+            if (event.category === 'sleep' && event.type === 'night' && event.event_type) {
+                if (event.event_type === 'sleep_start') {
+                    sleepStartTime = { hour: event.hour, minute: event.minute };
+                } else if (event.event_type === 'sleep_end') {
+                    sleepEndTime = { hour: event.hour, minute: event.minute };
+                }
+            }
+        });
+        
+        // Wenn kein Einschlafen gefunden, verwende Standard (20:00 = 170°)
+        if (!sleepStartTime) {
+            sleepStartTime = { hour: 20, minute: 0 };
+        }
+        
+        // Wenn kein Aufwachen gefunden, verwende Standard (7:00 = 190°)
+        if (!sleepEndTime) {
+            sleepEndTime = { hour: 7, minute: 0 };
+        }
+        
+        // Konvertiere Zeiten zu Minuten seit Mitternacht
+        function timeToMinutes(hour, minute) {
+            return hour * 60 + minute;
+        }
+        
+        const sleepStartMinutes = timeToMinutes(sleepStartTime.hour, sleepStartTime.minute);
+        const sleepEndMinutes = timeToMinutes(sleepEndTime.hour, sleepEndTime.minute);
+        
+        // Winkel-Bereiche
+        const SLEEP_START_ANGLE = 170;  // Einschlafen (Ende des Tages)
+        const SLEEP_END_ANGLE = 190;   // Aufwachen (Start des Tages)
+        
+        // Der Tag beginnt beim Aufwachen (190°) und endet beim Einschlafen (170°)
+        // Im Uhrzeigersinn: 190° → 360° → 0° → ... → 170°
+        // Das sind 340 Grad (von 190° bis 170° über 360°)
+        const TOTAL_ANGLE_RANGE = 360 - (SLEEP_END_ANGLE - SLEEP_START_ANGLE); // 340 Grad
+        
+        // Berechne Tageslänge: Von Aufwachen bis Einschlafen
+        // Aufwachen ist normalerweise am Morgen (z.B. 05:55), Einschlafen am Abend (z.B. 19:19)
+        let dayLengthMinutes;
+        if (sleepEndMinutes < sleepStartMinutes) {
+            // Normal: Aufwachen am Morgen, Einschlafen am Abend
+            dayLengthMinutes = sleepStartMinutes - sleepEndMinutes;
+        } else {
+            // Falls Aufwachen nach Einschlafen (ungewöhnlich, aber möglich)
+            dayLengthMinutes = (24 * 60) - sleepEndMinutes + sleepStartMinutes;
+        }
+        
+        // Neue Funktion: Mappe Zeit auf Winkel
+        // Der Tag beginnt beim Aufwachen (190°) und geht im Uhrzeigersinn bis Einschlafen (170°)
         function timeToAngle(hour, minute) {
-            // Auf einer Uhr: jede Stunde = 30°, jede Minute = 0.5°
-            // 12:00 = 0° (oben), 3:00 = 90° (rechts), 6:00 = 180° (unten), 9:00 = 270° (links)
-            // Berechne Winkel relativ zu 12:00
-            let angle = (hour * 30) + (minute * 0.5);
-            // In SVG ist 0° rechts, daher -90° damit 0° oben ist
-            angle = angle - 90;
+            const eventMinutes = timeToMinutes(hour, minute);
+            
+            // Berechne relative Position im Tag (0 = Aufwachen, dayLengthMinutes = Einschlafen)
+            let relativeMinutes;
+            if (sleepEndMinutes < sleepStartMinutes) {
+                // Normal: Aufwachen am Morgen, Einschlafen am Abend
+                if (eventMinutes >= sleepEndMinutes && eventMinutes <= sleepStartMinutes) {
+                    // Zwischen Aufwachen und Einschlafen
+                    relativeMinutes = eventMinutes - sleepEndMinutes;
+                } else if (eventMinutes < sleepEndMinutes) {
+                    // Nach Mitternacht, vor Aufwachen (sollte nicht vorkommen, aber sicherheitshalber)
+                    relativeMinutes = (24 * 60) - sleepEndMinutes + eventMinutes;
+                } else {
+                    // Nach Einschlafen, vor Mitternacht (sollte nicht vorkommen, aber sicherheitshalber)
+                    relativeMinutes = eventMinutes - sleepEndMinutes;
+                    if (relativeMinutes > dayLengthMinutes) {
+                        relativeMinutes = dayLengthMinutes;
+                    }
+                }
+            } else {
+                // Ungewöhnlich: Aufwachen nach Einschlafen
+                if (eventMinutes >= sleepEndMinutes || eventMinutes <= sleepStartMinutes) {
+                    if (eventMinutes >= sleepEndMinutes) {
+                        relativeMinutes = eventMinutes - sleepEndMinutes;
+                    } else {
+                        relativeMinutes = (24 * 60) - sleepEndMinutes + eventMinutes;
+                    }
+                } else {
+                    // Zwischen Einschlafen und Aufwachen (Schlafzeit, sollte nicht vorkommen)
+                    relativeMinutes = 0;
+                }
+            }
+            
+            // Stelle sicher, dass relativeMinutes im gültigen Bereich ist
+            relativeMinutes = Math.max(0, Math.min(relativeMinutes, dayLengthMinutes));
+            
+            // Normalisiere auf 0-1
+            const ratio = relativeMinutes / dayLengthMinutes;
+            
+            // Mappe auf Winkel: 190° (Aufwachen) bis 170° (Einschlafen) im Uhrzeigersinn
+            // 190° → 360° → 0° → ... → 170°
+            let angle = SLEEP_END_ANGLE + (ratio * TOTAL_ANGLE_RANGE);
+            
             // Normalisiere auf 0-360°
-            if (angle < 0) angle += 360;
-            if (angle >= 360) angle -= 360;
+            while (angle >= 360) angle -= 360;
+            while (angle < 0) angle += 360;
+            
             return angle;
+        }
+        
+        // Spezielle Funktion für feste Winkel (Einschlafen/Aufwachen)
+        function getFixedAngle(eventType) {
+            if (eventType === 'sleep_start') {
+                return SLEEP_START_ANGLE; // 170°
+            } else if (eventType === 'sleep_end') {
+                return SLEEP_END_ANGLE;   // 190°
+            }
+            return null;
         }
         
         // Zeichne jedes Event
         timelineEvents.forEach(event => {
             // Prüfe ob es ein Nachtschlaf-Eintrag ist (mit event_type)
             if (event.category === 'sleep' && event.type === 'night' && event.event_type) {
-                // Nachtschlaf: Berechne Winkel aus tatsächlicher Uhrzeit
-                const angle = timeToAngle(event.hour, event.minute);
+                // Nachtschlaf: Verwende festen Winkel (170° für Einschlafen, 190° für Aufwachen)
+                const fixedAngle = getFixedAngle(event.event_type);
+                let angle = fixedAngle !== null ? fixedAngle : timeToAngle(event.hour, event.minute);
+                // In SVG ist 0° rechts, daher -90° damit 0° oben ist
+                angle = angle - 90;
+                if (angle < 0) angle += 360;
                 const radians = (angle * Math.PI) / 180;
                 
                 // Position direkt auf dem Kreis
@@ -263,8 +368,13 @@
                 svg.appendChild(g);
             } else if (event.category === 'sleep' && event.start_hour !== undefined && event.end_hour !== undefined) {
                 // Nickerchen: Zeichne Bogen zwischen Start und Ende
-                const startAngle = timeToAngle(event.start_hour, event.start_minute);
-                const endAngle = timeToAngle(event.end_hour, event.end_minute);
+                let startAngle = timeToAngle(event.start_hour, event.start_minute);
+                let endAngle = timeToAngle(event.end_hour, event.end_minute);
+                // In SVG ist 0° rechts, daher -90° damit 0° oben ist
+                startAngle = startAngle - 90;
+                if (startAngle < 0) startAngle += 360;
+                endAngle = endAngle - 90;
+                if (endAngle < 0) endAngle += 360;
                 const startRadians = (startAngle * Math.PI) / 180;
                 const endRadians = (endAngle * Math.PI) / 180;
                 
@@ -357,7 +467,10 @@
                 svg.appendChild(endG);
             } else {
                 // Normales Event: Berechne Winkel aus tatsächlicher Uhrzeit
-                const angle = timeToAngle(event.hour, event.minute);
+                let angle = timeToAngle(event.hour, event.minute);
+                // In SVG ist 0° rechts, daher -90° damit 0° oben ist
+                angle = angle - 90;
+                if (angle < 0) angle += 360;
                 const radians = (angle * Math.PI) / 180;
                 
                 // Position direkt auf dem Kreis
@@ -618,6 +731,9 @@
                                         <div class="time-text">
                                             {{ entry.timestamp|format_datetime_de }} - 
                                             {{ entry.end_time|format_datetime_de }}
+                                            <span class="text-muted ms-2">
+                                                ({{ entry.timestamp|calculate_duration(entry.end_time) }})
+                                            </span>
                                         </div>
                                     {% else %}
                                         <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
@@ -1098,31 +1214,4 @@
 </script>
 
 <!-- Modal für Geburtsdatum -->
-<div class="modal fade" id="birthDateModal" tabindex="-1" aria-labelledby="birthDateModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="birthDateModalLabel">
-                    <i class="bi bi-calendar"></i> Geburtsdatum setzen
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('main.set_birth_date') }}" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="birth_date" class="form-label">Geburtsdatum</label>
-                        <input type="date" class="form-control" id="birth_date" name="birth_date" required>
-                        <small class="form-text text-muted">
-                            Das Alter wird automatisch berechnet und für personalisierte Nickerchen-Vorschläge verwendet.
-                        </small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Speichern</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 {% endblock %}

@@ -1,5 +1,6 @@
 from flask import Flask
 from app.models.database import init_db, close_db
+from app.models.models import BabyInfo
 
 def create_app():
     """Erstellt und konfiguriert die Flask-App"""
@@ -14,8 +15,14 @@ def create_app():
     # Teardown-Handler für Datenbankverbindung
     app.teardown_appcontext(close_db)
     
+    # Context-Processor für global verfügbare Variablen
+    @app.context_processor
+    def inject_baby_name():
+        """Macht den Baby-Namen in allen Templates verfügbar"""
+        return {'baby_name': BabyInfo.get_name()}
+    
     # Routes registrieren
-    from app.routes import main, sleep, feeding, bottle, diaper, temperature, medicine, edit, trends, entries
+    from app.routes import main, sleep, feeding, bottle, diaper, temperature, medicine, edit, trends, entries, settings
     app.register_blueprint(main.bp)
     app.register_blueprint(sleep.bp)
     app.register_blueprint(feeding.bp)
@@ -26,6 +33,7 @@ def create_app():
     app.register_blueprint(edit.bp)
     app.register_blueprint(trends.bp)
     app.register_blueprint(entries.bp)
+    app.register_blueprint(settings.bp)
     
     return app
 
