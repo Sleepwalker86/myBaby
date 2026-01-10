@@ -41,7 +41,7 @@
                         {% if active_sleep %}
                             {% if baby_name %}{{ baby_name }} schläft{% else %}Schläft{% endif %} seit
                         {% else %}
-                            {% if baby_name %}{{ baby_name }} ist{% else %}Wach{% endif %} seit
+                            {% if baby_name %}{{ baby_name }} ist Wach{% endif %} seit
                         {% endif %}
                     </div>
                     <div class="text-muted small">
@@ -128,7 +128,7 @@
                                             {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} Nickerchen heute
                                         </small>
                                         <small class="text-muted d-block">
-                                            Noch {{ suggestion.remaining_day_sleep|round(1) }}h Tagschlaf empfohlen
+                                            Noch {{ suggestion.remaining_day_sleep|int }}h {{ ((suggestion.remaining_day_sleep % 1) * 60)|int }}m Tagschlaf empfohlen
                                         </small>
                                     </div>
                                 </div>
@@ -189,6 +189,16 @@
         const centerY = 200;
         const radius = 150;
         const eventRadius = 160; // Radius für Event-Positionen
+        
+        // Prüfe Dark Mode (robust)
+        function isDarkMode() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            return theme === 'dark' || 
+                   (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !theme);
+        }
+        
+        // Textfarbe basierend auf Theme
+        const textColor = isDarkMode() ? '#ffffff' : '#666'; // Weiß im Dark Mode für bessere Lesbarkeit
         
         // Icon-Mapping
         const iconMap = {
@@ -361,7 +371,7 @@
                 timeText.setAttribute('y', textY + 4);
                 timeText.setAttribute('text-anchor', 'middle');
                 timeText.setAttribute('font-size', '10');
-                timeText.setAttribute('fill', '#666');
+                timeText.setAttribute('fill', textColor);
                 timeText.textContent = event.time_str;
                 g.appendChild(timeText);
                 
@@ -427,7 +437,7 @@
                 startTimeText.setAttribute('y', startTextY + 4);
                 startTimeText.setAttribute('text-anchor', 'middle');
                 startTimeText.setAttribute('font-size', '9');
-                startTimeText.setAttribute('fill', '#666');
+                startTimeText.setAttribute('fill', textColor);
                 startTimeText.textContent = event.start_time;
                 startG.appendChild(startTimeText);
                 
@@ -460,7 +470,7 @@
                 endTimeText.setAttribute('y', endTextY + 4);
                 endTimeText.setAttribute('text-anchor', 'middle');
                 endTimeText.setAttribute('font-size', '9');
-                endTimeText.setAttribute('fill', '#666');
+                endTimeText.setAttribute('fill', textColor);
                 endTimeText.textContent = event.end_time;
                 endG.appendChild(endTimeText);
                 
@@ -507,7 +517,7 @@
                 timeText.setAttribute('y', textY + 4);
                 timeText.setAttribute('text-anchor', 'middle');
                 timeText.setAttribute('font-size', '10');
-                timeText.setAttribute('fill', '#666');
+                timeText.setAttribute('fill', textColor);
                 timeText.textContent = event.time_str;
                 g.appendChild(timeText);
                 

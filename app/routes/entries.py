@@ -163,6 +163,7 @@ def entries():
                 
                 # Bestimme zu welchem Tag der Eintrag gehört
                 # Für Schlaf-Einträge: Wenn end_time vorhanden, gehört er zum Tag des end_time
+                entry_day = None
                 if entry.get('category') == 'sleep' and entry.get('end_time'):
                     try:
                         end_dt = datetime.fromisoformat(entry['end_time'].replace('Z', '+00:00'))
@@ -199,7 +200,7 @@ def entries():
                         entry_day = current_date
                 
                 # Stelle sicher, dass entry_day ein date-Objekt ist und innerhalb der Woche liegt
-                if week_start <= entry_day <= week_end:
+                if entry_day and week_start <= entry_day <= week_end:
                     # Stelle sicher, dass entry_day wirklich ein date-Objekt ist
                     if isinstance(entry_day, date):
                         entry['day'] = entry_day
@@ -209,11 +210,34 @@ def entries():
                             entry['day'] = date.fromisoformat(str(entry_day)) if isinstance(entry_day, str) else entry_day
                         except (ValueError, AttributeError):
                             entry['day'] = current_date
+                    
+                    # Stelle sicher, dass entry['day'] wirklich ein date-Objekt ist
+                    if not isinstance(entry.get('day'), date):
+                        entry['day'] = current_date
+                    
                     all_entries.append(entry)
                     
                     # Markiere diesen Eintrag als verarbeitet
                     if entry_id:
                         seen_entry_ids.add(entry_id)
+        
+        # Stelle sicher, dass alle entry['day'] Werte date-Objekte sind (BEVOR sortiert wird)
+        for entry in all_entries:
+            if 'day' not in entry or not isinstance(entry.get('day'), date):
+                # Versuche den Tag aus dem timestamp zu extrahieren
+                try:
+                    ts_str = entry.get('timestamp', '')
+                    if ts_str:
+                        ts_dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+                        if ts_dt.tzinfo is None:
+                            ts_dt = tz_berlin.localize(ts_dt.replace(tzinfo=None))
+                        elif ts_dt.tzinfo != tz_berlin:
+                            ts_dt = ts_dt.astimezone(tz_berlin)
+                        entry['day'] = ts_dt.date()
+                    else:
+                        entry['day'] = date(2000, 1, 1)
+                except (ValueError, AttributeError):
+                    entry['day'] = date(2000, 1, 1)
         
         # Sortiere nach Datum und Zeit (chronologisch, älteste zuerst)
         def get_entry_time(entry):
@@ -237,7 +261,7 @@ def entries():
             except (ValueError, AttributeError):
                 return tz_berlin.localize(datetime(2000, 1, 1))
         
-        # Stelle sicher, dass alle entry['day'] Werte date-Objekte sind
+        # Stelle sicher, dass alle entry['day'] Werte date-Objekte sind (NACH dem Hinzufügen, VOR dem Sortieren)
         for entry in all_entries:
             if 'day' not in entry or not isinstance(entry.get('day'), date):
                 # Versuche den Tag aus dem timestamp zu extrahieren

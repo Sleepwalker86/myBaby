@@ -1,183 +1,170 @@
-# Baby-Tracking Web-App
+# MyBaby - Baby-Tracking App
 
-Eine einfache, lokale Web-App zum Tracking von Baby-Aktivitäten wie Schlaf, Stillen, Flasche, Windel, Temperatur und Medizin.
+Eine einfache und intuitive Web-App zum Tracking aller wichtigen Baby-Aktivitäten. Perfekt für den täglichen Gebrauch auf dem Smartphone oder Tablet.
 
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-sleepwalker86%2Fmybaby-blue)](https://hub.docker.com/r/sleepwalker86/mybaby)
-[![GitHub](https://img.shields.io/badge/GitHub-sleepwalker86%2FmyBaby-black)](https://github.com/sleepwalker86/myBaby)
+## Was kann die App?
 
-## Features
+MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines Babys zu behalten:
 
-- **Schlaf-Tracking**: Nickerchen und Nachtschlaf mit Start-/Endzeit
-- **Stillen**: Erfassung mit Brustseite (links/rechts)
-- **Flasche**: Erfassung mit Menge in ml
-- **Windel**: Erfassung mit Art (nass/groß/beides)
-- **Temperatur**: Erfassung mit Temperaturwert
-- **Medizin**: Erfassung mit Medikamentenname und Dosis
-- **Tagesübersicht**: Dashboard mit aktuellen Status und letzten Einträgen
-- **Mobile-first**: Optimiert für Smartphone-Nutzung mit großen Buttons
+### 📱 Hauptfunktionen
 
-## Technischer Stack
+- **Schlaf-Tracking**: Erfasse Nickerchen und Nachtschlaf mit automatischer Dauerberechnung
+- **Nickerchen-Vorschläge**: Die App berechnet basierend auf Alter und Schlafmustern, wann das nächste Nickerchen ansteht
+- **Circular Timeline**: Visualisiere den Tagesverlauf als übersichtliches Kreisdiagramm
+- **Stillen & Flasche**: Tracke Stillzeiten (links/rechts) und Flaschenmengen
+- **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
+- **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
+- **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
+- **Dark Mode**: Schonende Darstellung für die Nacht
 
-- **Backend**: Python mit Flask
-- **Frontend**: Server-Side Rendering mit HTML + Bootstrap 5
-- **Datenbank**: SQLite
-- **Deployment**: Docker
+### 🎯 Besondere Features
 
-## Schnellstart
+- **Intelligente Nickerchen-Vorschläge**: Basierend auf wissenschaftlichen Empfehlungen (babyschlaffee.de) und dem Alter deines Babys
+- **Visuelles Timeline-Diagramm**: 24-Stunden-Übersicht mit allen Aktivitäten auf einen Blick
+- **Mobile-optimiert**: Große Buttons für einfache, einhändige Bedienung
+- **Persönlich**: Gib deinem Baby einen Namen - die App wird persönlicher
+- **Lokal & sicher**: Alle Daten bleiben auf deinem Gerät, keine Cloud, keine Anmeldung
 
-### Mit Docker Hub Image (empfohlen)
+## Installation
 
-1. **App starten:**
-   ```bash
-   docker run -d \
-     --name myBaby \
-     -p 8000:8000 \
-     -v $(pwd)/data:/data \
-     sleepwalker86/mybaby:v1.0.0
-   ```
+### Schnellstart mit Docker (empfohlen)
 
-2. **App öffnen:**
-   Öffne im Browser: http://localhost:8000
+Die einfachste Methode ist die Nutzung des vorgefertigten Docker-Images:
 
-3. **App stoppen:**
-   ```bash
-   docker stop myBaby
-   docker rm myBaby
-   ```
+```bash
+docker run -d \
+  --name myBaby \
+  -p 8000:8000 \
+  -v $(pwd)/data:/data \
+  sleepwalker86/mybaby:latest
+```
 
-### Mit Docker Compose (lokal)
+Dann öffne im Browser: **http://localhost:8000**
 
-1. **App starten:**
+### Mit Docker Compose
+
+1. Lade die Dateien herunter (inkl. `docker-compose.yml`)
+2. Starte die App:
    ```bash
    docker-compose up -d
    ```
+3. Öffne im Browser: **http://localhost:8000**
 
-2. **App öffnen:**
-   Öffne im Browser: http://localhost:8000
+Die Daten werden automatisch im `./data` Verzeichnis gespeichert.
 
-3. **App stoppen:**
-   ```bash
-   docker-compose down
-   ```
+### App stoppen
 
-Die SQLite-Datenbank wird persistent im `./data` Verzeichnis gespeichert.
-
-### Docker Hub
-
-Das Image ist auf Docker Hub verfügbar:
-- **Image**: `sleepwalker86/mybaby:v1.0.0`
-- **Latest**: `sleepwalker86/mybaby:latest`
-- **Multi-Architecture**: Unterstützt `linux/amd64` und `linux/arm64`
-
-**Docker Hub Repository**: https://hub.docker.com/r/sleepwalker86/mybaby
-
-### Ohne Docker (lokal)
-
-1. **Abhängigkeiten installieren:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Umgebungsvariable setzen (optional):**
-   ```bash
-   export DATABASE_PATH=./data/baby_tracking.db
-   ```
-
-3. **App starten:**
-   ```bash
-   python main.py
-   ```
-
-4. **App öffnen:**
-   Öffne im Browser: http://localhost:8000
-
-## Projektstruktur
-
-```
-myBaby/
-├── app/
-│   ├── __init__.py          # Flask-App Factory
-│   ├── models/
-│   │   ├── database.py      # Datenbankverbindung
-│   │   └── models.py        # Datenmodelle
-│   ├── routes/
-│   │   ├── main.py          # Hauptroute (Dashboard)
-│   │   ├── sleep.py         # Schlaf-Routes
-│   │   ├── feeding.py       # Stillen-Routes
-│   │   ├── bottle.py        # Flasche-Routes
-│   │   ├── diaper.py        # Windel-Routes
-│   │   ├── temperature.py   # Temperatur-Routes
-│   │   └── medicine.py      # Medizin-Routes
-│   └── templates/
-│       ├── base.html        # Base-Template
-│       └── index.html       # Dashboard-Template
-├── migrations/
-│   └── 001_initial_schema.sql  # Datenbankschema
-├── main.py                  # App-Einstiegspunkt
-├── requirements.txt         # Python-Abhängigkeiten
-├── Dockerfile              # Docker-Image Definition
-├── docker-compose.yml      # Docker-Compose Konfiguration
-└── README.md              # Diese Datei
+```bash
+docker stop myBaby
+docker rm myBaby
 ```
 
-## Datenbank
+Oder mit Docker Compose:
+```bash
+docker-compose down
+```
 
-Die SQLite-Datenbank wird automatisch beim ersten Start erstellt. Das Schema wird über Migrationsskripte im `migrations/` Verzeichnis verwaltet.
+## Erste Schritte
 
-### Tabellen
+### 1. Einstellungen konfigurieren
 
-- `sleep`: Schlaf-Einträge (Nickerchen/Nachtschlaf)
-- `feeding`: Stillen-Einträge
-- `bottle`: Flaschen-Einträge
-- `diaper`: Windel-Einträge
-- `temperature`: Temperatur-Einträge
-- `medicine`: Medizin-Einträge
+Gehe zu **Einstellungen** und trage ein:
+- **Name des Babys** (optional, macht die App persönlicher)
+- **Geburtsdatum** (wichtig für die Nickerchen-Vorschläge)
 
-## Verwendung
+### 2. Erste Einträge erfassen
+
+Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
+
+- **Schlaf**: Starte ein Nickerchen oder den Nachtschlaf. Die App stoppt automatisch die Zeit.
+- **Stillen**: Wähle links oder rechts
+- **Flasche**: Gib die Menge in ml ein
+- **Windel**: Wähle nass, groß oder beides
+- **Temperatur**: Trage die gemessene Temperatur ein
+- **Medizin**: Erfasse Medikamentenname und Dosis
+
+### 3. Dashboard verstehen
+
+Das Dashboard zeigt dir:
+
+- **Aktueller Status**: Ist das Baby wach oder schläft es gerade?
+- **Schlafdauer heute**: Gesamte Schlafzeit (Nachtschlaf + Nickerchen)
+- **Letzte Aktivitäten**: Wann war das letzte Stillen, die letzte Flasche, etc.
+- **Circular Timeline**: Visuelle Darstellung des Tagesverlaufs
+- **Nickerchen-Vorschläge**: Wann das nächste Nickerchen empfohlen wird
+- **Heutige Einträge**: Chronologische Liste aller Aktivitäten
+
+### 4. Einträge durchsuchen
+
+Die Seite **Einträge** bietet:
+
+- **Tagesansicht**: Alle Einträge eines bestimmten Tages
+- **Wochenansicht**: Übersicht über eine ganze Woche, gruppiert nach Tagen
+- **Navigation**: Blättere zwischen Tagen und Wochen
+
+## Tipps für die Nutzung
+
+### Schlaf-Tracking
+
+- **Nachtschlaf starten**: Wenn das Baby ins Bett geht, drücke "Nachtschlaf starten"
+- **Nachtschlaf beenden**: Beim Aufwachen am Morgen "Schlaf beenden" drücken
+- **Nickerchen nachtragen**: Du kannst auch Nickerchen mit angepasster Startzeit nachtragen
+- **Vorschläge beachten**: Die App berechnet basierend auf Alter und Schlafmustern, wann das nächste Nickerchen sinnvoll ist
 
 ### Schnellaktionen
 
-Die App ist für schnelle, einhändige Bedienung optimiert:
+- Alle Buttons sind für einhändige Bedienung optimiert
+- Die App aktualisiert sich automatisch alle 60 Sekunden
+- Einträge können später bearbeitet oder gelöscht werden
 
-- **Schlaf**: Button für Nickerchen oder Nachtschlaf starten, Button zum Beenden erscheint automatisch
-- **Stillen**: Direkte Buttons für links/rechts
-- **Flasche**: Button öffnet Modal für Mengeneingabe
-- **Windel**: Direkte Buttons für nass/groß/beides
-- **Temperatur**: Button öffnet Modal für Temperatur-Eingabe
-- **Medizin**: Button öffnet Modal für Name und Dosis
+### Dark Mode
 
-### Dashboard
+- Aktiviere den Dark Mode in den Einstellungen für schonende Nutzung in der Nacht
+- Die App merkt sich deine Präferenz
 
-Die Hauptseite zeigt:
+## Wichtige Hinweise
 
-- Aktuellen Schlafstatus (wach/schläft)
-- Schlafdauer heute
-- Letzte Stillzeit + Seite
-- Letzte Flasche + Menge
-- Letzte Windel
-- Chronologische Liste aller heutigen Einträge
+- **Lokale Nutzung**: Die App läuft nur auf deinem Gerät/Server. Keine Cloud, keine Anmeldung nötig.
+- **Daten-Sicherung**: Die Datenbank wird im `./data` Verzeichnis gespeichert. Regelmäßige Backups werden empfohlen.
+- **Mobile Nutzung**: Die App ist für Smartphone-Nutzung optimiert. Funktioniert aber auch am PC.
+- **Keine Internetverbindung nötig**: Die App funktioniert komplett offline, sobald sie gestartet ist.
 
-## Entwicklung
+## Häufige Fragen
 
-### Neue Migration hinzufügen
+**Wie funktionieren die Nickerchen-Vorschläge?**
+Die App nutzt wissenschaftlich fundierte Empfehlungen basierend auf dem Alter deines Babys. Sie berücksichtigt bereits gemachte Nickerchen, die Tageszeit und die noch empfohlene Tagschlafdauer.
 
-1. Erstelle eine neue SQL-Datei in `migrations/` mit fortlaufender Nummer (z.B. `002_add_field.sql`)
-2. Die Migration wird beim nächsten App-Start automatisch ausgeführt
+**Kann ich Einträge bearbeiten?**
+Ja, alle Einträge können nachträglich bearbeitet oder gelöscht werden.
 
-### Code-Struktur
+**Funktioniert die App offline?**
+Ja, sobald die App gestartet ist, funktioniert sie komplett offline. Nur für den ersten Start (Docker-Image herunterladen) wird Internet benötigt.
 
-- **Models**: Datenbankzugriff und Business-Logik
-- **Routes**: HTTP-Endpunkte und Request-Handling
-- **Templates**: HTML-Templates mit Jinja2
+**Wo werden die Daten gespeichert?**
+Alle Daten werden lokal in einer SQLite-Datenbank gespeichert. Bei Docker-Nutzung im `./data` Verzeichnis.
 
-## Hinweise
+**Kann ich die Daten exportieren?**
+Die Datenbank-Datei kann direkt kopiert werden. Sie liegt im `./data` Verzeichnis.
 
-- Die App ist für lokale Nutzung ohne Authentifizierung konzipiert
-- Alle Zeitstempel werden in ISO-Format gespeichert
-- Die Datenbank wird persistent gespeichert (auch bei Container-Neustart)
-- Optimiert für mobile Nutzung (große Buttons, einhändige Bedienung)
+## Support
 
-## Lizenz
+Bei Fragen oder Problemen:
+- **GitHub**: [sleepwalker86/myBaby](https://github.com/sleepwalker86/myBaby)
+- **Docker Hub**: [sleepwalker86/mybaby](https://hub.docker.com/r/sleepwalker86/mybaby)
 
-Privat / Eigengebrauch
+## Lizenz / Nutzung
+
+© 2025 Sascha Moritz
+
+Der Quellcode darf für den **eigenen Gebrauch** angepasst und erweitert werden.
+
+Eine **Weitergabe, Veröffentlichung oder kommerzielle Nutzung veränderter Versionen ist nicht gestattet**.
+
+Wenn du den Code in einem anderen Kontext einsetzen willst (z. B. in einem Unternehmen oder als Open‑Source‑Projekt), kläre dies bitte vorher mit dem Autor.
+
+---
+
+## Haftungsausschluss
+
+Dieses Projekt wird ohne Garantie bereitgestellt. Es gibt keine Gewähr für Richtigkeit, Vollständigkeit oder Eignung für einen bestimmten Zweck. Die Nutzung erfolgt auf eigene Verantwortung – insbesondere im Hinblick auf den Umgang mit sensiblen Daten.
 

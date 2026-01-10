@@ -1137,13 +1137,18 @@ class BabyInfo:
                         # (z.B. wenn ein neues Nickerchen hinzugefügt wurde)
                         age_months = BabyInfo.get_age_months()
                         if age_months <= 3:
-                            nap_duration = 1.5
+                            max_nap_duration = 1.5
                         elif age_months <= 6:
-                            nap_duration = 1.5
+                            max_nap_duration = 1.5
                         elif age_months <= 12:
-                            nap_duration = 1.0
+                            max_nap_duration = 1.0
                         else:
-                            nap_duration = 1.0
+                            max_nap_duration = 1.0
+                        
+                        # Die tatsächliche Dauer sollte nicht die noch verfügbare Tagesschlafdauer überschreiten
+                        # Verwende das Minimum aus altersbasierter Dauer und verfügbarer Dauer
+                        # Aber mindestens 0.5 Stunden (30 Minuten)
+                        nap_duration = min(max_nap_duration, max(remaining_day_sleep, 0.5))
                         
                         suggestions.append({
                             'suggested_time': suggested_time,
@@ -1199,15 +1204,20 @@ class BabyInfo:
             if suggested_time < now:
                 suggested_time = now + timedelta(minutes=15)  # Mindestens 15 Minuten ab jetzt
             
-            # Empfohlene Dauer des Nickerchens
+            # Empfohlene Dauer des Nickerchens basierend auf Alter
             if age_months <= 3:
-                nap_duration = 1.5  # 1.5 Stunden
+                max_nap_duration = 1.5  # 1.5 Stunden
             elif age_months <= 6:
-                nap_duration = 1.5  # 1.5 Stunden
+                max_nap_duration = 1.5  # 1.5 Stunden
             elif age_months <= 12:
-                nap_duration = 1.0  # 1 Stunde
+                max_nap_duration = 1.0  # 1 Stunde
             else:
-                nap_duration = 1.0  # 1 Stunde
+                max_nap_duration = 1.0  # 1 Stunde
+            
+            # Die tatsächliche Dauer sollte nicht die noch verfügbare Tagesschlafdauer überschreiten
+            # Verwende das Minimum aus altersbasierter Dauer und verfügbarer Dauer
+            # Aber mindestens 0.5 Stunden (30 Minuten)
+            nap_duration = min(max_nap_duration, max(remaining_day_sleep, 0.5))
             
             # Speichere den Vorschlag in der Datenbank (verhindert Verschiebung nach hinten)
             try:

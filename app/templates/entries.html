@@ -6,7 +6,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="section-title mb-0">
+                <h5 class="section-title mb-0 d-none d-md-block">
                     <i class="bi bi-list-ul"></i> Alle Einträge
                 </h5>
                 <div class="d-flex align-items-center gap-2">
@@ -55,18 +55,22 @@
                 <div class="card-body p-0">
                     {% if entries %}
                         {% if view == 'week' %}
-                            {% set current_day_obj = None %}
+                            {% set current_day_date = None %}
                             {% set first_entry = True %}
                             {% for entry in entries %}
                                 {% set entry_day = entry.day %}
-                                {% if entry_day != current_day_obj %}
-                                    {% if not first_entry %}
+                                {% if entry_day %}
+                                    {# Verwende isoformat() für zuverlässigen Vergleich #}
+                                    {% set entry_day_iso = entry_day.isoformat() %}
+                                    {% set current_day_iso = current_day_date.isoformat() if current_day_date else '' %}
+                                    {% if entry_day_iso != current_day_iso %}
+                                        {% if not first_entry %}
+                                            </div>
                                         </div>
-                                    </div>
-                                    {% endif %}
-                                    {% set first_entry = False %}
-                                    {% set current_day_obj = entry_day %}
-                                    {% set current_day = entry_day %}
+                                        {% endif %}
+                                        {% set first_entry = False %}
+                                        {% set current_day_date = entry_day %}
+                                        {% set current_day = entry_day %}
                                     <div class="day-group border-bottom">
                                         <div class="fw-bold text-primary mb-2 px-3 pt-3 pb-2">
                                             {% if current_day == today %}
@@ -131,6 +135,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
                             {% endfor %}
                             {% if not first_entry %}
                                         </div>
