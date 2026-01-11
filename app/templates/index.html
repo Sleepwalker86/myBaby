@@ -579,30 +579,24 @@
         <!-- Spalte 2 -->
         <div class="col-4 mb-3">
             <!-- Stillen -->
-            <form method="POST" action="{{ url_for('feeding.create') }}" class="mb-2">
-                <input type="hidden" name="side" value="links">
-                <button type="submit" class="btn btn-feeding btn-large w-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
-                        <circle cx="24" cy="18" r="6" fill="currentColor"/>
-                        <circle cx="38" cy="30" r="5" fill="currentColor"/>
-                        <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
-                        <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
-                    </svg><br>
-                    <small>Stillen (L)</small>
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('feeding.create') }}" class="mb-2">
-                <input type="hidden" name="side" value="rechts">
-                <button type="submit" class="btn btn-feeding btn-large w-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
-                        <circle cx="24" cy="18" r="6" fill="currentColor"/>
-                        <circle cx="38" cy="30" r="5" fill="currentColor"/>
-                        <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
-                        <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
-                    </svg><br>
-                    <small>Stillen (R)</small>
-                </button>
-            </form>
+            <button type="button" class="btn btn-feeding btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startFeedingLeftModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                    <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                    <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                    <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                    <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                </svg><br>
+                <small>Stillen (L)</small>
+            </button>
+            <button type="button" class="btn btn-feeding btn-large w-100" data-bs-toggle="modal" data-bs-target="#startFeedingRightModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                    <circle cx="24" cy="18" r="6" fill="currentColor"/>
+                    <circle cx="38" cy="30" r="5" fill="currentColor"/>
+                    <path d="M12 46 C12 34, 18 28, 26 26 C30 25, 34 26, 36 28 C40 32, 44 34, 52 34 L52 46 Z" fill="currentColor"/>
+                    <path d="M26 26 C30 30, 34 32, 38 30" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+                </svg><br>
+                <small>Stillen (R)</small>
+            </button>
             <!-- Flasche -->
             <button type="button" class="btn btn-bottle btn-large w-100" data-bs-toggle="modal" data-bs-target="#bottleModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
@@ -861,9 +855,14 @@
                                     <form method="POST" action="{{ url_for('edit.edit_feeding', feeding_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_feeding_timestamp" class="form-label">Zeitpunkt</label>
+                                                <label for="edit_feeding_timestamp" class="form-label">Startzeit</label>
                                                 <input type="datetime-local" class="form-control" id="edit_feeding_timestamp" name="timestamp" 
                                                        value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_feeding_end_time" class="form-label">Endzeit (optional)</label>
+                                                <input type="datetime-local" class="form-control" id="edit_feeding_end_time" name="end_time" 
+                                                       value="{{ entry.end_time[:16] if entry.end_time else '' }}">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="edit_feeding_side" class="form-label">Brustseite</label>
@@ -1114,7 +1113,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="nap_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
-                                <input type="datetime-local" class="form-control form-control-lg text-center" id="nap_start_time" name="start_time" required readonly>
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="nap_start_time" name="start_time" required>
                                 <small class="text-muted">Minuten anpassen</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="nap_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
@@ -1145,7 +1144,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="night_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
-                                <input type="datetime-local" class="form-control form-control-lg text-center" id="night_start_time" name="start_time" required readonly>
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="night_start_time" name="start_time" required>
                                 <small class="text-muted">Minuten anpassen</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="night_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
@@ -1155,6 +1154,94 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
                     <button type="submit" class="btn btn-primary">Start</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Stillen Links Start Modal -->
+<div class="modal fade" id="startFeedingLeftModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stillen (Links)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('feeding.create') }}">
+                <input type="hidden" name="side" value="links">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="feeding_left_start_time" class="form-label">Startzeit</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_left_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_left_start_time" name="start_time" required>
+                                <small class="text-muted">Minuten anpassen</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_left_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="feeding_left_end_time" class="form-label">Endzeit (optional)</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_left_minus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_left_end_time" name="end_time">
+                                <small class="text-muted">Optional: Dauer dokumentieren</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_left_plus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                            <button type="button" class="btn btn-outline-danger" id="feeding_left_clear_end" style="width: 50px; height: 50px; font-size: 1.2rem;" title="Löschen">×</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Stillen Rechts Start Modal -->
+<div class="modal fade" id="startFeedingRightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stillen (Rechts)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('feeding.create') }}">
+                <input type="hidden" name="side" value="rechts">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="feeding_right_start_time" class="form-label">Startzeit</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_right_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_right_start_time" name="start_time" required>
+                                <small class="text-muted">Minuten anpassen</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_right_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="feeding_right_end_time" class="form-label">Endzeit (optional)</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_right_minus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_right_end_time" name="end_time">
+                                <small class="text-muted">Optional: Dauer dokumentieren</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="feeding_right_plus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                            <button type="button" class="btn btn-outline-danger" id="feeding_right_clear_end" style="width: 50px; height: 50px; font-size: 1.2rem;" title="Löschen">×</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
                 </div>
             </form>
         </div>
@@ -1234,6 +1321,172 @@
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
         input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Initialisiere Zeit für Stillen Links Modal
+    document.getElementById('startFeedingLeftModal').addEventListener('show.bs.modal', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('feeding_left_start_time').value = timeString;
+        document.getElementById('feeding_left_end_time').value = '';
+    });
+
+    // Plus/Minus Buttons für Stillen Links Startzeit
+    document.getElementById('feeding_left_plus_minute').addEventListener('click', function() {
+        const input = document.getElementById('feeding_left_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    document.getElementById('feeding_left_minus_minute').addEventListener('click', function() {
+        const input = document.getElementById('feeding_left_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() - 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Plus/Minus Buttons für Stillen Links Endzeit
+    document.getElementById('feeding_left_plus_minute_end').addEventListener('click', function() {
+        const input = document.getElementById('feeding_left_end_time');
+        if (!input.value) {
+            // Wenn leer, setze auf Startzeit + 15 Minuten
+            const startInput = document.getElementById('feeding_left_start_time');
+            const startDate = new Date(startInput.value);
+            startDate.setMinutes(startDate.getMinutes() + 15);
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+            const day = String(startDate.getDate()).padStart(2, '0');
+            const hours = String(startDate.getHours()).padStart(2, '0');
+            const minutes = String(startDate.getMinutes()).padStart(2, '0');
+            input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        } else {
+            const date = new Date(input.value);
+            date.setMinutes(date.getMinutes() + 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+
+    document.getElementById('feeding_left_minus_minute_end').addEventListener('click', function() {
+        const input = document.getElementById('feeding_left_end_time');
+        if (input.value) {
+            const date = new Date(input.value);
+            date.setMinutes(date.getMinutes() - 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+
+    // Löschen-Button für Stillen Links Endzeit
+    document.getElementById('feeding_left_clear_end').addEventListener('click', function() {
+        document.getElementById('feeding_left_end_time').value = '';
+    });
+
+    // Initialisiere Zeit für Stillen Rechts Modal
+    document.getElementById('startFeedingRightModal').addEventListener('show.bs.modal', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('feeding_right_start_time').value = timeString;
+        document.getElementById('feeding_right_end_time').value = '';
+    });
+
+    // Plus/Minus Buttons für Stillen Rechts Startzeit
+    document.getElementById('feeding_right_plus_minute').addEventListener('click', function() {
+        const input = document.getElementById('feeding_right_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    document.getElementById('feeding_right_minus_minute').addEventListener('click', function() {
+        const input = document.getElementById('feeding_right_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() - 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Plus/Minus Buttons für Stillen Rechts Endzeit
+    document.getElementById('feeding_right_plus_minute_end').addEventListener('click', function() {
+        const input = document.getElementById('feeding_right_end_time');
+        if (!input.value) {
+            // Wenn leer, setze auf Startzeit + 15 Minuten
+            const startInput = document.getElementById('feeding_right_start_time');
+            const startDate = new Date(startInput.value);
+            startDate.setMinutes(startDate.getMinutes() + 15);
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+            const day = String(startDate.getDate()).padStart(2, '0');
+            const hours = String(startDate.getHours()).padStart(2, '0');
+            const minutes = String(startDate.getMinutes()).padStart(2, '0');
+            input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        } else {
+            const date = new Date(input.value);
+            date.setMinutes(date.getMinutes() + 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+
+    document.getElementById('feeding_right_minus_minute_end').addEventListener('click', function() {
+        const input = document.getElementById('feeding_right_end_time');
+        if (input.value) {
+            const date = new Date(input.value);
+            date.setMinutes(date.getMinutes() - 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+
+    // Löschen-Button für Stillen Rechts Endzeit
+    document.getElementById('feeding_right_clear_end').addEventListener('click', function() {
+        document.getElementById('feeding_right_end_time').value = '';
     });
 
     // Auto-Refresh: Seite alle 60 Sekunden neu laden

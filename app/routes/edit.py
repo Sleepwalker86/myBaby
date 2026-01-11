@@ -38,12 +38,13 @@ def edit_feeding(feeding_id):
     try:
         timestamp = request.form.get('timestamp')
         side = request.form.get('side')
+        end_time = request.form.get('end_time') or None
         
         if not timestamp or side not in ['links', 'rechts']:
             flash('Ungültige Eingabe', 'error')
             return redirect(url_for('main.index'))
         
-        Feeding.update(feeding_id, timestamp, side)
+        Feeding.update(feeding_id, timestamp, side, end_time)
         flash('Still-Eintrag aktualisiert', 'success')
     except Exception as e:
         flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')

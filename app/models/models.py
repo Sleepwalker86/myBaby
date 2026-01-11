@@ -407,12 +407,12 @@ class Sleep:
 class Feeding:
     """Stillen-Tracking"""
     @staticmethod
-    def create(timestamp, side):
+    def create(timestamp, side, end_time=None):
         """Erstellt einen Still-Eintrag"""
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO feeding (timestamp, side) VALUES (?, ?)',
-            (timestamp, side)
+            'INSERT INTO feeding (timestamp, side, end_time) VALUES (?, ?, ?)',
+            (timestamp, side, end_time)
         )
         db.commit()
         return cursor.lastrowid
@@ -434,12 +434,12 @@ class Feeding:
         return dict(row) if row else None
     
     @staticmethod
-    def update(feeding_id, timestamp, side):
+    def update(feeding_id, timestamp, side, end_time=None):
         """Aktualisiert einen Still-Eintrag"""
         db = get_db()
         db.execute(
-            'UPDATE feeding SET timestamp = ?, side = ? WHERE id = ?',
-            (timestamp, side, feeding_id)
+            'UPDATE feeding SET timestamp = ?, side = ?, end_time = ? WHERE id = ?',
+            (timestamp, side, end_time, feeding_id)
         )
         db.commit()
     
