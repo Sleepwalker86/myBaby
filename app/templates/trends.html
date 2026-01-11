@@ -43,8 +43,8 @@
         <div class="col-md-3 mb-3 d-flex">
             <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2">Ø Gesamtschlaf</h6>
-                    <h3 class="mb-0">{{ stats.avg_daily_sleep }}h</h3>
+                    <h6 class="text-muted mb-2">Gesamtschlaf</h6>
+                    <h3 class="mb-0">{{ stats.total_sleep }}h</h3>
                     <small class="text-muted">{{ stats.total_days }} Tage</small>
                 </div>
             </div>
@@ -183,6 +183,13 @@
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Schlafstunden: ' + context.parsed.y.toFixed(1) + 'h';
+                        }
+                    }
                 }
             },
             scales: {

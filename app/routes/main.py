@@ -347,9 +347,11 @@ def index():
     
     # Nickerchen-Vorschläge berechnen (nur für heute)
     nap_suggestions = []
+    night_sleep_suggestion = None
     baby_age_months = None
     if is_today:
         nap_suggestions = BabyInfo.get_nap_suggestions(selected_date)
+        night_sleep_suggestion = BabyInfo.get_night_sleep_suggestion(selected_date)
         baby_age_months = BabyInfo.get_age_months()
     
     # Datum formatieren für Anzeige
@@ -381,6 +383,7 @@ def index():
                          wake_up_time=wake_up_time_str,
                          timeline_events=timeline_events,
                          nap_suggestions=nap_suggestions,
+                         night_sleep_suggestion=night_sleep_suggestion,
                          baby_age_months=baby_age_months,
                          baby_name=baby_name)
 

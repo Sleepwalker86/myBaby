@@ -94,61 +94,80 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card card-modern">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="section-title mb-0">
-                            <i class="bi bi-moon-stars"></i> Nickerchen-Vorschlag{% if baby_name %} für {{ baby_name }}{% endif %}
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="section-title mb-0 small">
+                            <i class="bi bi-moon-stars"></i> Schlaf-Empfehlungen{% if baby_name %} für {{ baby_name }}{% endif %}
+                            {% if baby_age_months is not none %}
+                            <span class="text-muted ms-2">({{ baby_age_months }} Monat{% if baby_age_months != 1 %}e{% endif %})</span>
+                            {% endif %}
                         </h6>
-                        {% if baby_age_months is not none %}
-                        <small class="text-muted">
-                            Alter: {{ baby_age_months }} Monat{% if baby_age_months != 1 %}e{% endif %}
-                        </small>
-                        {% endif %}
                     </div>
-                    {% if nap_suggestions %}
-                        {% for suggestion in nap_suggestions %}
-                            {% if suggestion.waiting_for_nap_end %}
-                            <div class="alert alert-warning mb-0">
-                                <i class="bi bi-hourglass-split"></i>
-                                <strong>Nickerchen läuft...</strong><br>
-                                <small>Der nächste Vorschlag wird berechnet, sobald das aktuelle Nickerchen beendet ist.</small>
-                            </div>
-                            {% elif suggestion.suggested_time %}
-                            <div class="alert alert-info mb-0">
-                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                    <div>
-                                        <strong>Nächstes Nickerchen empfohlen:</strong><br>
-                                        <span class="fs-5">{{ suggestion.suggested_time.strftime('%H:%M') }} Uhr</span>
-                                        <small class="text-muted d-block">
-                                            Dauer: ca. {{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m
-                                        </small>
+                    
+                    <div class="row g-2">
+                        <!-- Nickerchen-Empfehlung -->
+                        <div class="col-12 {% if night_sleep_suggestion and night_sleep_suggestion.suggested_time %}col-md-6{% endif %}">
+                            {% if nap_suggestions %}
+                                {% for suggestion in nap_suggestions %}
+                                    {% if suggestion.waiting_for_nap_end %}
+                                    <div class="alert alert-warning mb-0 py-2">
+                                        <small><i class="bi bi-hourglass-split"></i> <strong>Nickerchen läuft...</strong></small>
                                     </div>
-                                    <div class="text-end">
-                                        <small class="text-muted d-block">
-                                            {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} Nickerchen heute
-                                        </small>
-                                        <small class="text-muted d-block">
-                                            Noch {{ suggestion.remaining_day_sleep|int }}h {{ ((suggestion.remaining_day_sleep % 1) * 60)|int }}m Tagschlaf empfohlen
-                                        </small>
+                                    {% elif suggestion.suggested_time %}
+                                    <div class="alert alert-secondary mb-0 py-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <small class="d-block mb-1"><strong>Nickerchen:</strong> <span class="fw-bold">{{ suggestion.suggested_time.strftime('%H:%M') }} Uhr</span></small>
+                                                <small class="text-muted d-block">{{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m • {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} heute</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-success mb-0 py-2">
+                                    <small><i class="bi bi-check-circle"></i> Alle Nickerchen abgeschlossen</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Nachtschlaf-Empfehlung -->
+                        {% if night_sleep_suggestion %}
+                        <div class="col-12 {% if nap_suggestions and (nap_suggestions[0].suggested_time or nap_suggestions[0].waiting_for_nap_end) %}col-md-6{% endif %}">
+                            {% if night_sleep_suggestion.waiting_for_night_sleep_end %}
+                            <div class="alert alert-warning mb-0 py-2">
+                                <small><i class="bi bi-moon-stars"></i> <strong>Nachtschlaf läuft...</strong></small>
+                            </div>
+                            {% elif night_sleep_suggestion.suggested_time %}
+                            <div class="alert alert-secondary mb-0 py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <small class="d-block mb-1"><strong>Nachtschlaf:</strong> <span class="fw-bold">{{ night_sleep_suggestion.suggested_time.strftime('%H:%M') }} Uhr</span></small>
+                                        <small class="text-muted d-block">{{ night_sleep_suggestion.night_sleep_duration|int }}h {{ ((night_sleep_suggestion.night_sleep_duration % 1) * 60)|int }}m • Aufwachen {{ night_sleep_suggestion.desired_wake_time.strftime('%H:%M') }} Uhr</small>
                                     </div>
                                 </div>
                             </div>
                             {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="alert alert-success mb-0">
-                            <i class="bi bi-check-circle"></i> 
-                            Alle empfohlenen Nickerchen für heute sind bereits abgeschlossen!
                         </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if nap_suggestions and nap_suggestions[0].suggested_time and nap_suggestions[0].remaining_day_sleep > 0.5 %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Noch {{ nap_suggestions[0].remaining_day_sleep|int }}h {{ ((nap_suggestions[0].remaining_day_sleep % 1) * 60)|int }}m Tagschlaf empfohlen
+                        </small>
+                    </div>
                     {% endif %}
+                    
                     {% if baby_age_months is none %}
-                    <div class="alert alert-warning mt-3 mb-0">
-                        <small>
+                    <div class="mt-2">
+                        <small class="text-muted">
                             <i class="bi bi-info-circle"></i> 
                             <a href="{{ url_for('settings.settings') }}" class="text-decoration-underline">
-                                Geburtsdatum in den Einstellungen setzen
+                                Geburtsdatum setzen
                             </a>
-                            , um personalisierte Vorschläge zu erhalten.
+                            für personalisierte Vorschläge
                         </small>
                     </div>
                     {% endif %}
