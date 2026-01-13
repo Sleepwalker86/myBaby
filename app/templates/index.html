@@ -570,9 +570,30 @@
                 <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
                 <small>Nickerchen</small>
             </button>
-            <button type="button" class="btn btn-sleep btn-large w-100" data-bs-toggle="modal" data-bs-target="#startNightSleepModal">
+            <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startNightSleepModal">
                 <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
                 <small>Nachtschlaf</small>
+            </button>
+            <!-- Nächtliches Aufwachen -->
+            {% if active_night_waking %}
+            <button type="button" class="btn btn-warning btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#endNightWakingModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; color: currentColor;">
+                    <!-- Mond -->
+                    <path d="M32 8 C20 8, 12 16, 12 28 C12 40, 20 48, 32 48 C38 48, 44 46, 48 42 C42 52, 32 56, 20 56 C8 56, 0 48, 0 36 C0 24, 8 16, 20 16 C26 16, 30 14, 34 12 C34 10, 34 8, 32 8 Z" fill="currentColor" opacity="0.8"/>
+                    <!-- Blitz -->
+                    <path d="M40 16 L28 36 L38 36 L32 52 L50 24 L40 24 L46 16 Z" fill="currentColor" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                </svg><br>
+                <small>Aufwachen beenden</small>
+            </button>
+            {% endif %}
+            <button type="button" class="btn btn-warning btn-large w-100" data-bs-toggle="modal" data-bs-target="#startNightWakingModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; color: currentColor;">
+                    <!-- Mond -->
+                    <path d="M32 8 C20 8, 12 16, 12 28 C12 40, 20 48, 32 48 C38 48, 44 46, 48 42 C42 52, 32 56, 20 56 C8 56, 0 48, 0 36 C0 24, 8 16, 20 16 C26 16, 30 14, 34 12 C34 10, 34 8, 32 8 Z" fill="currentColor" opacity="0.8"/>
+                    <!-- Blitz -->
+                    <path d="M40 16 L28 36 L38 36 L32 52 L50 24 L40 24 L46 16 Z" fill="currentColor" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                </svg><br>
+                <small>Nächtliches Aufwachen</small>
             </button>
         </div>
         
@@ -588,7 +609,7 @@
                 </svg><br>
                 <small>Stillen (L)</small>
             </button>
-            <button type="button" class="btn btn-feeding btn-large w-100" data-bs-toggle="modal" data-bs-target="#startFeedingRightModal">
+            <button type="button" class="btn btn-feeding btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startFeedingRightModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                     <circle cx="24" cy="18" r="6" fill="currentColor"/>
                     <circle cx="38" cy="30" r="5" fill="currentColor"/>
@@ -746,11 +767,26 @@
                                         <i class="bi bi-thermometer-half" style="font-size: 1.5rem; color: var(--color-teal-light);"></i>
                                     {% elif entry.category == 'medicine' %}
                                         <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                                    {% elif entry.category == 'night_waking' %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-warning);">
+                                            <!-- Mond -->
+                                            <path d="M32 8 C20 8, 12 16, 12 28 C12 40, 20 48, 32 48 C38 48, 44 46, 48 42 C42 52, 32 56, 20 56 C8 56, 0 48, 0 36 C0 24, 8 16, 20 16 C26 16, 30 14, 34 12 C34 10, 34 8, 32 8 Z" fill="currentColor" opacity="0.8"/>
+                                            <!-- Blitz -->
+                                            <path d="M40 16 L28 36 L38 36 L32 52 L50 24 L40 24 L46 16 Z" fill="currentColor" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                                        </svg>
                                     {% endif %}
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="fw-bold mb-1">{{ entry.display }}</div>
                                     {% if entry.category == 'sleep' and entry.end_time %}
+                                        <div class="time-text">
+                                            {{ entry.timestamp|format_datetime_de }} - 
+                                            {{ entry.end_time|format_datetime_de }}
+                                            <span class="text-muted ms-2">
+                                                ({{ entry.timestamp|calculate_duration(entry.end_time) }})
+                                            </span>
+                                        </div>
+                                    {% elif entry.category == 'night_waking' and entry.end_time %}
                                         <div class="time-text">
                                             {{ entry.timestamp|format_datetime_de }} - 
                                             {{ entry.end_time|format_datetime_de }}
@@ -802,6 +838,12 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    {% elif entry.category == 'night_waking' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_night_waking', waking_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                     {% endif %}
                                 </div>
                             </div>
@@ -831,9 +873,12 @@
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_sleep_end" class="form-label">Endzeit (optional)</label>
-                                                <input type="datetime-local" class="form-control" id="edit_sleep_end" name="end_time" 
-                                                       value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                                <label for="edit_sleep_end{{ entry.id }}" class="form-label">Endzeit (optional)</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="datetime-local" class="form-control" id="edit_sleep_end{{ entry.id }}" name="end_time" 
+                                                           value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_sleep_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="Löschen">×</button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -860,9 +905,12 @@
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_feeding_end_time" class="form-label">Endzeit (optional)</label>
-                                                <input type="datetime-local" class="form-control" id="edit_feeding_end_time" name="end_time" 
-                                                       value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                                <label for="edit_feeding_end_time{{ entry.id }}" class="form-label">Endzeit (optional)</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="datetime-local" class="form-control" id="edit_feeding_end_time{{ entry.id }}" name="end_time" 
+                                                           value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_feeding_end_time{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="Löschen">×</button>
+                                                </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="edit_feeding_side" class="form-label">Brustseite</label>
@@ -994,6 +1042,38 @@
                                                 <label for="edit_med_dose" class="form-label">Dosis</label>
                                                 <input type="text" class="form-control" id="edit_med_dose" name="dose" 
                                                        value="{{ entry.dose }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif entry.category == 'night_waking' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Nächtliches Aufwachen bearbeiten</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_night_waking', waking_id=entry.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="edit_night_waking_start{{ entry.id }}" class="form-label">Startzeit</label>
+                                                <input type="datetime-local" class="form-control" id="edit_night_waking_start{{ entry.id }}" name="start_time" 
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_night_waking_end{{ entry.id }}" class="form-label">Endzeit (optional)</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="datetime-local" class="form-control" id="edit_night_waking_end{{ entry.id }}" name="end_time" 
+                                                           value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_night_waking_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="Löschen">×</button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -1160,6 +1240,68 @@
     </div>
 </div>
 
+<!-- Nächtliches Aufwachen Start Modal -->
+<div class="modal fade" id="startNightWakingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nächtliches Aufwachen starten</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('sleep.start_night_waking') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="night_waking_start_time" class="form-label">Startzeit</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="night_waking_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="night_waking_start_time" name="start_time" required>
+                                <small class="text-muted">Minuten anpassen</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="night_waking_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Start</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Nächtliches Aufwachen Beenden Modal -->
+<div class="modal fade" id="endNightWakingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nächtliches Aufwachen beenden</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('sleep.end_night_waking') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="night_waking_end_time" class="form-label">Endzeit</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="night_waking_minus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="night_waking_end_time" name="end_time" required>
+                                <small class="text-muted">Minuten anpassen</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="night_waking_plus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Beenden</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Stillen Links Start Modal -->
 <div class="modal fade" id="startFeedingLeftModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1313,6 +1455,80 @@
 
     document.getElementById('night_minus_minute').addEventListener('click', function() {
         const input = document.getElementById('night_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() - 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Initialisiere Zeit für Nächtliches Aufwachen Start Modal
+    document.getElementById('startNightWakingModal').addEventListener('show.bs.modal', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('night_waking_start_time').value = timeString;
+    });
+
+    // Plus/Minus Buttons für Nächtliches Aufwachen Startzeit
+    document.getElementById('night_waking_plus_minute').addEventListener('click', function() {
+        const input = document.getElementById('night_waking_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    document.getElementById('night_waking_minus_minute').addEventListener('click', function() {
+        const input = document.getElementById('night_waking_start_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() - 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    // Initialisiere Zeit für Nächtliches Aufwachen Beenden Modal
+    document.getElementById('endNightWakingModal').addEventListener('show.bs.modal', function() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+        document.getElementById('night_waking_end_time').value = timeString;
+    });
+
+    // Plus/Minus Buttons für Nächtliches Aufwachen Endzeit
+    document.getElementById('night_waking_plus_minute_end').addEventListener('click', function() {
+        const input = document.getElementById('night_waking_end_time');
+        const date = new Date(input.value);
+        date.setMinutes(date.getMinutes() + 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    });
+
+    document.getElementById('night_waking_minus_minute_end').addEventListener('click', function() {
+        const input = document.getElementById('night_waking_end_time');
         const date = new Date(input.value);
         date.setMinutes(date.getMinutes() - 1);
         const year = date.getFullYear();
@@ -1487,6 +1703,20 @@
     // Löschen-Button für Stillen Rechts Endzeit
     document.getElementById('feeding_right_clear_end').addEventListener('click', function() {
         document.getElementById('feeding_right_end_time').value = '';
+    });
+
+    // Löschen-Button für Bearbeitungsmodal Endzeit (Schlaf und Stillen)
+    // Verwende Event-Delegation, da die Modals dynamisch erstellt werden
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('clear-end-time-btn')) {
+            const targetId = e.target.getAttribute('data-target');
+            if (targetId) {
+                const input = document.getElementById(targetId);
+                if (input) {
+                    input.value = '';
+                }
+            }
+        }
     });
 
     // Auto-Refresh: Seite alle 60 Sekunden neu laden

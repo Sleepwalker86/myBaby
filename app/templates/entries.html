@@ -114,12 +114,27 @@
                             <i class="bi bi-thermometer-half" style="font-size: 1.5rem; color: var(--color-teal-light);"></i>
                         {% elif entry.category == 'medicine' %}
                             <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                        {% elif entry.category == 'night_waking' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-warning);">
+                                <!-- Mond -->
+                                <path d="M32 8 C20 8, 12 16, 12 28 C12 40, 20 48, 32 48 C38 48, 44 46, 48 42 C42 52, 32 56, 20 56 C8 56, 0 48, 0 36 C0 24, 8 16, 20 16 C26 16, 30 14, 34 12 C34 10, 34 8, 32 8 Z" fill="currentColor" opacity="0.8"/>
+                                <!-- Blitz -->
+                                <path d="M40 16 L28 36 L38 36 L32 52 L50 24 L40 24 L46 16 Z" fill="currentColor" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
                         {% endif %}
                     </div>
 
                     <div class="flex-grow-1">
                         <div class="fw-bold mb-1">{{ entry.display }}</div>
                         {% if entry.category == 'sleep' and entry.end_time %}
+                            <div class="time-text">
+                                {{ entry.timestamp|format_datetime_de }} -
+                                {{ entry.end_time|format_datetime_de }}
+                                <span class="text-muted ms-2">
+                                    ({{ entry.timestamp|calculate_duration(entry.end_time) }})
+                                </span>
+                            </div>
+                        {% elif entry.category == 'night_waking' and entry.end_time %}
                             <div class="time-text">
                                 {{ entry.timestamp|format_datetime_de }} -
                                 {{ entry.end_time|format_datetime_de }}
@@ -174,12 +189,27 @@
                             <i class="bi bi-thermometer-half" style="font-size: 1.5rem; color: var(--color-teal-light);"></i>
                         {% elif entry.category == 'medicine' %}
                             <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
+                        {% elif entry.category == 'night_waking' %}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-warning);">
+                                <!-- Mond -->
+                                <path d="M32 8 C20 8, 12 16, 12 28 C12 40, 20 48, 32 48 C38 48, 44 46, 48 42 C42 52, 32 56, 20 56 C8 56, 0 48, 0 36 C0 24, 8 16, 20 16 C26 16, 30 14, 34 12 C34 10, 34 8, 32 8 Z" fill="currentColor" opacity="0.8"/>
+                                <!-- Blitz -->
+                                <path d="M40 16 L28 36 L38 36 L32 52 L50 24 L40 24 L46 16 Z" fill="currentColor" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
                         {% endif %}
                     </div>
 
                     <div class="flex-grow-1">
                         <div class="fw-bold mb-1">{{ entry.display }}</div>
                         {% if entry.category == 'sleep' and entry.end_time %}
+                            <div class="time-text">
+                                {{ entry.timestamp|format_datetime_de }} -
+                                {{ entry.end_time|format_datetime_de }}
+                                <span class="text-muted ms-2">
+                                    ({{ entry.timestamp|calculate_duration(entry.end_time) }})
+                                </span>
+                            </div>
+                        {% elif entry.category == 'night_waking' and entry.end_time %}
                             <div class="time-text">
                                 {{ entry.timestamp|format_datetime_de }} -
                                 {{ entry.end_time|format_datetime_de }}

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from app.models.models import (
-    Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo
+    Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo, NightWaking
 )
 from app.models.database import get_db
 from datetime import datetime, date, timedelta
@@ -171,6 +171,9 @@ def index():
     # Aktueller Schlafstatus (nur für heute relevant)
     active_sleep = Sleep.get_active_sleep() if is_today else None
     sleep_status = "schläft" if active_sleep else "wach"
+    
+    # Aktives nächtliches Aufwachen (nur für heute relevant)
+    active_night_waking = NightWaking.get_active() if is_today else None
     
     # Schlafdauer für den ausgewählten Tag
     sleep_duration_hours = Sleep.get_today_sleep_duration(selected_date)
@@ -374,6 +377,7 @@ def index():
                          diaper_ago=diaper_ago,
                          today_entries=entries,
                          active_sleep=active_sleep,
+                         active_night_waking=active_night_waking,
                          selected_date=selected_date.isoformat(),
                          prev_date=prev_date,
                          next_date=next_date,

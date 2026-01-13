@@ -152,6 +152,14 @@ class Sleep:
                 if end_date == selected_date:
                     # Für alle Schlaf-Einträge (Nickerchen und Nachtschlaf): Gesamte Dauer von Start bis Ende zählen
                     duration_seconds = (end_dt - start_dt).total_seconds()
+                    
+                    # Für Nachtschlaf: Ziehe nächtliches Aufwachen ab
+                    if sleep_type == 'night':
+                        waking_duration = NightWaking.get_total_waking_duration(
+                            start_str, end_str
+                        )
+                        duration_seconds = max(0, duration_seconds - (waking_duration * 3600))
+                    
                     total_seconds += duration_seconds
                             
             except Exception as e:
@@ -198,6 +206,15 @@ class Sleep:
                             # Nachtschlaf gestartet am Vortag: Gesamte Dauer vom Start bis jetzt zählen
                             if end_time > start_dt:
                                 duration_seconds = (end_time - start_dt).total_seconds()
+                                
+                                # Ziehe nächtliches Aufwachen ab (für aktiven Nachtschlaf)
+                                # Verwende die aktuelle Zeit als Endzeit für die Berechnung
+                                now_str = datetime.now(tz_berlin).isoformat()
+                                waking_duration = NightWaking.get_total_waking_duration(
+                                    row['start_time'], now_str
+                                )
+                                duration_seconds = max(0, duration_seconds - (waking_duration * 3600))
+                                
                                 total_seconds += duration_seconds
                 except Exception:
                     continue
@@ -285,6 +302,12 @@ class Sleep:
                 # Bei Nickerchen: Dauer dem Tag zurechnen, an dem das Nickerchen endet
                 if row['type'] == 'night':
                     # Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen
+                    # Ziehe nächtliches Aufwachen ab
+                    waking_duration = NightWaking.get_total_waking_duration(
+                        row['start_time'], row['end_time']
+                    )
+                    duration_hours = max(0, duration_hours - waking_duration)
+                    
                     day_key = end.date().isoformat()
                     if start_date <= day_key <= end_date:
                         if day_key not in daily_sleep:
@@ -347,6 +370,12 @@ class Sleep:
                 # Bei Nickerchen: Auch dem End-Tag zurechnen
                 if row['type'] == 'night':
                     # Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen (auch wenn vor Zeitraum gestartet)
+                    # Ziehe nächtliches Aufwachen ab
+                    waking_duration = NightWaking.get_total_waking_duration(
+                        row['start_time'], row['end_time']
+                    )
+                    duration_hours = max(0, duration_hours - waking_duration)
+                    
                     day_key = end.date().isoformat()
                     if start_date <= day_key <= end_date:
                         if day_key not in daily_sleep:
@@ -403,6 +432,136 @@ class Sleep:
             'avg_sleep_time': round(avg_sleep_time, 1),
             'total_days': total_days
         }
+
+class NightWaking:
+    """Nächtliches Aufwachen-Tracking"""
+    @staticmethod
+    def create(start_time, end_time=None):
+        """Erstellt einen nächtliches Aufwachen-Eintrag"""
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO night_waking (start_time, end_time) VALUES (?, ?)',
+            (start_time, end_time)
+        )
+        db.commit()
+        return cursor.lastrowid
+    
+    @staticmethod
+    def get_active():
+        """Gibt das aktive nächtliche Aufwachen zurück (falls vorhanden)"""
+        db = get_db()
+        row = db.execute(
+            'SELECT * FROM night_waking WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1'
+        ).fetchone()
+        return dict(row) if row else None
+    
+    @staticmethod
+    def end_waking(waking_id, end_time):
+        """Beendet ein nächtliches Aufwachen"""
+        db = get_db()
+        db.execute(
+            'UPDATE night_waking SET end_time = ? WHERE id = ?',
+            (end_time, waking_id)
+        )
+        db.commit()
+    
+    @staticmethod
+    def get_by_id(waking_id):
+        """Holt einen nächtliches Aufwachen-Eintrag nach ID"""
+        db = get_db()
+        row = db.execute('SELECT * FROM night_waking WHERE id = ?', (waking_id,)).fetchone()
+        return dict(row) if row else None
+    
+    @staticmethod
+    def get_wakings_for_night_sleep(night_sleep_start, night_sleep_end):
+        """Gibt alle nächtlichen Aufwachen für einen bestimmten Nachtschlaf zurück"""
+        db = get_db()
+        rows = db.execute(
+            '''SELECT * FROM night_waking 
+               WHERE start_time >= ? AND start_time <= ?
+               AND (end_time IS NULL OR (end_time >= ? AND end_time <= ?))
+               ORDER BY start_time''',
+            (night_sleep_start, night_sleep_end, night_sleep_start, night_sleep_end)
+        ).fetchall()
+        return [dict(row) for row in rows]
+    
+    @staticmethod
+    def get_total_waking_duration(night_sleep_start, night_sleep_end):
+        """Berechnet die Gesamtdauer des nächtlichen Aufwachens für einen Nachtschlaf in Stunden"""
+        wakings = NightWaking.get_wakings_for_night_sleep(night_sleep_start, night_sleep_end)
+        total_seconds = 0.0
+        
+        for waking in wakings:
+            if not waking.get('end_time'):
+                # Aktives Aufwachen: bis zum aktuellen Zeitpunkt oder Nachtschlaf-Ende
+                now = datetime.now(tz_berlin)
+                try:
+                    end_dt = datetime.fromisoformat(night_sleep_end.replace('Z', '+00:00'))
+                    if end_dt.tzinfo is None:
+                        end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                    elif end_dt.tzinfo != tz_berlin:
+                        end_dt = end_dt.astimezone(tz_berlin)
+                    end_time = min(now, end_dt)
+                except (ValueError, AttributeError):
+                    end_time = now
+            else:
+                try:
+                    end_time = datetime.fromisoformat(waking['end_time'].replace('Z', '+00:00'))
+                    if end_time.tzinfo is None:
+                        end_time = tz_berlin.localize(end_time.replace(tzinfo=None))
+                    elif end_time.tzinfo != tz_berlin:
+                        end_time = end_time.astimezone(tz_berlin)
+                except (ValueError, AttributeError):
+                    continue
+            
+            try:
+                start_time = datetime.fromisoformat(waking['start_time'].replace('Z', '+00:00'))
+                if start_time.tzinfo is None:
+                    start_time = tz_berlin.localize(start_time.replace(tzinfo=None))
+                elif start_time.tzinfo != tz_berlin:
+                    start_time = start_time.astimezone(tz_berlin)
+                
+                # Prüfe ob das Aufwachen innerhalb des Nachtschlafs liegt
+                try:
+                    sleep_start = datetime.fromisoformat(night_sleep_start.replace('Z', '+00:00'))
+                    if sleep_start.tzinfo is None:
+                        sleep_start = tz_berlin.localize(sleep_start.replace(tzinfo=None))
+                    elif sleep_start.tzinfo != tz_berlin:
+                        sleep_start = sleep_start.astimezone(tz_berlin)
+                    
+                    sleep_end = datetime.fromisoformat(night_sleep_end.replace('Z', '+00:00'))
+                    if sleep_end.tzinfo is None:
+                        sleep_end = tz_berlin.localize(sleep_end.replace(tzinfo=None))
+                    elif sleep_end.tzinfo != tz_berlin:
+                        sleep_end = sleep_end.astimezone(tz_berlin)
+                    
+                    # Nur Aufwachen innerhalb des Nachtschlafs zählen
+                    if start_time >= sleep_start and end_time <= sleep_end:
+                        duration_seconds = (end_time - start_time).total_seconds()
+                        total_seconds += duration_seconds
+                except (ValueError, AttributeError):
+                    pass
+            except (ValueError, AttributeError):
+                continue
+        
+        return round(total_seconds / 3600, 2) if total_seconds > 0 else 0.0
+    
+    @staticmethod
+    def update(waking_id, start_time, end_time=None):
+        """Aktualisiert einen nächtliches Aufwachen-Eintrag"""
+        db = get_db()
+        db.execute(
+            'UPDATE night_waking SET start_time = ?, end_time = ? WHERE id = ?',
+            (start_time, end_time, waking_id)
+        )
+        db.commit()
+    
+    @staticmethod
+    def delete(waking_id):
+        """Löscht einen nächtliches Aufwachen-Eintrag"""
+        db = get_db()
+        db.execute('DELETE FROM night_waking WHERE id = ?', (waking_id,))
+        db.commit()
 
 class Feeding:
     """Stillen-Tracking"""
@@ -719,6 +878,36 @@ def get_all_entries_today(selected_date=None):
             'timestamp': row['timestamp'],
             'end_time': row['end_time'],
             'display': sleep_type_display
+        })
+    
+    # Nächtliches Aufwachen: Einträge, die am Tag gestartet haben
+    waking_rows = db.execute(
+        'SELECT id, start_time as timestamp, end_time FROM night_waking WHERE date(start_time) = ?',
+        (target_date,)
+    ).fetchall()
+    for row in waking_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'night_waking',
+            'timestamp': row['timestamp'],
+            'end_time': row['end_time'],
+            'display': 'Nächtliches Aufwachen'
+        })
+    
+    # Nächtliches Aufwachen: Einträge, die am vorherigen Tag gestartet haben, aber am Tag enden
+    waking_rows_prev = db.execute(
+        '''SELECT id, start_time as timestamp, end_time 
+           FROM night_waking 
+           WHERE date(start_time) = ? AND date(end_time) = ? AND end_time IS NOT NULL''',
+        (prev_date, target_date)
+    ).fetchall()
+    for row in waking_rows_prev:
+        entries.append({
+            'id': row['id'],
+            'category': 'night_waking',
+            'timestamp': row['timestamp'],
+            'end_time': row['end_time'],
+            'display': 'Nächtliches Aufwachen'
         })
     
     # Stillen
@@ -1212,13 +1401,15 @@ class BabyInfo:
             else:
                 # Keine tatsächlichen Abstände vorhanden, verwende Tabellenwerte mit Anpassungen
                 # Anpassung basierend auf Tageszeit
-                # Morgens (6-10 Uhr): mittlere Wachzeit (näher am Mittelwert, nicht zu kurz)
+                # Morgens (6-10 Uhr): längere Wachzeit (näher am Maximum, für besseren ersten Nickerchen)
                 # Mittags (10-14 Uhr): mittlere Wachzeit (Mittelwert)
                 # Nachmittags (14-18 Uhr): längere Wachzeit (näher am Maximum)
                 current_hour = last_wake_time.hour
                 if current_hour < 10:
-                    # Morgens: verwende eher den Mittelwert (nicht zu kurz, damit nicht zu früh)
-                    wake_window = min_wake_window + (max_wake_window - min_wake_window) * 0.5
+                    # Morgens: verwende etwas über dem Minimum (für erstes Nickerchen)
+                    # Für 6 Monate: min=2.0, max=3.0 -> 2.0 + (3.0-2.0)*0.25 = 2.25h ≈ 2h 15min
+                    # Bei Aufwachen 06:20 → Nickerchen ca. 08:35 (Ziel: ~08:30)
+                    wake_window = min_wake_window + (max_wake_window - min_wake_window) * 0.25
                 elif current_hour < 14:
                     # Mittags: verwende den Mittelwert
                     wake_window = base_wake_window
@@ -1412,6 +1603,12 @@ class BabyInfo:
                     duration = (end_dt + timedelta(days=1) - start_dt).total_seconds() / 3600.0
                 else:
                     duration = (end_dt - start_dt).total_seconds() / 3600.0
+                
+                # Ziehe nächtliches Aufwachen ab
+                waking_duration = NightWaking.get_total_waking_duration(
+                    night_sleep['start_time'], night_sleep['end_time']
+                )
+                duration = max(0, duration - waking_duration)
                 
                 if duration > 0 and duration < 16:  # Plausibilitätsprüfung (max 16h)
                     actual_night_sleep_durations.append(duration)

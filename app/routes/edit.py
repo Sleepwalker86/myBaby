@@ -1,5 +1,5 @@
 from flask import Blueprint, request, redirect, url_for, flash, jsonify
-from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine
+from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine, NightWaking
 from datetime import datetime
 
 bp = Blueprint('edit', __name__, url_prefix='/edit')
@@ -169,6 +169,33 @@ def delete_medicine(med_id):
     try:
         Medicine.delete(med_id)
         flash('Medizin-Eintrag gelöscht', 'success')
+    except Exception as e:
+        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    return redirect(url_for('main.index'))
+
+@bp.route('/night_waking/<int:waking_id>', methods=['POST'])
+def edit_night_waking(waking_id):
+    """Bearbeitet einen nächtliches Aufwachen-Eintrag"""
+    try:
+        start_time = request.form.get('start_time')
+        end_time = request.form.get('end_time') or None
+        
+        if not start_time:
+            flash('Startzeit ist erforderlich', 'error')
+            return redirect(url_for('main.index'))
+        
+        NightWaking.update(waking_id, start_time, end_time)
+        flash('Nächtliches Aufwachen aktualisiert', 'success')
+    except Exception as e:
+        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    return redirect(url_for('main.index'))
+
+@bp.route('/night_waking/<int:waking_id>/delete', methods=['POST'])
+def delete_night_waking(waking_id):
+    """Löscht einen nächtliches Aufwachen-Eintrag"""
+    try:
+        NightWaking.delete(waking_id)
+        flash('Nächtliches Aufwachen gelöscht', 'success')
     except Exception as e:
         flash(f'Fehler beim Löschen: {str(e)}', 'error')
     return redirect(url_for('main.index'))

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, redirect, url_for, flash
-from app.models.models import Sleep
+from app.models.models import Sleep, NightWaking
 from datetime import datetime
 import pytz
 
@@ -72,5 +72,47 @@ def end_night_sleep():
         flash('Nachtschlaf beendet', 'success')
     else:
         flash('Kein aktiver Nachtschlaf gefunden', 'warning')
+    return redirect(url_for('main.index'))
+
+@bp.route('/night_waking/start', methods=['POST'])
+def start_night_waking():
+    """Startet ein nächtliches Aufwachen"""
+    # Prüfe ob eine Startzeit übergeben wurde
+    if 'start_time' in request.form and request.form['start_time']:
+        try:
+            # Parse die übergebene Zeit
+            timestamp = datetime.fromisoformat(request.form['start_time'])
+            if timestamp.tzinfo is None:
+                timestamp = tz_berlin.localize(timestamp)
+            timestamp = timestamp.isoformat()
+        except (ValueError, TypeError):
+            timestamp = get_local_now().isoformat()
+    else:
+        timestamp = get_local_now().isoformat()
+    waking_id = NightWaking.create(timestamp)
+    flash('Nächtliches Aufwachen gestartet', 'success')
+    return redirect(url_for('main.index'))
+
+@bp.route('/night_waking/end', methods=['POST'])
+def end_night_waking():
+    """Beendet ein nächtliches Aufwachen"""
+    active_waking = NightWaking.get_active()
+    if active_waking:
+        # Prüfe ob eine Endzeit übergeben wurde
+        if 'end_time' in request.form and request.form['end_time']:
+            try:
+                # Parse die übergebene Zeit
+                timestamp = datetime.fromisoformat(request.form['end_time'])
+                if timestamp.tzinfo is None:
+                    timestamp = tz_berlin.localize(timestamp)
+                timestamp = timestamp.isoformat()
+            except (ValueError, TypeError):
+                timestamp = get_local_now().isoformat()
+        else:
+            timestamp = get_local_now().isoformat()
+        NightWaking.end_waking(active_waking['id'], timestamp)
+        flash('Nächtliches Aufwachen beendet', 'success')
+    else:
+        flash('Kein aktives nächtliches Aufwachen gefunden', 'warning')
     return redirect(url_for('main.index'))
 
