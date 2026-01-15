@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models.models import get_all_entries_today
+from app.models.models import get_all_entries_today, get_all_entries_date_range
 from datetime import datetime, date, timedelta
 import pytz
 
@@ -148,67 +148,77 @@ def entries():
         week_start = selected_date - timedelta(days=days_since_monday)
         week_end = week_start + timedelta(days=6)
         
+        # PERFORMANCE-OPTIMIERUNG: Hole alle Einträge in einem Batch statt 7x get_all_entries_today()
+        # Dies reduziert DB-Queries von ~56 (7 Tage × 8 Queries) auf ~8 Queries
+        all_entries_raw = get_all_entries_date_range(week_start, week_end)
+        
         all_entries = []
         seen_entry_ids = set()  # Verhindere Duplikate
         
-        for day_offset in range(7):
-            current_date = week_start + timedelta(days=day_offset)
-            day_entries = get_all_entries_today(current_date)
+        # PERFORMANCE: Cached datetime parsing - parse einmal und cache das Ergebnis
+        def parse_timestamp_cached(ts_str):
+            """Parst einen Timestamp und cached das Ergebnis im Entry"""
+            if not ts_str:
+                return None
+            if isinstance(ts_str, datetime):
+                if ts_str.tzinfo is None:
+                    return tz_berlin.localize(ts_str.replace(tzinfo=None))
+                elif ts_str.tzinfo != tz_berlin:
+                    return ts_str.astimezone(tz_berlin)
+                return ts_str
             
-            for entry in day_entries:
-                entry_id = entry.get('id')
-                
-                # Überspringe wenn dieser Eintrag bereits verarbeitet wurde
-                if entry_id and entry_id in seen_entry_ids:
-                    continue
-                
-                # Bestimme zu welchem Tag der Eintrag gehört
-                entry_day = None
-                # Für Schlaf-Einträge mit end_time: Tag aus end_time
-                if entry.get('category') == 'sleep' and entry.get('end_time'):
-                    try:
-                        end_dt = datetime.fromisoformat(entry['end_time'].replace('Z', '+00:00'))
-                        if end_dt.tzinfo is None:
-                            end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
-                        elif end_dt.tzinfo != tz_berlin:
-                            end_dt = end_dt.astimezone(tz_berlin)
-                        entry_day = end_dt.date()
-                    except (ValueError, AttributeError):
-                        pass
-                
-                # Für alle anderen Einträge: Tag aus timestamp
-                if entry_day is None:
-                    try:
-                        ts_str = entry.get('timestamp', '')
-                        if ts_str:
-                            ts_dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
-                            if ts_dt.tzinfo is None:
-                                ts_dt = tz_berlin.localize(ts_dt.replace(tzinfo=None))
-                            elif ts_dt.tzinfo != tz_berlin:
-                                ts_dt = ts_dt.astimezone(tz_berlin)
-                            entry_day = ts_dt.date()
-                        else:
-                            entry_day = current_date
-                    except (ValueError, AttributeError):
-                        entry_day = current_date
-                
-                # Stelle sicher, dass entry_day ein date-Objekt ist (nicht datetime)
-                if isinstance(entry_day, datetime):
-                    entry_day = entry_day.date()
-                elif not isinstance(entry_day, date):
-                    try:
-                        entry_day = date.fromisoformat(str(entry_day))
-                    except (ValueError, AttributeError):
-                        entry_day = current_date
-                
-                # Setze entry.day explizit als date-Objekt
-                entry['day'] = entry_day
-                
-                # Nur Einträge innerhalb der Woche hinzufügen
-                if entry_day and week_start <= entry_day <= week_end:
-                    all_entries.append(entry)
-                    if entry_id:
-                        seen_entry_ids.add(entry_id)
+            try:
+                dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+                if dt.tzinfo is None:
+                    dt = tz_berlin.localize(dt.replace(tzinfo=None))
+                elif dt.tzinfo != tz_berlin:
+                    dt = dt.astimezone(tz_berlin)
+                return dt
+            except (ValueError, AttributeError):
+                return None
+        
+        # Filtere und gruppiere Einträge nach Tag
+        for entry in all_entries_raw:
+            entry_id = entry.get('id')
+            
+            # Überspringe wenn dieser Eintrag bereits verarbeitet wurde
+            if entry_id and entry_id in seen_entry_ids:
+                continue
+            
+            # Bestimme zu welchem Tag der Eintrag gehört
+            entry_day = None
+            # Für Schlaf-Einträge mit end_time: Tag aus end_time
+            if entry.get('category') == 'sleep' and entry.get('end_time'):
+                end_dt = parse_timestamp_cached(entry['end_time'])
+                if end_dt:
+                    entry_day = end_dt.date()
+            
+            # Für alle anderen Einträge: Tag aus timestamp
+            if entry_day is None:
+                ts_dt = parse_timestamp_cached(entry.get('timestamp', ''))
+                if ts_dt:
+                    entry_day = ts_dt.date()
+                else:
+                    # Fallback: verwende week_start
+                    entry_day = week_start
+            
+            # Stelle sicher, dass entry_day ein date-Objekt ist (nicht datetime)
+            if isinstance(entry_day, datetime):
+                entry_day = entry_day.date()
+            elif not isinstance(entry_day, date):
+                try:
+                    entry_day = date.fromisoformat(str(entry_day))
+                except (ValueError, AttributeError):
+                    entry_day = week_start
+            
+            # Setze entry.day explizit als date-Objekt
+            entry['day'] = entry_day
+            
+            # Nur Einträge innerhalb der Woche hinzufügen
+            if entry_day and week_start <= entry_day <= week_end:
+                all_entries.append(entry)
+                if entry_id:
+                    seen_entry_ids.add(entry_id)
         
         # Stelle sicher, dass alle entry['day'] Werte date-Objekte sind (BEVOR sortiert wird)
         for entry in all_entries:

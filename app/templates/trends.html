@@ -75,6 +75,52 @@
         </div>
     </div>
 
+    <!-- Windel- und Still-Statistiken -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-droplet"></i> Windel-Statistiken
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h6 class="text-muted mb-2">Ø Gesamt</h6>
+                            <h4 class="mb-0">{{ diaper_stats.avg_total }}</h4>
+                            <small class="text-muted">{{ diaper_stats.total_count }} insgesamt</small>
+                        </div>
+                        <div class="col-4">
+                            <h6 class="text-muted mb-2">Ø Nass</h6>
+                            <h4 class="mb-0">{{ diaper_stats.avg_nass }}</h4>
+                            <small class="text-muted">{{ diaper_stats.nass_count }} insgesamt</small>
+                        </div>
+                        <div class="col-4">
+                            <h6 class="text-muted mb-2">Ø Groß</h6>
+                            <h4 class="mb-0">{{ diaper_stats.avg_groß }}</h4>
+                            <small class="text-muted">{{ diaper_stats.groß_count }} insgesamt</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-heart"></i> Still-Statistiken
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-2">Ø Still-Einträge pro Tag</h6>
+                            <h4 class="mb-0">{{ feeding_stats.avg_count }}</h4>
+                            <small class="text-muted">{{ feeding_stats.total_count }} insgesamt</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Gesamtschlaf über Zeit -->
     <div class="row mb-4">
         <div class="col-12">

@@ -63,10 +63,21 @@ class Sleep:
         
         total_seconds = 0.0
         
-        # Hole ALLE beendeten Schlaf-Einträge
+        # PERFORMANCE-OPTIMIERUNG: Hole nur relevante Schlaf-Einträge mit Range-Query
+        # Statt alle Einträge zu holen, filtern wir direkt in der DB
+        # Ein Tag: von 00:00:00 bis 23:59:59
+        day_start = datetime.combine(selected_date, datetime.min.time())
+        day_end = datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59))
+        day_start_str = day_start.strftime('%Y-%m-%dT%H:%M:%S')
+        day_end_str = day_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
+        # Hole nur Einträge, die am ausgewählten Tag enden
+        # Dies nutzt den Index auf end_time viel besser als date(end_time)
         all_rows = db.execute(
             '''SELECT type, start_time, end_time FROM sleep 
-               WHERE end_time IS NOT NULL'''
+               WHERE end_time IS NOT NULL 
+               AND end_time >= ? AND end_time <= ?''',
+            (day_start_str, day_end_str)
         ).fetchall()
         
         # Hilfsfunktion zum Parsen von Zeitstempeln - EINFACH und DIREKT
@@ -256,20 +267,36 @@ class Sleep:
         """Gibt Schlaf-Statistiken für einen Zeitraum zurück"""
         db = get_db()
         
+        # PERFORMANCE-OPTIMIERUNG: Range-Queries statt date() für bessere Index-Nutzung
+        # Konvertiere Datums-Strings zu datetime für Range-Queries
+        if isinstance(start_date, str):
+            start_date_obj = date.fromisoformat(start_date)
+        else:
+            start_date_obj = start_date
+        if isinstance(end_date, str):
+            end_date_obj = date.fromisoformat(end_date)
+        else:
+            end_date_obj = end_date
+        
+        range_start = datetime.combine(start_date_obj, datetime.min.time())
+        range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
+        range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
+        range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
         # Alle Schlaf-Einträge, die im Zeitraum gestartet haben
         rows = db.execute(
             '''SELECT type, start_time, end_time FROM sleep 
-               WHERE date(start_time) >= ? AND date(start_time) <= ? AND end_time IS NOT NULL
+               WHERE start_time >= ? AND start_time <= ? AND end_time IS NOT NULL
                ORDER BY start_time''',
-            (start_date, end_date)
+            (range_start_str, range_end_str)
         ).fetchall()
         
         # Schlaf-Einträge, die vor dem Zeitraum gestartet haben, aber im Zeitraum enden
         rows_prev = db.execute(
             '''SELECT type, start_time, end_time FROM sleep 
-               WHERE date(start_time) < ? AND date(end_time) >= ? AND date(end_time) <= ? AND end_time IS NOT NULL
+               WHERE start_time < ? AND end_time >= ? AND end_time <= ? AND end_time IS NOT NULL
                ORDER BY start_time''',
-            (start_date, start_date, end_date)
+            (range_start_str, range_start_str, range_end_str)
         ).fetchall()
         
         daily_sleep = {}  # {date: total_hours}
@@ -309,7 +336,8 @@ class Sleep:
                     duration_hours = max(0, duration_hours - waking_duration)
                     
                     day_key = end.date().isoformat()
-                    if start_date <= day_key <= end_date:
+                    # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
+                    if start_date_obj <= end.date() <= end_date_obj:
                         if day_key not in daily_sleep:
                             daily_sleep[day_key] = 0
                         daily_sleep[day_key] += duration_hours
@@ -319,14 +347,16 @@ class Sleep:
                     if start.date() != end.date():
                         # Über Mitternacht: Dem End-Tag zurechnen
                         day_key = end.date().isoformat()
-                        if start_date <= day_key <= end_date:
+                        # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
+                        if start_date_obj <= end.date() <= end_date_obj:
                             if day_key not in daily_sleep:
                                 daily_sleep[day_key] = 0
                             daily_sleep[day_key] += duration_hours
                     else:
                         # Innerhalb eines Tages
                         day_key = start.date().isoformat()
-                        if start_date <= day_key <= end_date:
+                        # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
+                        if start_date_obj <= start.date() <= end_date_obj:
                             if day_key not in daily_sleep:
                                 daily_sleep[day_key] = 0
                             daily_sleep[day_key] += duration_hours
@@ -336,11 +366,12 @@ class Sleep:
                 else:
                     night_hours += duration_hours
                     # Aufwachzeit und Einschlafzeit: Nur für Nachtschlaf
+                    # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
                     # Aufwachzeit (end_time) - nur wenn im Zeitraum
-                    if start_date <= end.date().isoformat() <= end_date:
+                    if start_date_obj <= end.date() <= end_date_obj:
                         wake_times.append(end.hour + end.minute / 60.0)
                     # Einschlafzeit (start_time) - nur wenn im Zeitraum
-                    if start_date <= start.date().isoformat() <= end_date:
+                    if start_date_obj <= start.date() <= end_date_obj:
                         sleep_times.append(start.hour + start.minute / 60.0)
                 
             except (ValueError, AttributeError):
@@ -377,17 +408,19 @@ class Sleep:
                     duration_hours = max(0, duration_hours - waking_duration)
                     
                     day_key = end.date().isoformat()
-                    if start_date <= day_key <= end_date:
+                    # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
+                    if start_date_obj <= end.date() <= end_date_obj:
                         if day_key not in daily_sleep:
                             daily_sleep[day_key] = 0
                         daily_sleep[day_key] += duration_hours
                 else:
                     # Nickerchen: Nur der Teil im Zeitraum
-                    start_of_period = tz_berlin.localize(datetime.combine(date.fromisoformat(start_date), datetime.min.time()))
+                    start_of_period = tz_berlin.localize(datetime.combine(start_date_obj, datetime.min.time()))
                     if start < start_of_period:
                         # Nur der Teil im Zeitraum zählen
                         day_key = end.date().isoformat()
-                        if start_date <= day_key <= end_date:
+                        # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
+                        if start_date_obj <= end.date() <= end_date_obj:
                             day_start = tz_berlin.localize(datetime.combine(end.date(), datetime.min.time()))
                             day_duration = (end - day_start).total_seconds() / 3600
                             if day_key not in daily_sleep:
@@ -608,6 +641,47 @@ class Feeding:
         db = get_db()
         db.execute('DELETE FROM feeding WHERE id = ?', (feeding_id,))
         db.commit()
+    
+    @staticmethod
+    def get_feeding_statistics(start_date, end_date):
+        """Gibt Still-Statistiken für einen Zeitraum zurück"""
+        db = get_db()
+        
+        # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
+        if isinstance(start_date, str):
+            start_date_obj = date.fromisoformat(start_date)
+        else:
+            start_date_obj = start_date
+        if isinstance(end_date, str):
+            end_date_obj = date.fromisoformat(end_date)
+        else:
+            end_date_obj = end_date
+        
+        range_start = datetime.combine(start_date_obj, datetime.min.time())
+        range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
+        range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
+        range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
+        # Alle Still-Einträge im Zeitraum
+        rows = db.execute(
+            '''SELECT id FROM feeding 
+               WHERE timestamp >= ? AND timestamp <= ?''',
+            (range_start_str, range_end_str)
+        ).fetchall()
+        
+        total_count = len(rows)
+        
+        # Berechne Anzahl der Tage im Zeitraum
+        days_count = (end_date_obj - start_date_obj).days + 1
+        
+        # Durchschnittswert
+        avg_count = round(total_count / days_count, 1) if days_count > 0 else 0
+        
+        return {
+            'total_count': total_count,
+            'avg_count': avg_count,
+            'days_count': days_count
+        }
 
 class Bottle:
     """Flasche-Tracking"""
@@ -700,6 +774,66 @@ class Diaper:
         db = get_db()
         db.execute('DELETE FROM diaper WHERE id = ?', (diaper_id,))
         db.commit()
+    
+    @staticmethod
+    def get_diaper_statistics(start_date, end_date):
+        """Gibt Windel-Statistiken für einen Zeitraum zurück"""
+        db = get_db()
+        
+        # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
+        if isinstance(start_date, str):
+            start_date_obj = date.fromisoformat(start_date)
+        else:
+            start_date_obj = start_date
+        if isinstance(end_date, str):
+            end_date_obj = date.fromisoformat(end_date)
+        else:
+            end_date_obj = end_date
+        
+        range_start = datetime.combine(start_date_obj, datetime.min.time())
+        range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
+        range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
+        range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
+        # Alle Windel-Einträge im Zeitraum
+        rows = db.execute(
+            '''SELECT type FROM diaper 
+               WHERE timestamp >= ? AND timestamp <= ?''',
+            (range_start_str, range_end_str)
+        ).fetchall()
+        
+        total_count = len(rows)
+        nass_count = 0
+        groß_count = 0
+        beides_count = 0
+        
+        for row in rows:
+            diaper_type = row['type']
+            if diaper_type == 'nass':
+                nass_count += 1
+            elif diaper_type == 'groß':
+                groß_count += 1
+            elif diaper_type == 'beides':
+                beides_count += 1
+        
+        # Berechne Anzahl der Tage im Zeitraum
+        days_count = (end_date_obj - start_date_obj).days + 1
+        
+        # Durchschnittswerte
+        avg_total = round(total_count / days_count, 1) if days_count > 0 else 0
+        avg_nass = round(nass_count / days_count, 1) if days_count > 0 else 0
+        avg_groß = round(groß_count / days_count, 1) if days_count > 0 else 0
+        
+        return {
+            'total_count': total_count,
+            'nass_count': nass_count,
+            'groß_count': groß_count,
+            'beides_count': beides_count,
+            'avg_total': avg_total,
+            'avg_nass': avg_nass,
+            'avg_groß': avg_groß,
+            'days_count': days_count
+        }
 
 class Temperature:
     """Temperatur-Tracking"""
@@ -744,11 +878,26 @@ class Temperature:
         db = get_db()
         
         # Alle Temperatur-Einträge im Zeitraum
+        # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
+        if isinstance(start_date, str):
+            start_date_obj = date.fromisoformat(start_date)
+        else:
+            start_date_obj = start_date
+        if isinstance(end_date, str):
+            end_date_obj = date.fromisoformat(end_date)
+        else:
+            end_date_obj = end_date
+        
+        range_start = datetime.combine(start_date_obj, datetime.min.time())
+        range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
+        range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
+        range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
         rows = db.execute(
             '''SELECT timestamp, value FROM temperature 
-               WHERE date(timestamp) >= ? AND date(timestamp) <= ?
+               WHERE timestamp >= ? AND timestamp <= ?
                ORDER BY timestamp''',
-            (start_date, end_date)
+            (range_start_str, range_end_str)
         ).fetchall()
         
         daily_temps = {}  # {date: [temperatures]}
@@ -841,14 +990,28 @@ def get_all_entries_today(selected_date=None):
         selected_date = date.today()
     elif isinstance(selected_date, str):
         selected_date = date.fromisoformat(selected_date)
-    target_date = selected_date.isoformat()
+    
+    # PERFORMANCE-OPTIMIERUNG: Verwende Range-Queries statt date() für bessere Index-Nutzung
+    day_start = datetime.combine(selected_date, datetime.min.time())
+    day_end = datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59))
+    day_start_str = day_start.strftime('%Y-%m-%dT%H:%M:%S')
+    day_end_str = day_end.strftime('%Y-%m-%dT%H:%M:%S')
+    
+    # Für Einträge vom Vortag, die am Tag enden
+    prev_date = selected_date - timedelta(days=1)
+    prev_day_start = datetime.combine(prev_date, datetime.min.time())
+    prev_day_end = datetime.combine(prev_date, datetime.max.time().replace(hour=23, minute=59, second=59))
+    prev_day_start_str = prev_day_start.strftime('%Y-%m-%dT%H:%M:%S')
+    prev_day_end_str = prev_day_end.strftime('%Y-%m-%dT%H:%M:%S')
     
     entries = []
     
-    # Schlaf: Einträge, die am Tag gestartet haben
+    # Schlaf: Einträge, die am Tag gestartet haben (nutzt Index auf start_time)
     sleep_rows = db.execute(
-        'SELECT id, "sleep" as category, type, start_time as timestamp, end_time FROM sleep WHERE date(start_time) = ?',
-        (target_date,)
+        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time 
+           FROM sleep 
+           WHERE start_time >= ? AND start_time <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in sleep_rows:
         sleep_type_display = "Nachtschlaf" if row['type'] == 'night' else "Nickerchen"
@@ -862,12 +1025,14 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Schlaf: Einträge, die am vorherigen Tag gestartet haben, aber am Tag enden
-    prev_date = (selected_date - timedelta(days=1)).isoformat()
+    # PERFORMANCE: Range-Query nutzt Indizes besser als date()
     sleep_rows_prev = db.execute(
         '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time 
            FROM sleep 
-           WHERE date(start_time) = ? AND date(end_time) = ? AND end_time IS NOT NULL''',
-        (prev_date, target_date)
+           WHERE start_time >= ? AND start_time <= ? 
+           AND end_time >= ? AND end_time <= ?
+           AND end_time IS NOT NULL''',
+        (prev_day_start_str, prev_day_end_str, day_start_str, day_end_str)
     ).fetchall()
     for row in sleep_rows_prev:
         sleep_type_display = "Nachtschlaf" if row['type'] == 'night' else "Nickerchen"
@@ -881,9 +1046,12 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Nächtliches Aufwachen: Einträge, die am Tag gestartet haben
+    # PERFORMANCE: Range-Query statt date()
     waking_rows = db.execute(
-        'SELECT id, start_time as timestamp, end_time FROM night_waking WHERE date(start_time) = ?',
-        (target_date,)
+        '''SELECT id, start_time as timestamp, end_time 
+           FROM night_waking 
+           WHERE start_time >= ? AND start_time <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in waking_rows:
         entries.append({
@@ -895,11 +1063,14 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Nächtliches Aufwachen: Einträge, die am vorherigen Tag gestartet haben, aber am Tag enden
+    # PERFORMANCE: Range-Query statt date()
     waking_rows_prev = db.execute(
         '''SELECT id, start_time as timestamp, end_time 
            FROM night_waking 
-           WHERE date(start_time) = ? AND date(end_time) = ? AND end_time IS NOT NULL''',
-        (prev_date, target_date)
+           WHERE start_time >= ? AND start_time <= ?
+           AND end_time >= ? AND end_time <= ?
+           AND end_time IS NOT NULL''',
+        (prev_day_start_str, prev_day_end_str, day_start_str, day_end_str)
     ).fetchall()
     for row in waking_rows_prev:
         entries.append({
@@ -911,9 +1082,12 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Stillen
+    # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
     feeding_rows = db.execute(
-        'SELECT id, "feeding" as category, timestamp, side FROM feeding WHERE date(timestamp) = ?',
-        (target_date,)
+        '''SELECT id, "feeding" as category, timestamp, side 
+           FROM feeding 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in feeding_rows:
         entries.append({
@@ -925,9 +1099,12 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Flasche
+    # PERFORMANCE: Range-Query statt date()
     bottle_rows = db.execute(
-        'SELECT id, "bottle" as category, timestamp, amount FROM bottle WHERE date(timestamp) = ?',
-        (target_date,)
+        '''SELECT id, "bottle" as category, timestamp, amount 
+           FROM bottle 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in bottle_rows:
         entries.append({
@@ -939,9 +1116,12 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Windel
+    # PERFORMANCE: Range-Query statt date()
     diaper_rows = db.execute(
-        'SELECT id, "diaper" as category, timestamp, type FROM diaper WHERE date(timestamp) = ?',
-        (target_date,)
+        '''SELECT id, "diaper" as category, timestamp, type 
+           FROM diaper 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in diaper_rows:
         entries.append({
@@ -953,9 +1133,12 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Temperatur
+    # PERFORMANCE: Range-Query statt date()
     temp_rows = db.execute(
-        'SELECT id, "temperature" as category, timestamp, value FROM temperature WHERE date(timestamp) = ?',
-        (target_date,)
+        '''SELECT id, "temperature" as category, timestamp, value 
+           FROM temperature 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in temp_rows:
         entries.append({
@@ -967,9 +1150,12 @@ def get_all_entries_today(selected_date=None):
         })
     
     # Medizin
+    # PERFORMANCE: Range-Query statt date()
     med_rows = db.execute(
-        'SELECT id, "medicine" as category, timestamp, name, dose FROM medicine WHERE date(timestamp) = ?',
-        (target_date,)
+        '''SELECT id, "medicine" as category, timestamp, name, dose 
+           FROM medicine 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
     ).fetchall()
     for row in med_rows:
         entries.append({
@@ -983,6 +1169,147 @@ def get_all_entries_today(selected_date=None):
     
     # Sortiere nach Zeitstempel
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
+    return entries
+
+def get_all_entries_date_range(start_date, end_date):
+    """
+    PERFORMANCE-OPTIMIERUNG: Gibt alle Einträge für einen Datumsbereich zurück
+    Statt get_all_entries_today() mehrmals aufzurufen, holen wir alle Daten in einer Query
+    """
+    db = get_db()
+    if isinstance(start_date, str):
+        start_date = date.fromisoformat(start_date)
+    if isinstance(end_date, str):
+        end_date = date.fromisoformat(end_date)
+    
+    # Erweitere den Bereich um einen Tag vor/nach für Einträge, die über Mitternacht gehen
+    extended_start = start_date - timedelta(days=1)
+    extended_end = end_date + timedelta(days=1)
+    
+    range_start = datetime.combine(extended_start, datetime.min.time())
+    range_end = datetime.combine(extended_end, datetime.max.time().replace(hour=23, minute=59, second=59))
+    range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
+    range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
+    
+    entries = []
+    
+    # PERFORMANCE: Eine Query für alle Schlaf-Einträge im Bereich
+    sleep_rows = db.execute(
+        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time 
+           FROM sleep 
+           WHERE (start_time >= ? AND start_time <= ?) 
+           OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL)''',
+        (range_start_str, range_end_str, range_start_str, range_end_str)
+    ).fetchall()
+    for row in sleep_rows:
+        sleep_type_display = "Nachtschlaf" if row['type'] == 'night' else "Nickerchen"
+        entries.append({
+            'id': row['id'],
+            'category': 'sleep',
+            'type': row['type'],
+            'timestamp': row['timestamp'],
+            'end_time': row['end_time'],
+            'display': sleep_type_display
+        })
+    
+    # Nächtliches Aufwachen im Bereich
+    waking_rows = db.execute(
+        '''SELECT id, start_time as timestamp, end_time 
+           FROM night_waking 
+           WHERE (start_time >= ? AND start_time <= ?)
+           OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL)''',
+        (range_start_str, range_end_str, range_start_str, range_end_str)
+    ).fetchall()
+    for row in waking_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'night_waking',
+            'timestamp': row['timestamp'],
+            'end_time': row['end_time'],
+            'display': 'Nächtliches Aufwachen'
+        })
+    
+    # Stillen im Bereich
+    feeding_rows = db.execute(
+        '''SELECT id, "feeding" as category, timestamp, side 
+           FROM feeding 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in feeding_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'feeding',
+            'timestamp': row['timestamp'],
+            'side': row['side'],
+            'display': f"Stillen ({row['side']})"
+        })
+    
+    # Flasche im Bereich
+    bottle_rows = db.execute(
+        '''SELECT id, "bottle" as category, timestamp, amount 
+           FROM bottle 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in bottle_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'bottle',
+            'timestamp': row['timestamp'],
+            'amount': row['amount'],
+            'display': f"Flasche ({row['amount']} ml)"
+        })
+    
+    # Windel im Bereich
+    diaper_rows = db.execute(
+        '''SELECT id, "diaper" as category, timestamp, type 
+           FROM diaper 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in diaper_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'diaper',
+            'timestamp': row['timestamp'],
+            'type': row['type'],
+            'display': f"Windel ({row['type']})"
+        })
+    
+    # Temperatur im Bereich
+    temp_rows = db.execute(
+        '''SELECT id, "temperature" as category, timestamp, value 
+           FROM temperature 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in temp_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'temperature',
+            'timestamp': row['timestamp'],
+            'value': row['value'],
+            'display': f"Temperatur ({row['value']}°C)"
+        })
+    
+    # Medizin im Bereich
+    med_rows = db.execute(
+        '''SELECT id, "medicine" as category, timestamp, name, dose 
+           FROM medicine 
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in med_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'medicine',
+            'timestamp': row['timestamp'],
+            'name': row['name'],
+            'dose': row['dose'],
+            'display': f"Medizin ({row['name']}, {row['dose']})"
+        })
+    
     return entries
 
 def get_latest_activities(limit=3):
@@ -1501,14 +1828,19 @@ class BabyInfo:
         now = datetime.now(tz_berlin)
         
         # Finde letztes Nachtschlaf-Aufwachen (PRIORITÄT: Nachtschlaf, nicht Nickerchen)
-        # Suche zuerst nach Nachtschlaf-Aufwachen heute
+        # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
+        day_start = datetime.combine(selected_date, datetime.min.time())
+        day_end = datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59))
+        day_start_str = day_start.strftime('%Y-%m-%dT%H:%M:%S')
+        day_end_str = day_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
         last_night_sleep_end = db.execute(
             '''SELECT end_time FROM sleep 
                WHERE type = 'night'
                AND end_time IS NOT NULL 
-               AND date(end_time) = ?
+               AND end_time >= ? AND end_time <= ?
                ORDER BY end_time DESC LIMIT 1''',
-            (selected_date.isoformat(),)
+            (day_start_str, day_end_str)
         ).fetchone()
         
         # Falls kein Nachtschlaf-Aufwachen heute, suche nach dem letzten Nachtschlaf-Aufwachen generell
@@ -1543,21 +1875,31 @@ class BabyInfo:
             desired_wake_time = tz_berlin.localize(datetime.combine(selected_date + timedelta(days=1), datetime.min.time().replace(hour=7)))
         
         # Für Wachzeit-Berechnung: Finde letztes Aufwachen (egal ob Nickerchen oder Nachtschlaf)
+        # PERFORMANCE: Range-Query statt date()
         last_sleep_end = db.execute(
             '''SELECT end_time FROM sleep 
                WHERE end_time IS NOT NULL 
-               AND date(end_time) = ?
+               AND end_time >= ? AND end_time <= ?
                ORDER BY end_time DESC LIMIT 1''',
-            (selected_date.isoformat(),)
+            (day_start_str, day_end_str)
         ).fetchone()
         
         # Berechne bereits geschlafene Tagschlafdauer heute
+        # PERFORMANCE: Range-Queries statt date() - nutzt Indizes besser
+        prev_date = selected_date - timedelta(days=1)
+        prev_day_start = datetime.combine(prev_date, datetime.min.time())
+        prev_day_end = datetime.combine(prev_date, datetime.max.time().replace(hour=23, minute=59, second=59))
+        prev_day_start_str = prev_day_start.strftime('%Y-%m-%dT%H:%M:%S')
+        prev_day_end_str = prev_day_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
         naps_today = db.execute(
             '''SELECT start_time, end_time FROM sleep 
                WHERE type = 'nap' 
-               AND (date(start_time) = ? OR (date(start_time) = ? AND date(end_time) = ?))
-               AND end_time IS NOT NULL''',
-            (selected_date.isoformat(), (selected_date - timedelta(days=1)).isoformat(), selected_date.isoformat())
+               AND end_time IS NOT NULL
+               AND ((start_time >= ? AND start_time <= ?)
+                    OR (start_time >= ? AND start_time <= ? 
+                        AND end_time >= ? AND end_time <= ?))''',
+            (day_start_str, day_end_str, prev_day_start_str, prev_day_end_str, day_start_str, day_end_str)
         ).fetchall()
         
         total_day_sleep_hours = 0.0
