@@ -9,13 +9,15 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 ### 📱 Hauptfunktionen
 
 - **Schlaf-Tracking**: Erfasse Nickerchen und Nachtschlaf mit automatischer Dauerberechnung
-- **Nickerchen-Vorschläge**: Die App berechnet basierend auf Alter und Schlafmustern, wann das nächste Nickerchen ansteht
+- **Nächtliches Aufwachen**: Dokumentiere nächtliche Wachphasen, die automatisch vom Nachtschlaf abgezogen werden
+- **Intelligente Schlaf-Vorschläge**: Die App berechnet basierend auf Alter und Schlafmustern, wann das nächste Nickerchen und der optimale Nachtschlaf ansteht
 - **Circular Timeline**: Visualisiere den Tagesverlauf als übersichtliches Kreisdiagramm
-- **Stillen & Flasche**: Tracke Stillzeiten (links/rechts) und Flaschenmengen
+- **Stillen & Flasche**: Tracke Stillzeiten (links/rechts) mit optionaler Endzeit und Flaschenmengen
 - **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
 - **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken
+- **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
 
 ### Screenshots
@@ -38,10 +40,12 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 
 ### 🎯 Besondere Features
 
-- **Intelligente Nickerchen-Vorschläge**: Basierend auf wissenschaftlichen Empfehlungen (babyschlaffee.de) und dem Alter deines Babys
+- **Intelligente Schlaf-Vorschläge**: Basierend auf wissenschaftlichen Empfehlungen (babyschlaffee.de) und dem Alter deines Babys. Berücksichtigt auch tatsächliche Schlafmuster aus der Vergangenheit
 - **Visuelles Timeline-Diagramm**: 24-Stunden-Übersicht mit allen Aktivitäten auf einen Blick
+- **Quick Entry**: Plus-Button oben auf dem Dashboard für schnellen Zugriff auf alle Eintragsmöglichkeiten
 - **Mobile-optimiert**: Große Buttons für einfache, einhändige Bedienung
 - **Persönlich**: Gib deinem Baby einen Namen - die App wird persönlicher
+- **Mehrsprachig**: Wechsle zwischen Deutsch, Englisch und Spanisch in den Einstellungen
 - **Lokal & sicher**: Alle Daten bleiben auf deinem Gerät, keine Cloud, keine Anmeldung
 
 ## Installation
@@ -89,14 +93,18 @@ docker-compose down
 
 Gehe zu **Einstellungen** und trage ein:
 - **Name des Babys** (optional, macht die App persönlicher)
-- **Geburtsdatum** (wichtig für die Nickerchen-Vorschläge)
+- **Geburtsdatum** (wichtig für die Schlaf-Vorschläge)
+- **Sprache**: Wähle zwischen Deutsch, Englisch oder Spanisch
+- **Dark Mode**: Aktiviere für schonende Nutzung in der Nacht
 
 ### 2. Erste Einträge erfassen
 
 Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
 
+- **Plus-Button** (oben rechts): Öffnet ein Modal mit allen Eintragsmöglichkeiten
 - **Schlaf**: Starte ein Nickerchen oder den Nachtschlaf. Die App stoppt automatisch die Zeit.
-- **Stillen**: Wähle links oder rechts
+- **Nächtliches Aufwachen**: Dokumentiere Wachphasen in der Nacht (wird automatisch vom Nachtschlaf abgezogen)
+- **Stillen**: Wähle links oder rechts. Optional kannst du eine Endzeit eintragen, um die Stilldauer zu dokumentieren.
 - **Flasche**: Gib die Menge in ml ein
 - **Windel**: Wähle nass, groß oder beides
 - **Temperatur**: Trage die gemessene Temperatur ein
@@ -110,7 +118,7 @@ Das Dashboard zeigt dir:
 - **Schlafdauer heute**: Gesamte Schlafzeit (Nachtschlaf + Nickerchen)
 - **Letzte Aktivitäten**: Wann war das letzte Stillen, die letzte Flasche, etc.
 - **Circular Timeline**: Visuelle Darstellung des Tagesverlaufs
-- **Nickerchen-Vorschläge**: Wann das nächste Nickerchen empfohlen wird
+- **Schlaf-Vorschläge**: Wann das nächste Nickerchen und der optimale Nachtschlaf empfohlen werden
 - **Heutige Einträge**: Chronologische Liste aller Aktivitäten
 
 ### 4. Einträge durchsuchen
@@ -127,8 +135,9 @@ Die Seite **Einträge** bietet:
 
 - **Nachtschlaf starten**: Wenn das Baby ins Bett geht, drücke "Nachtschlaf starten"
 - **Nachtschlaf beenden**: Beim Aufwachen am Morgen "Schlaf beenden" drücken
+- **Nächtliches Aufwachen**: Wenn das Baby nachts wach wird, starte "Nächtliches Aufwachen". Beim Wiedereinschlafen beende es. Die Dauer wird automatisch vom Nachtschlaf abgezogen.
 - **Nickerchen nachtragen**: Du kannst auch Nickerchen mit angepasster Startzeit nachtragen
-- **Vorschläge beachten**: Die App berechnet basierend auf Alter und Schlafmustern, wann das nächste Nickerchen sinnvoll ist
+- **Vorschläge beachten**: Die App berechnet basierend auf Alter und tatsächlichen Schlafmustern, wann das nächste Nickerchen und der optimale Nachtschlaf sinnvoll sind
 
 ### Schnellaktionen
 
@@ -150,8 +159,8 @@ Die Seite **Einträge** bietet:
 
 ## Häufige Fragen
 
-**Wie funktionieren die Nickerchen-Vorschläge?**
-Die App nutzt wissenschaftlich fundierte Empfehlungen basierend auf dem Alter deines Babys. Sie berücksichtigt bereits gemachte Nickerchen, die Tageszeit und die noch empfohlene Tagschlafdauer.
+**Wie funktionieren die Schlaf-Vorschläge?**
+Die App nutzt wissenschaftlich fundierte Empfehlungen basierend auf dem Alter deines Babys. Sie berücksichtigt bereits gemachte Nickerchen, die Tageszeit und die noch empfohlene Tagschlafdauer. Für Nachtschlaf-Vorschläge werden auch die tatsächlichen Schlafmuster der letzten Tage berücksichtigt.
 
 **Kann ich Einträge bearbeiten?**
 Ja, alle Einträge können nachträglich bearbeitet oder gelöscht werden.
@@ -164,6 +173,9 @@ Alle Daten werden lokal in einer SQLite-Datenbank gespeichert. Bei Docker-Nutzun
 
 **Kann ich die Daten exportieren?**
 Die Datenbank-Datei kann direkt kopiert werden. Sie liegt im `./data` Verzeichnis.
+
+**Welche Sprachen werden unterstützt?**
+Die App unterstützt Deutsch (Standard), Englisch und Spanisch. Die Sprache kann in den Einstellungen umgeschaltet werden.
 
 ## Support
 
