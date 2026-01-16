@@ -15,7 +15,26 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
+- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken
 - **Dark Mode**: Schonende Darstellung für die Nacht
+
+### Screenshots
+
+![Dashboard Übersicht](screenshots/01-dashboard-overview.png)
+
+![Schlaf-Empfehlungen](screenshots/02-sleep-recommendations.png)
+
+![Circular Timeline](screenshots/03-circular-timeline.png)
+
+![Schnellaktionen](screenshots/04-quick-actions.png)
+
+![Einträge - Tagesansicht](screenshots/05-entries-day-view.png)
+
+![Einträge - Wochenansicht](screenshots/06-entries-week-view.png)
+
+![Einstellungen](screenshots/07-settings.png)
+
+![Trends & Statistiken](screenshots/08-trends.png)
 
 ### 🎯 Besondere Features
 

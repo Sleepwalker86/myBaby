@@ -11,4 +11,5 @@ venv/
 data/
 .gitignore
 .DS_Store
+screenshots/
 
