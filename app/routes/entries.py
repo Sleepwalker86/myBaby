@@ -2,10 +2,55 @@ from flask import Blueprint, render_template, request
 from app.models.models import get_all_entries_today, get_all_entries_date_range
 from datetime import datetime, date, timedelta
 import pytz
+from app.i18n import get_language, _
 
 tz_berlin = pytz.timezone('Europe/Berlin')
 
 bp = Blueprint('entries', __name__, url_prefix='/entries')
+
+@bp.app_template_filter('translate_entry_display')
+def translate_entry_display(entry):
+    """Übersetzt die display-Eigenschaft eines Eintrags basierend auf seiner Kategorie"""
+    if not entry:
+        return ""
+    
+    category = entry.get('category', '')
+    
+    if category == 'sleep':
+        sleep_type = entry.get('type', '')
+        if sleep_type == 'night':
+            return _('entries.night_sleep')
+        else:
+            return _('entries.nap')
+    elif category == 'night_waking':
+        return _('entries.night_waking')
+    elif category == 'feeding':
+        side = entry.get('side', '').lower()
+        if side == 'left' or side == 'links':
+            return _('entries.feeding_left')
+        else:
+            return _('entries.feeding_right')
+    elif category == 'bottle':
+        amount = entry.get('amount', 0)
+        return _('bottle.title') + f" ({amount} ml)"
+    elif category == 'diaper':
+        diaper_type = entry.get('type', '')
+        if diaper_type == 'nass':
+            return _('entries.diaper_wet')
+        elif diaper_type == 'groß':
+            return _('entries.diaper_solid')
+        else:
+            return _('entries.diaper_both')
+    elif category == 'temperature':
+        value = entry.get('value', 0)
+        return _('entries.temperature') + f" ({value}°C)"
+    elif category == 'medicine':
+        name = entry.get('name', '')
+        dose = entry.get('dose', '')
+        return _('entries.medicine') + f" ({name}, {dose})"
+    
+    # Fallback: Original display verwenden
+    return entry.get('display', '')
 
 @bp.app_template_filter('format_datetime_de')
 def format_datetime_de(value):
@@ -137,11 +182,11 @@ def entries():
         entries.sort(key=get_entry_time)
         date_display = selected_date.strftime('%d.%m.%Y')
         if selected_date == date.today():
-            date_display = "Heute"
+            date_display = _('common.today')
         elif selected_date == date.today() - timedelta(days=1):
-            date_display = "Gestern"
+            date_display = _('common.yesterday')
         elif selected_date == date.today() - timedelta(days=2):
-            date_display = "Vorgestern"
+            date_display = _('common.day_before_yesterday')
     else:  # week
         # Wochenansicht: Hole Einträge für die gesamte Woche
         days_since_monday = selected_date.weekday()
@@ -274,15 +319,16 @@ def entries():
         date_display = f"{week_start.strftime('%d.%m.%Y')} - {week_end.strftime('%d.%m.%Y')}"
     
     today = date.today()
-    # Wochentags-Mapping für deutsche Anzeige
+    # Wochentags-Mapping basierend auf aktueller Sprache
+    lang = get_language()
     weekday_names = {
-        0: 'Montag',
-        1: 'Dienstag',
-        2: 'Mittwoch',
-        3: 'Donnerstag',
-        4: 'Freitag',
-        5: 'Samstag',
-        6: 'Sonntag'
+        0: _('common.weekday_monday', lang=lang),
+        1: _('common.weekday_tuesday', lang=lang),
+        2: _('common.weekday_wednesday', lang=lang),
+        3: _('common.weekday_thursday', lang=lang),
+        4: _('common.weekday_friday', lang=lang),
+        5: _('common.weekday_saturday', lang=lang),
+        6: _('common.weekday_sunday', lang=lang)
     }
     
     return render_template('entries.html',

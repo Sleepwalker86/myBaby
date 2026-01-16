@@ -3,8 +3,61 @@ from app.models.models import (
     Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo, NightWaking
 )
 from app.models.database import get_db
+from app.i18n import _
 from datetime import datetime, date, timedelta
 import pytz
+
+def get_baby_name():
+    """Hilfsfunktion zum Abrufen des Baby-Namens"""
+    return BabyInfo.get_name()
+
+tz_berlin = pytz.timezone('Europe/Berlin')
+
+bp = Blueprint('main', __name__)
+
+@bp.app_template_filter('translate_entry_display')
+def translate_entry_display(entry):
+    """Übersetzt die display-Eigenschaft eines Eintrags basierend auf seiner Kategorie"""
+    if not entry:
+        return ""
+    
+    category = entry.get('category', '')
+    
+    if category == 'sleep':
+        sleep_type = entry.get('type', '')
+        if sleep_type == 'night':
+            return _('entries.night_sleep')
+        else:
+            return _('entries.nap')
+    elif category == 'night_waking':
+        return _('entries.night_waking')
+    elif category == 'feeding':
+        side = entry.get('side', '').lower()
+        if side == 'left' or side == 'links':
+            return _('entries.feeding_left')
+        else:
+            return _('entries.feeding_right')
+    elif category == 'bottle':
+        amount = entry.get('amount', 0)
+        return _('bottle.title') + f" ({amount} ml)"
+    elif category == 'diaper':
+        diaper_type = entry.get('type', '')
+        if diaper_type == 'nass':
+            return _('entries.diaper_wet')
+        elif diaper_type == 'groß':
+            return _('entries.diaper_solid')
+        else:
+            return _('entries.diaper_both')
+    elif category == 'temperature':
+        value = entry.get('value', 0)
+        return _('entries.temperature') + f" ({value}°C)"
+    elif category == 'medicine':
+        name = entry.get('name', '')
+        dose = entry.get('dose', '')
+        return _('entries.medicine') + f" ({name}, {dose})"
+    
+    # Fallback: Original display verwenden
+    return entry.get('display', '')
 
 def get_baby_name():
     """Hilfsfunktion zum Abrufen des Baby-Namens"""
@@ -92,7 +145,7 @@ def calculate_duration(start_time, end_time):
 def format_time_ago(timestamp):
     """Formatiert eine Zeitstempel als 'vor X Stunden/Minuten'"""
     if not timestamp:
-        return "Noch nie"
+        return _('status.never')
     
     try:
         if isinstance(timestamp, str):
@@ -112,25 +165,25 @@ def format_time_ago(timestamp):
         total_seconds = int(diff.total_seconds())
         
         if total_seconds < 0:
-            return "Gerade eben"
+            return _('common.just_now')
         
         # Wenn länger als 48 Stunden (172800 Sekunden) her, zeige "Noch nie"
         if total_seconds > 48 * 3600:
-            return "Noch nie"
+            return _('status.never')
         
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         
         if hours > 0:
             if minutes > 0:
-                return f"vor {hours}h {minutes}m"
-            return f"vor {hours}h"
+                return _('common.ago_hours_minutes', hours=hours, minutes=minutes)
+            return _('common.ago_hours', hours=hours)
         elif minutes > 0:
-            return f"vor {minutes}m"
+            return _('common.ago_minutes', minutes=minutes)
         else:
-            return "Gerade eben"
+            return _('common.just_now')
     except (ValueError, AttributeError):
-        return "Unbekannt"
+        return _('common.unknown')
 
 def format_duration_hours(hours):
     """Formatiert Stunden als 'Xh Ym'"""
@@ -170,7 +223,7 @@ def index():
     
     # Aktueller Schlafstatus (nur für heute relevant)
     active_sleep = Sleep.get_active_sleep() if is_today else None
-    sleep_status = "schläft" if active_sleep else "wach"
+    sleep_status = _('status.sleeping') if active_sleep else _('status.awake')
     
     # Aktives nächtliches Aufwachen (nur für heute relevant)
     active_night_waking = NightWaking.get_active() if is_today else None
@@ -195,7 +248,7 @@ def index():
             if last_sleep:
                 awake_since = format_time_ago(last_sleep['end_time'])
             else:
-                awake_since = "Heute"
+                awake_since = _('common.today')
     else:
         awake_since = None
         sleep_since = None
@@ -224,6 +277,10 @@ def index():
     # Timeline-Events werden immer berechnet, auch wenn Baby schläft
     # Hole alle Einträge des Tages
     for entry in entries:
+        # Überspringe nächtliches Aufwachen - soll nicht im Kreisdiagramm angezeigt werden
+        if entry.get('category') == 'night_waking':
+            continue
+        
         # Für Schlaf-Einträge: Unterscheide zwischen Nachtschlaf und Nickerchen
         if entry.get('category') == 'sleep':
             start_time_str = entry.get('timestamp') or entry.get('start_time')
@@ -360,11 +417,11 @@ def index():
     # Datum formatieren für Anzeige
     date_display = selected_date.strftime('%d.%m.%Y')
     if is_today:
-        date_display = "Heute"
+        date_display = _('common.today')
     elif selected_date == date.today() - timedelta(days=1):
-        date_display = "Gestern"
+        date_display = _('common.yesterday')
     elif selected_date == date.today() - timedelta(days=2):
-        date_display = "Vorgestern"
+        date_display = _('common.day_before_yesterday')
     
     # Baby-Name für persönlichere Anzeige
     baby_name = BabyInfo.get_name()

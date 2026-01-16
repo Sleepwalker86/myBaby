@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ current_language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MyBaby{% if baby_name %} - {{ baby_name }}{% endif %}</title>
+    <meta name="lang" content="{{ current_language }}">
     <!-- Favicon - SVG für moderne Browser (bevorzugt) -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="icon" type="image/svg+xml" sizes="any" href="{{ url_for('static', filename='favicon.svg') }}">
@@ -376,22 +377,22 @@
                 MyBaby{% if baby_name %} - {{ baby_name }}{% endif %}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="{{ _('common.toggle_navigation') }}">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('main.index') }}">{{ _('nav.dashboard') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('entries.entries') }}">Einträge</a>
+                        <a class="nav-link" href="{{ url_for('entries.entries') }}">{{ _('nav.entries') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('trends.trends') }}">Trends</a>
+                        <a class="nav-link" href="{{ url_for('trends.trends') }}">{{ _('nav.trends') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('settings.settings') }}">Einstellungen</a>
+                        <a class="nav-link" href="{{ url_for('settings.settings') }}">{{ _('nav.settings') }}</a>
                     </li>
                 </ul>
             </div>

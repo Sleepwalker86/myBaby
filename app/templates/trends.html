@@ -5,7 +5,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <h4 class="mb-3">
-                <i class="bi bi-graph-up"></i> Trends & Statistiken
+                <i class="bi bi-graph-up"></i> {{ _('trends.title') }}
             </h4>
         </div>
     </div>
@@ -15,21 +15,21 @@
         <div class="col-12">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Zeitraum wählen</h5>
+                    <h5 class="card-title mb-3">{{ _('trends.select_period') }}</h5>
                     <form method="GET" action="{{ url_for('trends.trends') }}" class="row g-3">
                         <div class="col-md-5">
-                            <label for="start_date" class="form-label">Von</label>
+                            <label for="start_date" class="form-label">{{ _('trends.from') }}</label>
                             <input type="date" class="form-control" id="start_date" name="start_date" 
                                    value="{{ start_date }}" required>
                         </div>
                         <div class="col-md-5">
-                            <label for="end_date" class="form-label">Bis</label>
+                            <label for="end_date" class="form-label">{{ _('trends.to') }}</label>
                             <input type="date" class="form-control" id="end_date" name="end_date" 
                                    value="{{ end_date }}" required>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-filter"></i> Filtern
+                                <i class="bi bi-filter"></i> {{ _('common.filter') }}
                             </button>
                         </div>
                     </form>
@@ -43,16 +43,16 @@
         <div class="col-md-3 mb-3 d-flex">
             <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2">Gesamtschlaf</h6>
+                    <h6 class="text-muted mb-2">{{ _('trends.total_sleep') }}</h6>
                     <h3 class="mb-0">{{ stats.total_sleep }}h</h3>
-                    <small class="text-muted">{{ stats.total_days }} Tage</small>
+                    <small class="text-muted">{{ stats.total_days }} {{ _('trends.days') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3 d-flex">
             <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2">Ø täglicher Schlaf</h6>
+                    <h6 class="text-muted mb-2">{{ _('trends.avg_daily_sleep') }}</h6>
                     <h3 class="mb-0">{{ stats.avg_daily_sleep }}h</h3>
                 </div>
             </div>
@@ -60,7 +60,7 @@
         <div class="col-md-3 mb-3 d-flex">
             <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2">Ø Aufwachzeit</h6>
+                    <h6 class="text-muted mb-2">{{ _('trends.avg_wake_time') }}</h6>
                     <h3 class="mb-0">{{ stats.avg_wake_time_formatted }}</h3>
                 </div>
             </div>
@@ -68,7 +68,7 @@
         <div class="col-md-3 mb-3 d-flex">
             <div class="card card-modern stats-card w-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted mb-2">Ø Einschlafzeit</h6>
+                    <h6 class="text-muted mb-2">{{ _('trends.avg_sleep_time') }}</h6>
                     <h3 class="mb-0">{{ stats.avg_sleep_time_formatted }}</h3>
                 </div>
             </div>
@@ -81,23 +81,23 @@
             <div class="card card-modern">
                 <div class="card-body">
                     <h5 class="card-title mb-3">
-                        <i class="bi bi-droplet"></i> Windel-Statistiken
+                        <i class="bi bi-droplet"></i> {{ _('trends.diaper_stats') }}
                     </h5>
                     <div class="row text-center">
                         <div class="col-4">
-                            <h6 class="text-muted mb-2">Ø Gesamt</h6>
+                            <h6 class="text-muted mb-2">{{ _('trends.avg_total') }}</h6>
                             <h4 class="mb-0">{{ diaper_stats.avg_total }}</h4>
-                            <small class="text-muted">{{ diaper_stats.total_count }} insgesamt</small>
+                            <small class="text-muted">{{ diaper_stats.total_count }} {{ _('trends.total') }}</small>
                         </div>
                         <div class="col-4">
-                            <h6 class="text-muted mb-2">Ø Nass</h6>
+                            <h6 class="text-muted mb-2">{{ _('trends.avg_wet') }}</h6>
                             <h4 class="mb-0">{{ diaper_stats.avg_nass }}</h4>
-                            <small class="text-muted">{{ diaper_stats.nass_count }} insgesamt</small>
+                            <small class="text-muted">{{ diaper_stats.nass_count }} {{ _('trends.total') }}</small>
                         </div>
                         <div class="col-4">
-                            <h6 class="text-muted mb-2">Ø Groß</h6>
+                            <h6 class="text-muted mb-2">{{ _('trends.avg_solid') }}</h6>
                             <h4 class="mb-0">{{ diaper_stats.avg_groß }}</h4>
-                            <small class="text-muted">{{ diaper_stats.groß_count }} insgesamt</small>
+                            <small class="text-muted">{{ diaper_stats.groß_count }} {{ _('trends.total') }}</small>
                         </div>
                     </div>
                 </div>
@@ -107,13 +107,13 @@
             <div class="card card-modern">
                 <div class="card-body">
                     <h5 class="card-title mb-3">
-                        <i class="bi bi-heart"></i> Still-Statistiken
+                        <i class="bi bi-heart"></i> {{ _('trends.feeding_stats') }}
                     </h5>
                     <div class="row text-center">
                         <div class="col-12">
-                            <h6 class="text-muted mb-2">Ø Still-Einträge pro Tag</h6>
+                            <h6 class="text-muted mb-2">{{ _('trends.avg_feeding_entries') }}</h6>
                             <h4 class="mb-0">{{ feeding_stats.avg_count }}</h4>
-                            <small class="text-muted">{{ feeding_stats.total_count }} insgesamt</small>
+                            <small class="text-muted">{{ feeding_stats.total_count }} {{ _('trends.total') }}</small>
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
         <div class="col-12">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Gesamtschlaf pro Tag</h5>
+                    <h5 class="card-title mb-3">{{ _('trends.total_sleep_per_day') }}</h5>
                     <canvas id="totalSleepChart" height="80"></canvas>
                 </div>
             </div>
@@ -138,11 +138,11 @@
         <div class="col-md-6 mb-3">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Schlafverteilung</h5>
+                    <h5 class="card-title mb-3">{{ _('trends.sleep_distribution') }}</h5>
                     <canvas id="sleepDistributionChart"></canvas>
                     <div class="mt-3 text-center">
-                        <p class="mb-1"><strong>Nachtschlaf:</strong> {{ stats.night_hours }}h ({{ stats.night_percentage }}%)</p>
-                        <p class="mb-0"><strong>Nickerchen:</strong> {{ stats.nap_hours }}h ({{ stats.nap_percentage }}%)</p>
+                        <p class="mb-1"><strong>{{ _('trends.night_sleep') }}:</strong> {{ stats.night_hours }}h ({{ stats.night_percentage }}%)</p>
+                        <p class="mb-0"><strong>{{ _('trends.naps') }}:</strong> {{ stats.nap_hours }}h ({{ stats.nap_percentage }}%)</p>
                     </div>
                 </div>
             </div>
@@ -150,7 +150,7 @@
         <div class="col-md-6 mb-3">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Aufwachzeiten</h5>
+                    <h5 class="card-title mb-3">{{ _('trends.wake_times') }}</h5>
                     <canvas id="wakeTimesChart"></canvas>
                 </div>
             </div>
@@ -162,7 +162,7 @@
         <div class="col-12">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Einschlafzeiten</h5>
+                    <h5 class="card-title mb-3">{{ _('trends.sleep_times') }}</h5>
                     <canvas id="sleepTimesChart" height="80"></canvas>
                 </div>
             </div>
@@ -175,18 +175,18 @@
         <div class="col-12">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Temperaturverlauf</h5>
+                    <h5 class="card-title mb-3">{{ _('trends.temperature_chart') }}</h5>
                     <div class="row mb-3">
                         <div class="col-4 col-md-4 text-center">
-                            <small class="text-muted">Ø Temperatur</small>
+                            <small class="text-muted">{{ _('trends.avg_temperature') }}</small>
                             <div class="fw-bold">{{ temp_stats.avg_temp }}°C</div>
                         </div>
                         <div class="col-4 col-md-4 text-center">
-                            <small class="text-muted">Min</small>
+                            <small class="text-muted">{{ _('trends.min') }}</small>
                             <div class="fw-bold">{{ temp_stats.min_temp }}°C</div>
                         </div>
                         <div class="col-4 col-md-4 text-center">
-                            <small class="text-muted">Max</small>
+                            <small class="text-muted">{{ _('trends.max') }}</small>
                             <div class="fw-bold">{{ temp_stats.max_temp }}°C</div>
                         </div>
                     </div>
@@ -215,7 +215,7 @@
         data: {
             labels: dates.map(d => new Date(d).toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'})),
             datasets: [{
-                label: 'Schlafstunden',
+                label: '{{ _('trends.sleep_hours') }}',
                 data: sleepHours,
                 borderColor: 'rgb(2, 94, 115)',
                 backgroundColor: 'rgba(2, 94, 115, 0.1)',
@@ -233,7 +233,7 @@
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return 'Schlafstunden: ' + context.parsed.y.toFixed(1) + 'h';
+                            return '{{ _('trends.sleep_hours') }}: ' + context.parsed.y.toFixed(1) + 'h';
                         }
                     }
                 }
@@ -243,14 +243,14 @@
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Stunden'
+                        text: '{{ _('trends.hours') }}'
                     }
                 }
             }
         }
     });
     } else {
-        document.getElementById('totalSleepChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+        document.getElementById('totalSleepChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
     }
     
     // Schlafverteilung Chart
@@ -258,7 +258,7 @@
     new Chart(document.getElementById('sleepDistributionChart'), {
         type: 'doughnut',
         data: {
-            labels: ['Nachtschlaf', 'Nickerchen'],
+            labels: ['{{ _('trends.night_sleep') }}', '{{ _('trends.naps') }}'],
             datasets: [{
                 data: [{{ stats.night_hours }}, {{ stats.nap_hours }}],
                 backgroundColor: [
@@ -278,7 +278,7 @@
         }
     });
     } else {
-        document.getElementById('sleepDistributionChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+        document.getElementById('sleepDistributionChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
     }
     
     // Aufwachzeiten Histogramm
@@ -299,7 +299,7 @@
         data: {
             labels: Array.from({length: 24}, (_, i) => i + ':00'),
             datasets: [{
-                label: 'Anzahl',
+                label: '{{ _('trends.count') }}',
                 data: wakeTimeBins,
                 backgroundColor: 'rgba(3, 166, 136, 0.6)',
                 borderColor: 'rgb(3, 166, 136)',
@@ -325,7 +325,7 @@
         }
     });
     } else {
-        document.getElementById('wakeTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+        document.getElementById('wakeTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
     }
     
     // Einschlafzeiten Chart
@@ -346,7 +346,7 @@
         data: {
             labels: Array.from({length: 24}, (_, i) => i + ':00'),
             datasets: [{
-                label: 'Anzahl',
+                label: '{{ _('trends.count') }}',
                 data: sleepTimeBins,
                 backgroundColor: 'rgba(242, 102, 139, 0.6)',
                 borderColor: 'rgb(242, 102, 139)',
@@ -372,7 +372,7 @@
         }
     });
     } else {
-        document.getElementById('sleepTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">Keine Daten verfügbar</p>';
+        document.getElementById('sleepTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
     }
     
     // Temperaturverlauf Chart
@@ -401,7 +401,7 @@
             data: {
                 labels: tempLabels,
                 datasets: [{
-                    label: 'Temperatur (°C)',
+                    label: '{{ _('trends.temperature_chart') }} (°C)',
                     data: tempValues,
                     borderColor: 'rgb(242, 102, 139)',
                     backgroundColor: 'rgba(242, 102, 139, 0.1)',
@@ -440,7 +440,7 @@
                         beginAtZero: false,
                         title: {
                             display: true,
-                            text: 'Temperatur (°C)'
+                            text: '{{ _('trends.temperature_chart') }} (°C)'
                         },
                         min: Math.min(...tempValues) - 0.5,
                         max: Math.max(...tempValues) + 0.5

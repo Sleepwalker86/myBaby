@@ -7,18 +7,18 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="section-title mb-0 d-none d-md-block">
-                    <i class="bi bi-list-ul"></i> Alle Einträge
+                    <i class="bi bi-list-ul"></i> {{ _('common.all_entries') }}
                 </h5>
                 <div class="d-flex align-items-center gap-2">
                     <!-- View Toggle -->
                     <div class="btn-group" role="group">
                         <a href="{{ url_for('entries.entries', view='day', date=selected_date.isoformat()) }}" 
                            class="btn btn-sm {{ 'btn-primary' if view == 'day' else 'btn-outline-primary' }}">
-                            <i class="bi bi-calendar-day"></i> Tag
+                            <i class="bi bi-calendar-day"></i> {{ _('common.day') }}
                         </a>
                         <a href="{{ url_for('entries.entries', view='week', date=selected_date.isoformat()) }}" 
                            class="btn btn-sm {{ 'btn-primary' if view == 'week' else 'btn-outline-primary' }}">
-                            <i class="bi bi-calendar-week"></i> Woche
+                            <i class="bi bi-calendar-week"></i> {{ _('common.week') }}
                         </a>
                     </div>
                     
@@ -41,7 +41,7 @@
                     </span>
                     {% endif %}
                     <a href="{{ url_for('entries.entries', view=view) }}" class="btn btn-sm btn-outline-primary">
-                        Heute
+                        {{ _('common.today') }}
                     </a>
                 </div>
             </div>
@@ -70,11 +70,11 @@
                 <div class="day-group border-bottom">
                     <div class="fw-bold text-primary mb-2 px-3 pt-3 pb-2">
                         {% if entry_day == today %}
-                            Heute, {{ entry_day.strftime('%d.%m.%Y') }}
+                            {{ _('common.today') }}, {{ entry_day.strftime('%d.%m.%Y') }}
                         {% elif entry_day == today - timedelta(days=1) %}
-                            Gestern, {{ entry_day.strftime('%d.%m.%Y') }}
+                            {{ _('common.yesterday') }}, {{ entry_day.strftime('%d.%m.%Y') }}
                         {% elif entry_day == today - timedelta(days=2) %}
-                            Vorgestern, {{ entry_day.strftime('%d.%m.%Y') }}
+                            {{ _('common.day_before_yesterday') }}, {{ entry_day.strftime('%d.%m.%Y') }}
                         {% else %}
                             {{ weekday_names[entry_day.weekday()] }}, {{ entry_day.strftime('%d.%m.%Y') }}
                         {% endif %}
@@ -140,7 +140,7 @@
                     </div>
 
                     <div class="flex-grow-1">
-                        <div class="fw-bold mb-1">{{ entry.display }}</div>
+                        <div class="fw-bold mb-1">{{ entry|translate_entry_display }}</div>
                         {% if entry.category == 'sleep' and entry.end_time %}
                             <div class="time-text">
                                 {{ entry.timestamp|format_datetime_de }} -
@@ -230,7 +230,7 @@
                     </div>
 
                     <div class="flex-grow-1">
-                        <div class="fw-bold mb-1">{{ entry.display }}</div>
+                        <div class="fw-bold mb-1">{{ entry|translate_entry_display }}</div>
                         {% if entry.category == 'sleep' and entry.end_time %}
                             <div class="time-text">
                                 {{ entry.timestamp|format_datetime_de }} -
@@ -257,7 +257,7 @@
     {% endif %}
                     {% else %}
                         <div class="entry-item text-center text-muted">
-                            <p class="mb-0">Keine Einträge gefunden</p>
+                            <p class="mb-0">{{ _('common.no_entries_found') }}</p>
                         </div>
                     {% endif %}
                 </div>

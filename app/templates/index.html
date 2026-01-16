@@ -21,12 +21,12 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-1">
-                                <i class="bi bi-moon-stars"></i> Schlafstatus
+                                <i class="bi bi-moon-stars"></i> {{ _('status.sleep_status') }}
                             </h5>
-                            <p class="mb-0 text-muted">Schlafdauer heute: <strong>{{ sleep_duration }}</strong></p>
+                            <p class="mb-0 text-muted">{{ _('status.sleep_duration_today') }}: <strong>{{ sleep_duration }}</strong></p>
                         </div>
                         <div>
-                            <span class="status-badge {{ 'sleeping' if sleep_status == 'schläft' else 'awake' }}">
+                            <span class="status-badge {{ 'sleeping' if active_sleep else 'awake' }}">
                                 {{ sleep_status }}
                             </span>
                         </div>
@@ -50,9 +50,9 @@
                     </div>
                     <div class="fw-bold mb-1">
                         {% if active_sleep %}
-                            {% if baby_name %}{{ baby_name }} schläft{% else %}Schläft{% endif %} seit
+                            {% if baby_name %}{{ baby_name }} {{ _('status.sleeps_since') }}{% else %}{{ _('status.sleeps_since')|capitalize }}{% endif %}
                         {% else %}
-                            {% if baby_name %}{{ baby_name }} ist Wach{% endif %} seit
+                            {% if baby_name %}{{ baby_name }} {{ _('status.is_awake_since') }}{% endif %}
                         {% endif %}
                     </div>
                     <div class="text-muted small">
@@ -75,7 +75,7 @@
                             </g>
                         </svg>
                     </div>
-                    <div class="fw-bold mb-1">Letztes Stillen</div>
+                    <div class="fw-bold mb-1">{{ _('status.last_feeding') }}</div>
                     <div class="text-muted small">{{ feeding_ago }}</div>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                             <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                         </svg>
                     </div>
-                    <div class="fw-bold mb-1">Letzte Windel</div>
+                    <div class="fw-bold mb-1">{{ _('status.last_diaper') }}</div>
                     <div class="text-muted small">{{ diaper_ago }}</div>
                 </div>
             </div>
@@ -103,9 +103,9 @@
                 <div class="card-body py-2">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="section-title mb-0 small">
-                            <i class="bi bi-moon-stars"></i> Schlaf-Empfehlungen{% if baby_name %} für {{ baby_name }}{% endif %}
+                            <i class="bi bi-moon-stars"></i> {{ _('sleep.recommendations') }}{% if baby_name %} {{ _('common.for') }} {{ baby_name }}{% endif %}
                             {% if baby_age_months is not none %}
-                            <span class="text-muted ms-2">({{ baby_age_months }} Monat{% if baby_age_months != 1 %}e{% endif %})</span>
+                            <span class="text-muted ms-2">({{ baby_age_months }} {% if baby_age_months == 1 %}{{ _('settings.month') }}{% else %}{{ _('settings.months') }}{% endif %})</span>
                             {% endif %}
                         </h6>
                     </div>
@@ -117,14 +117,14 @@
                                 {% for suggestion in nap_suggestions %}
                                     {% if suggestion.waiting_for_nap_end %}
                                     <div class="alert alert-warning mb-0 py-2">
-                                        <small><i class="bi bi-hourglass-split"></i> <strong>Nickerchen läuft...</strong></small>
+                                        <small><i class="bi bi-hourglass-split"></i> <strong>{{ _('sleep.nap_running') }}</strong></small>
                                     </div>
                                     {% elif suggestion.suggested_time %}
                                     <div class="alert alert-secondary mb-0 py-2">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div class="flex-grow-1">
-                                                <small class="d-block mb-1"><strong>Nickerchen:</strong> <span class="fw-bold">{{ suggestion.suggested_time.strftime('%H:%M') }} Uhr</span></small>
-                                                <small class="text-muted d-block">{{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m • {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} heute</small>
+                                                <small class="d-block mb-1"><strong>{{ _('sleep.nap_at') }}</strong> <span class="fw-bold">{{ suggestion.suggested_time.strftime('%H:%M') }} {{ _('common.o_clock') }}</span></small>
+                                                <small class="text-muted d-block">{{ suggestion.nap_duration|int }}h {{ ((suggestion.nap_duration % 1) * 60)|int }}m • {{ suggestion.completed_naps }}/{{ suggestion.target_naps }} {{ _('common.today') }}</small>
                                             </div>
                                         </div>
                                     </div>
@@ -132,7 +132,7 @@
                                 {% endfor %}
                             {% else %}
                                 <div class="alert alert-success mb-0 py-2">
-                                    <small><i class="bi bi-check-circle"></i> Alle Nickerchen abgeschlossen</small>
+                                    <small><i class="bi bi-check-circle"></i> {{ _('sleep.all_naps_completed') }}</small>
                                 </div>
                             {% endif %}
                         </div>
@@ -142,14 +142,14 @@
                         <div class="col-12 col-md-6 {% if nap_suggestions and (nap_suggestions[0].suggested_time or nap_suggestions[0].waiting_for_nap_end) %}col-md-6{% endif %}">
                             {% if night_sleep_suggestion.waiting_for_night_sleep_end %}
                             <div class="alert alert-warning mb-0 py-2">
-                                <small><i class="bi bi-moon-stars"></i> <strong>Nachtschlaf läuft...</strong></small>
+                                <small><i class="bi bi-moon-stars"></i> <strong>{{ _('sleep.night_sleep_running') }}</strong></small>
                             </div>
                             {% elif night_sleep_suggestion.suggested_time %}
                             <div class="alert alert-secondary mb-0 py-2">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
-                                        <small class="d-block mb-1"><strong>Nachtschlaf:</strong> <span class="fw-bold">{{ night_sleep_suggestion.suggested_time.strftime('%H:%M') }} Uhr</span></small>
-                                        <small class="text-muted d-block">{{ night_sleep_suggestion.night_sleep_duration|int }}h {{ ((night_sleep_suggestion.night_sleep_duration % 1) * 60)|int }}m • Aufwachen {{ night_sleep_suggestion.desired_wake_time.strftime('%H:%M') }} Uhr</small>
+                                        <small class="d-block mb-1"><strong>{{ _('sleep.night_sleep_at') }}</strong> <span class="fw-bold">{{ night_sleep_suggestion.suggested_time.strftime('%H:%M') }} {{ _('common.o_clock') }}</span></small>
+                                        <small class="text-muted d-block">{{ night_sleep_suggestion.night_sleep_duration|int }}h {{ ((night_sleep_suggestion.night_sleep_duration % 1) * 60)|int }}m • {{ _('sleep.wake_at') }} {{ night_sleep_suggestion.desired_wake_time.strftime('%H:%M') }} {{ _('common.o_clock') }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -161,7 +161,7 @@
                     {% if nap_suggestions and nap_suggestions[0].suggested_time and nap_suggestions[0].remaining_day_sleep > 0.5 %}
                     <div class="mt-2">
                         <small class="text-muted">
-                            <i class="bi bi-info-circle"></i> Noch {{ nap_suggestions[0].remaining_day_sleep|int }}h {{ ((nap_suggestions[0].remaining_day_sleep % 1) * 60)|int }}m Tagschlaf empfohlen
+                            <i class="bi bi-info-circle"></i> {{ _('sleep.day_sleep_recommended')|replace('Xh', (nap_suggestions[0].remaining_day_sleep|int)|string + 'h')|replace('Ym', ((nap_suggestions[0].remaining_day_sleep % 1) * 60)|int|string + 'm') }}
                         </small>
                     </div>
                     {% endif %}
@@ -171,9 +171,9 @@
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i> 
                             <a href="{{ url_for('settings.settings') }}" class="text-decoration-underline">
-                                Geburtsdatum setzen
+                                {{ _('common.set_birth_date') }}
                             </a>
-                            für personalisierte Vorschläge
+                            {{ _('common.for_personalized_suggestions') }}
                         </small>
                     </div>
                     {% endif %}
@@ -190,7 +190,7 @@
             <div class="card card-modern">
                 <div class="card-body">
                     <h6 class="section-title mb-3">
-                        <i class="bi bi-clock-history"></i> Tagesverlauf (24h)
+                        <i class="bi bi-clock-history"></i> {{ _('common.timeline') }} (24h)
                     </h6>
                     <div class="d-flex justify-content-center">
                         <div id="timeline-circle" style="position: relative; width: 100%; max-width: 400px; aspect-ratio: 1;">
@@ -207,32 +207,219 @@
     </div>
     
     <script>
-        // Timeline-Ereignisse von Jinja2
-        const timelineEvents = {{ timeline_events | tojson }};
-        const svg = document.getElementById('timeline-svg');
-        const centerX = 200;
-        const centerY = 200;
-        const radius = 150;
-        const eventRadius = 160; // Radius für Event-Positionen
+        // Warte bis DOM und Theme geladen sind
+        document.addEventListener('DOMContentLoaded', function() {
+            // Warte bis base.html Script das Theme gesetzt hat
+            function drawTimeline() {
+                // Timeline-Ereignisse von Jinja2
+                const timelineEvents = {{ timeline_events | tojson }};
+                const svg = document.getElementById('timeline-svg');
+                if (!svg) return; // Sicherheitscheck
+                
+                const centerX = 200;
+                const centerY = 200;
+                const radius = 150;
+                const eventRadius = 160; // Radius für Event-Positionen
+                
+                // Prüfe Dark Mode (robust)
+                function isDarkMode() {
+                    const theme = document.documentElement.getAttribute('data-theme');
+                    // Explizit 'dark' = Dark Mode
+                    if (theme === 'dark') {
+                        return true;
+                    }
+                    // Explizit 'light' = Light Mode
+                    if (theme === 'light') {
+                        return false;
+                    }
+                    // Wenn kein Theme gesetzt, prüfe System-Präferenz
+                    if (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        return true;
+                    }
+                    // Standard: Light Mode
+                    return false;
+                }
+                
+                // Funktion zum Abrufen der Textfarbe (dynamisch, damit Theme-Änderungen berücksichtigt werden)
+                function getTextColor() {
+                    const isDark = isDarkMode();
+                    if (isDark) {
+                        return '#ffffff';  // Weiß im Dark Mode für bessere Lesbarkeit
+                    } else {
+                        // Im Light Mode: Verwende --text-primary (dunkel, wie Überschrift)
+                        // Hole die CSS-Variable direkt, um sicherzustellen dass wir die richtige Farbe bekommen
+                        const rootStyles = getComputedStyle(document.documentElement);
+                        let textPrimary = rootStyles.getPropertyValue('--text-primary');
+                        if (textPrimary) {
+                            textPrimary = textPrimary.trim();
+                        }
+                        // Fallback auf dunkle Farbe falls CSS-Variable nicht verfügbar oder leer
+                        if (!textPrimary || textPrimary === '') {
+                            return '#212529';
+                        }
+                        return textPrimary;
+                    }
+                }
         
-        // Prüfe Dark Mode (robust)
-        function isDarkMode() {
-            const theme = document.documentElement.getAttribute('data-theme');
-            return theme === 'dark' || 
-                   (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !theme);
+        // Funktion zum Abrufen der Hintergrundfarbe der Kreise
+        function getCircleBgColor() {
+            return isDarkMode() ? '#2d2d2d' : '#ffffff';
         }
         
-        // Textfarbe basierend auf Theme
-        const textColor = isDarkMode() ? '#ffffff' : '#666'; // Weiß im Dark Mode für bessere Lesbarkeit
+        // Funktion zum Erstellen von SVG-Icons
+        function createIconSVG(category, eventType = null) {
+            const ns = 'http://www.w3.org/2000/svg';
+            const iconGroup = document.createElementNS(ns, 'g');
+            const iconColorValue = isDarkMode() ? '#ffffff' : (iconMap[category]?.color || 'var(--color-teal-dark)');
+            
+            if (category === 'sleep' && eventType) {
+                // Nachtschlaf: Bootstrap Icon als HTML in foreignObject
+                const foreignObject = document.createElementNS(ns, 'foreignObject');
+                foreignObject.setAttribute('x', '-12');
+                foreignObject.setAttribute('y', '-12');
+                foreignObject.setAttribute('width', '24');
+                foreignObject.setAttribute('height', '24');
+                const iconHtml = document.createElement('div');
+                iconHtml.style.cssText = `width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: ${iconColorValue};`;
+                iconHtml.innerHTML = eventType === 'sleep_start' ? '<i class="bi bi-moon-stars"></i>' : '<i class="bi bi-sun"></i>';
+                foreignObject.appendChild(iconHtml);
+                iconGroup.appendChild(foreignObject);
+            } else if (category === 'sleep') {
+                // Nickerchen: Bootstrap Icon als HTML in foreignObject
+                const foreignObject = document.createElementNS(ns, 'foreignObject');
+                foreignObject.setAttribute('x', '-12');
+                foreignObject.setAttribute('y', '-12');
+                foreignObject.setAttribute('width', '24');
+                foreignObject.setAttribute('height', '24');
+                const iconHtml = document.createElement('div');
+                iconHtml.style.cssText = `width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: ${iconColorValue};`;
+                iconHtml.innerHTML = '<i class="bi bi-moon"></i>';
+                foreignObject.appendChild(iconHtml);
+                iconGroup.appendChild(foreignObject);
+            } else if (category === 'feeding') {
+                // Stillen: SVG-Icon
+                const iconSvg = document.createElementNS(ns, 'svg');
+                iconSvg.setAttribute('viewBox', '0 0 1024 1024');
+                iconSvg.setAttribute('width', '24');
+                iconSvg.setAttribute('height', '24');
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('x', '-12');
+                iconSvg.setAttribute('y', '-12');
+                const g = document.createElementNS(ns, 'g');
+                g.setAttribute('transform', 'translate(0.000000,1024.000000) scale(0.100000,-0.100000)');
+                g.setAttribute('fill', iconColorValue);
+                g.setAttribute('stroke', iconColorValue);
+                g.setAttribute('stroke-width', '12');
+                g.setAttribute('stroke-linejoin', 'round');
+                const path = document.createElementNS(ns, 'path');
+                path.setAttribute('d', 'M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z');
+                g.appendChild(path);
+                iconSvg.appendChild(g);
+                iconGroup.appendChild(iconSvg);
+            } else if (category === 'bottle') {
+                // Flasche: SVG-Icon
+                const iconSvg = document.createElementNS(ns, 'svg');
+                iconSvg.setAttribute('viewBox', '0 0 512 512');
+                iconSvg.setAttribute('width', '24');
+                iconSvg.setAttribute('height', '24');
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('x', '-12');
+                iconSvg.setAttribute('y', '-12');
+                const path1 = document.createElementNS(ns, 'path');
+                path1.setAttribute('d', 'M288.209,331.768c-13.486,0-25.843-2.991-37.793-5.891c-11.956-2.888-24.313-5.885-37.688-5.885 c-10.64,0-20.838,1.883-31.166,5.753l-4.05,1.509V445.54c0,3.696,1.032,7.11,3.08,10.156c1.974,2.907,4.811,5.254,8.003,6.604 c2.257,0.948,4.57,1.419,7.068,1.419h120.653c3.704-0.007,7.117-1.046,10.15-3.088c2.914-1.959,5.254-4.805,6.611-8.017 c0.941-2.222,1.412-4.597,1.412-7.054V320.324l-8.619,3.565C313.02,329.186,300.697,331.768,288.209,331.768z');
+                path1.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path1);
+                const path2 = document.createElementNS(ns, 'path');
+                path2.setAttribute('d', 'M381.115,200.834c0.028-4.888-0.215-21.71-4.458-32.759c-5.303-13.777-19.322-35.134-34.892-47.581 c-5.096-4.085-10.911-8.19-17.065-12.538c-7.304-5.157-19.98-14.116-25.255-19.716c0.146-0.235,0.298-0.471,0.443-0.686 c4.05-6.265,10.841-16.739,10.841-32.815C310.729,24.563,286.18,0,256.003,0c-30.184,0-54.732,24.563-54.732,54.74 c0,16.068,6.791,26.55,10.841,32.815c0.145,0.215,0.298,0.45,0.45,0.686c-5.282,5.593-17.958,14.559-25.262,19.716 c-6.148,4.348-11.97,8.453-17.072,12.538c-15.563,12.454-29.588,33.811-34.885,47.581c-4.236,11.049-4.479,27.871-4.458,32.759 l0.07,11.603h-0.07v235.719c0,8.626,1.696,16.982,5.061,24.86c4.866,11.402,12.924,21.122,23.295,28.08 c10.62,7.13,23.047,10.904,35.93,10.904h121.636c8.674,0,17.1-1.689,25.02-5.026c11.506-4.833,21.295-12.822,28.294-23.123 c7.2-10.55,11-22.894,10.994-35.694V212.437h-0.07L381.115,200.834z M155.731,175.905c4.209-10.952,16.151-28.772,28.135-38.367 c17.051-13.632,48.163-31.305,51.389-45.269c3.136-13.61-12.15-18.45-12.15-37.529c0-18.18,14.726-32.904,32.898-32.904 c18.166,0,32.898,14.725,32.898,32.904c0,19.08-15.293,23.919-12.157,37.529c3.226,13.964,34.338,31.638,51.389,45.269 c11.984,9.595,23.926,27.415,28.135,38.367c3.109,8.072,3.012,24.812,3.012,24.812H152.72 C152.72,200.717,152.623,183.977,155.731,175.905z M359.653,233.732v16.373v198.051c0,5.753-1.128,11.319-3.364,16.553 c-3.233,7.615-8.612,14.094-15.542,18.74c-7.089,4.742-15.376,7.248-23.954,7.255H195.206c-5.788,0-11.402-1.128-16.671-3.343 c-7.67-3.213-14.199-8.543-18.879-15.424c-4.784-7.034-7.304-15.259-7.31-23.78V250.105v-16.373v-11.18h0.374h206.56h0.374V233.732 z');
+                path2.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path2);
+                iconGroup.appendChild(iconSvg);
+            } else if (category === 'diaper') {
+                // Windel: SVG-Icon
+                const iconSvg = document.createElementNS(ns, 'svg');
+                iconSvg.setAttribute('viewBox', '0 0 64 64');
+                iconSvg.setAttribute('width', '24');
+                iconSvg.setAttribute('height', '24');
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('x', '-12');
+                iconSvg.setAttribute('y', '-12');
+                const path = document.createElementNS(ns, 'path');
+                path.setAttribute('d', 'M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z');
+                path.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path);
+                iconGroup.appendChild(iconSvg);
+            } else if (category === 'temperature') {
+                // Temperatur: Bootstrap Icon als HTML in foreignObject
+                const foreignObject = document.createElementNS(ns, 'foreignObject');
+                foreignObject.setAttribute('x', '-12');
+                foreignObject.setAttribute('y', '-12');
+                foreignObject.setAttribute('width', '24');
+                foreignObject.setAttribute('height', '24');
+                const iconHtml = document.createElement('div');
+                iconHtml.style.cssText = `width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: ${iconColorValue};`;
+                iconHtml.innerHTML = '<i class="bi bi-thermometer-half"></i>';
+                foreignObject.appendChild(iconHtml);
+                iconGroup.appendChild(foreignObject);
+            } else if (category === 'medicine') {
+                // Medizin: Bootstrap Icon als HTML in foreignObject
+                const foreignObject = document.createElementNS(ns, 'foreignObject');
+                foreignObject.setAttribute('x', '-12');
+                foreignObject.setAttribute('y', '-12');
+                foreignObject.setAttribute('width', '24');
+                foreignObject.setAttribute('height', '24');
+                const iconHtml = document.createElement('div');
+                iconHtml.style.cssText = `width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: ${iconColorValue};`;
+                iconHtml.innerHTML = '<i class="bi bi-capsule"></i>';
+                foreignObject.appendChild(iconHtml);
+                iconGroup.appendChild(foreignObject);
+            } else if (category === 'night_waking') {
+                // Nächtliches Aufwachen: Cry-SVG
+                const iconSvg = document.createElementNS(ns, 'svg');
+                iconSvg.setAttribute('viewBox', '0 0 64 64');
+                iconSvg.setAttribute('width', '24');
+                iconSvg.setAttribute('height', '24');
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('x', '-12');
+                iconSvg.setAttribute('y', '-12');
+                const path1 = document.createElementNS(ns, 'path');
+                path1.setAttribute('d', 'M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z');
+                path1.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path1);
+                const path2 = document.createElementNS(ns, 'path');
+                path2.setAttribute('d', 'M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z');
+                path2.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path2);
+                const path3 = document.createElementNS(ns, 'path');
+                path3.setAttribute('d', 'M42.88,29.46a7.67,7.67,0,0,1,3,.25,1,1,0,1,0,.6-1.9c-1.81-.58-5.35-.84-7.65,1.48l-.09.09a6.29,6.29,0,0,0-1.09,1.55,1,1,0,0,0,.45,1.34,1,1,0,0,0,.45.1,1,1,0,0,0,.89-.55A4.5,4.5,0,0,1,40,31c1,0,2.85.21,3.42,1.31a1,1,0,0,0,.89.54.91.91,0,0,0,.45-.11,1,1,0,0,0,.43-1.34A4,4,0,0,0,42.88,29.46Z');
+                path3.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path3);
+                const path4 = document.createElementNS(ns, 'path');
+                path4.setAttribute('d', 'M43,37.11a6.38,6.38,0,0,0-6.73-.24,6.35,6.35,0,0,1-1,.51h0a9.53,9.53,0,0,1-1.88.56A9.26,9.26,0,0,1,29,37.72l-.38-.09-.05,0L28,37.43c-2-.67-4.19-1.43-6.26.34a5.43,5.43,0,0,0-2.07,4.38A5.33,5.33,0,0,0,22,46.2c1.8,1.27,3.64.57,5.26-.05a7.07,7.07,0,0,1,2.87-.69,7.18,7.18,0,0,1,2.62.6,19.89,19.89,0,0,0,3.73,1.1,13.54,13.54,0,0,0,2.68.31,6.19,6.19,0,0,0,3.53-.95,6.32,6.32,0,0,0,2.47-4.3A4.89,4.89,0,0,0,43,37.11ZM28.89,39.76c.19.05.39.11.58.14a8.85,8.85,0,0,0,.88.12l.54.06c.33,0,.67,0,1,0,.13,0,.27,0,.41,0a10.92,10.92,0,0,0,1.4-.17c.35-.07.68-.15,1-.23,0,.78-.19,1-.19,1-1.31.79-5.25.59-5.91,0a2.17,2.17,0,0,1-.45-1.11C28.4,39.65,28.65,39.7,28.89,39.76Zm14.34,2.1a4.32,4.32,0,0,1-1.62,3c-1,.68-2.54.79-4.69.34a17.42,17.42,0,0,1-3.4-1,9.25,9.25,0,0,0-3.22-.74H30a9.54,9.54,0,0,0-3.38.83c-1.53.58-2.51.91-3.39.28a3.32,3.32,0,0,1-1.49-2.5,3.48,3.48,0,0,1,1.37-2.77,2.9,2.9,0,0,1,3-.39,4.75,4.75,0,0,0,1.29,3.33,7.46,7.46,0,0,0,4.17.93,8.71,8.71,0,0,0,4-.79c.9-.54,1.26-1.67,1.12-3.45a6,6,0,0,0,.66-.38,4.37,4.37,0,0,1,4.53.24A2.93,2.93,0,0,1,43.23,41.86Z');
+                path4.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path4);
+                const path5 = document.createElementNS(ns, 'path');
+                path5.setAttribute('d', 'M18.44,33.86a1,1,0,0,0-.89-.09c-.45.17-4.43,1.77-4.71,4.83a2.27,2.27,0,0,0,1,2.22,2.35,2.35,0,0,0,1.25.34,3,3,0,0,0,1.58-.46c.78-.47,2.55-2,2.21-6.08A1,1,0,0,0,18.44,33.86ZM15.65,39c-.35.21-.63.2-.73.13s-.1-.24-.09-.34c.09-1,1.12-1.88,2.08-2.46A3.41,3.41,0,0,1,15.65,39Z');
+                path5.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path5);
+                const path6 = document.createElementNS(ns, 'path');
+                path6.setAttribute('d', 'M50.38,40.56a2.31,2.31,0,0,0,1-2.22c-.28-3.06-4.26-4.66-4.72-4.83a1,1,0,0,0-.88.09,1,1,0,0,0-.47.76C45,38.42,46.77,40,47.55,40.44a3,3,0,0,0,1.57.47A2.42,2.42,0,0,0,50.38,40.56Zm-1.79-1.83a3.36,3.36,0,0,1-1.26-2.67c1,.59,2,1.47,2.07,2.46,0,.1,0,.28-.08.34A.74.74,0,0,1,48.59,38.73Z');
+                path6.setAttribute('fill', iconColorValue);
+                iconSvg.appendChild(path6);
+                iconGroup.appendChild(iconSvg);
+            }
+            
+            return iconGroup;
+        }
         
-        // Icon-Mapping
+        // Icon-Mapping mit Farben
         const iconMap = {
-            'feeding': { emoji: '🍼', color: 'var(--color-pink)' },
-            'bottle': { emoji: '🍼', color: 'var(--color-teal-medium)' },
-            'diaper': { emoji: '👶', color: 'var(--color-teal-light)' },
-            'sleep': { emoji: '😴', color: 'var(--color-teal-dark)' },
-            'temperature': { emoji: '🌡️', color: 'var(--color-pink)' },
-            'medicine': { emoji: '💊', color: 'var(--color-pink)' }
+            'feeding': { color: 'var(--color-pink)' },
+            'bottle': { color: 'var(--color-teal-medium)' },
+            'diaper': { color: 'var(--color-teal-light)' },
+            'sleep': { color: 'var(--color-teal-dark)' },
+            'temperature': { color: 'var(--color-pink)' },
+            'medicine': { color: 'var(--color-pink)' },
+            'night_waking': { color: 'var(--color-warning)' }
         };
         
         // Finde Einschlafen- und Aufwachen-Zeit für Kalibrierung
@@ -370,25 +557,20 @@
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 g.setAttribute('transform', `translate(${x}, ${y})`);
                 
-                // Icon-Hintergrund
+                // Icon-Hintergrund (größer, Theme-abhängig)
                 const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                bgCircle.setAttribute('r', '18');
-                bgCircle.setAttribute('fill', 'white');
+                bgCircle.setAttribute('r', '24');
+                bgCircle.setAttribute('fill', getCircleBgColor());
                 bgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
                 bgCircle.setAttribute('stroke-width', '2');
                 g.appendChild(bgCircle);
                 
-                // Icon-Emoji
-                const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                iconText.setAttribute('x', '0');
-                iconText.setAttribute('y', '5');
-                iconText.setAttribute('text-anchor', 'middle');
-                iconText.setAttribute('font-size', '14');
-                iconText.textContent = event.event_type === 'sleep_start' ? '🌙' : '☀️';  // Mond für Einschlafen, Sonne für Aufwachen
-                g.appendChild(iconText);
+                // Icon-SVG
+                const iconSvg = createIconSVG(event.category, event.event_type);
+                g.appendChild(iconSvg);
                 
-                // Zeit außerhalb des Kreises (vom Zentrum weg)
-                const textOffset = 25;
+                // Zeit außerhalb des Kreises (vom Zentrum weg) - mehr Abstand
+                const textOffset = 40;
                 const textX = -textOffset * Math.cos(radians);
                 const textY = -textOffset * Math.sin(radians);
                 const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -396,7 +578,7 @@
                 timeText.setAttribute('y', textY + 4);
                 timeText.setAttribute('text-anchor', 'middle');
                 timeText.setAttribute('font-size', '10');
-                timeText.setAttribute('fill', textColor);
+                timeText.setAttribute('fill', getTextColor());
                 timeText.textContent = event.time_str;
                 g.appendChild(timeText);
                 
@@ -440,29 +622,24 @@
                 startG.setAttribute('transform', `translate(${startX}, ${startY})`);
                 
                 const startBgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                startBgCircle.setAttribute('r', '18');
-                startBgCircle.setAttribute('fill', 'white');
+                startBgCircle.setAttribute('r', '24');
+                startBgCircle.setAttribute('fill', getCircleBgColor());
                 startBgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
                 startBgCircle.setAttribute('stroke-width', '2');
                 startG.appendChild(startBgCircle);
                 
-                const startIconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                startIconText.setAttribute('x', '0');
-                startIconText.setAttribute('y', '5');
-                startIconText.setAttribute('text-anchor', 'middle');
-                startIconText.setAttribute('font-size', '14');
-                startIconText.textContent = iconMap[event.category]?.emoji || '😴';
-                startG.appendChild(startIconText);
+                const startIconSvg = createIconSVG(event.category);
+                startG.appendChild(startIconSvg);
                 
                 const startTimeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                const startTextOffset = 25;
+                const startTextOffset = 40;
                 const startTextX = -startTextOffset * Math.cos(startRadians);
                 const startTextY = -startTextOffset * Math.sin(startRadians);
                 startTimeText.setAttribute('x', startTextX);
                 startTimeText.setAttribute('y', startTextY + 4);
                 startTimeText.setAttribute('text-anchor', 'middle');
                 startTimeText.setAttribute('font-size', '9');
-                startTimeText.setAttribute('fill', textColor);
+                startTimeText.setAttribute('fill', getTextColor());
                 startTimeText.textContent = event.start_time;
                 startG.appendChild(startTimeText);
                 
@@ -473,29 +650,24 @@
                 endG.setAttribute('transform', `translate(${endX}, ${endY})`);
                 
                 const endBgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                endBgCircle.setAttribute('r', '18');
-                endBgCircle.setAttribute('fill', 'white');
+                endBgCircle.setAttribute('r', '24');
+                endBgCircle.setAttribute('fill', getCircleBgColor());
                 endBgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-dark)');
                 endBgCircle.setAttribute('stroke-width', '2');
                 endG.appendChild(endBgCircle);
                 
-                const endIconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                endIconText.setAttribute('x', '0');
-                endIconText.setAttribute('y', '5');
-                endIconText.setAttribute('text-anchor', 'middle');
-                endIconText.setAttribute('font-size', '14');
-                endIconText.textContent = iconMap[event.category]?.emoji || '😴';
-                endG.appendChild(endIconText);
+                const endIconSvg = createIconSVG(event.category);
+                endG.appendChild(endIconSvg);
                 
                 const endTimeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                const endTextOffset = 25;
+                const endTextOffset = 40;
                 const endTextX = -endTextOffset * Math.cos(endRadians);
                 const endTextY = -endTextOffset * Math.sin(endRadians);
                 endTimeText.setAttribute('x', endTextX);
                 endTimeText.setAttribute('y', endTextY + 4);
                 endTimeText.setAttribute('text-anchor', 'middle');
                 endTimeText.setAttribute('font-size', '9');
-                endTimeText.setAttribute('fill', textColor);
+                endTimeText.setAttribute('fill', getTextColor());
                 endTimeText.textContent = event.end_time;
                 endG.appendChild(endTimeText);
                 
@@ -516,25 +688,20 @@
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 g.setAttribute('transform', `translate(${x}, ${y})`);
                 
-                // Icon-Hintergrund
+                // Icon-Hintergrund (größer, Theme-abhängig)
                 const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                bgCircle.setAttribute('r', '18');
-                bgCircle.setAttribute('fill', 'white');
+                bgCircle.setAttribute('r', '24');
+                bgCircle.setAttribute('fill', getCircleBgColor());
                 bgCircle.setAttribute('stroke', iconMap[event.category]?.color || 'var(--color-teal-medium)');
                 bgCircle.setAttribute('stroke-width', '2');
                 g.appendChild(bgCircle);
                 
-                // Icon-Emoji
-                const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                iconText.setAttribute('x', '0');
-                iconText.setAttribute('y', '5');
-                iconText.setAttribute('text-anchor', 'middle');
-                iconText.setAttribute('font-size', '14');
-                iconText.textContent = iconMap[event.category]?.emoji || '•';
-                g.appendChild(iconText);
+                // Icon-SVG
+                const iconSvg = createIconSVG(event.category);
+                g.appendChild(iconSvg);
                 
-                // Zeit außerhalb des Kreises (in Richtung Zentrum)
-                const textRadius = radius + 25;
+                // Zeit außerhalb des Kreises (in Richtung Zentrum) - mehr Abstand
+                const textRadius = radius + 40;
                 const textX = (textRadius - radius) * Math.cos(radians);
                 const textY = (textRadius - radius) * Math.sin(radians);
                 const timeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -542,12 +709,27 @@
                 timeText.setAttribute('y', textY + 4);
                 timeText.setAttribute('text-anchor', 'middle');
                 timeText.setAttribute('font-size', '10');
-                timeText.setAttribute('fill', textColor);
+                timeText.setAttribute('fill', getTextColor());
                 timeText.textContent = event.time_str;
                 g.appendChild(timeText);
                 
                 svg.appendChild(g);
             }
+        });
+            }
+            
+            // Warte bis Theme geladen ist
+            function checkAndDraw() {
+                const theme = document.documentElement.getAttribute('data-theme');
+                if (theme || document.readyState === 'complete') {
+                    drawTimeline();
+                } else {
+                    setTimeout(checkAndDraw, 50);
+                }
+            }
+            
+            // Starte nach kurzer Verzögerung
+            setTimeout(checkAndDraw, 50);
         });
     </script>
     {% endif %}
@@ -556,7 +738,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <h6 class="section-title">
-                <i class="bi bi-lightning-fill"></i> Schnellaktionen
+                <i class="bi bi-lightning-fill"></i> {{ _('common.quick_actions') }}
             </h6>
         </div>
         
@@ -567,18 +749,18 @@
             <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2">
                 <button type="submit" class="btn btn-sleep btn-large w-100">
                     <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
-                    <small>Schlaf beenden</small>
+                    <small>{{ _('sleep.end_sleep') }}</small>
                 </button>
             </form>
             {% endif %}
             <!-- Buttons zum Starten eines neuen Schlafs sind immer sichtbar (auch für nachträgliche Einträge) -->
             <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startNapModal">
                 <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
-                <small>Nickerchen</small>
+                <small>{{ _('sleep.nap') }}</small>
             </button>
             <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startNightSleepModal">
                 <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
-                <small>Nachtschlaf</small>
+                <small>{{ _('sleep.night_sleep') }}</small>
             </button>
             <!-- Nächtliches Aufwachen -->
             {% if active_night_waking %}
@@ -591,7 +773,7 @@
                     <path d="M18.44,33.86a1,1,0,0,0-.89-.09c-.45.17-4.43,1.77-4.71,4.83a2.27,2.27,0,0,0,1,2.22,2.35,2.35,0,0,0,1.25.34,3,3,0,0,0,1.58-.46c.78-.47,2.55-2,2.21-6.08A1,1,0,0,0,18.44,33.86ZM15.65,39c-.35.21-.63.2-.73.13s-.1-.24-.09-.34c.09-1,1.12-1.88,2.08-2.46A3.41,3.41,0,0,1,15.65,39Z" fill="currentColor"/>
                     <path d="M50.38,40.56a2.31,2.31,0,0,0,1-2.22c-.28-3.06-4.26-4.66-4.72-4.83a1,1,0,0,0-.88.09,1,1,0,0,0-.47.76C45,38.42,46.77,40,47.55,40.44a3,3,0,0,0,1.57.47A2.42,2.42,0,0,0,50.38,40.56Zm-1.79-1.83a3.36,3.36,0,0,1-1.26-2.67c1,.59,2,1.47,2.07,2.46,0,.1,0,.28-.08.34A.74.74,0,0,1,48.59,38.73Z" fill="currentColor"/>
                 </svg><br>
-                <small>Aufwachen beenden</small>
+                <small>{{ _('sleep.end_night_waking') }}</small>
             </button>
             {% endif %}
             <button type="button" class="btn btn-warning btn-large w-100" data-bs-toggle="modal" data-bs-target="#startNightWakingModal">
@@ -603,7 +785,7 @@
                     <path d="M18.44,33.86a1,1,0,0,0-.89-.09c-.45.17-4.43,1.77-4.71,4.83a2.27,2.27,0,0,0,1,2.22,2.35,2.35,0,0,0,1.25.34,3,3,0,0,0,1.58-.46c.78-.47,2.55-2,2.21-6.08A1,1,0,0,0,18.44,33.86ZM15.65,39c-.35.21-.63.2-.73.13s-.1-.24-.09-.34c.09-1,1.12-1.88,2.08-2.46A3.41,3.41,0,0,1,15.65,39Z" fill="currentColor"/>
                     <path d="M50.38,40.56a2.31,2.31,0,0,0,1-2.22c-.28-3.06-4.26-4.66-4.72-4.83a1,1,0,0,0-.88.09,1,1,0,0,0-.47.76C45,38.42,46.77,40,47.55,40.44a3,3,0,0,0,1.57.47A2.42,2.42,0,0,0,50.38,40.56Zm-1.79-1.83a3.36,3.36,0,0,1-1.26-2.67c1,.59,2,1.47,2.07,2.46,0,.1,0,.28-.08.34A.74.74,0,0,1,48.59,38.73Z" fill="currentColor"/>
                 </svg><br>
-                <small>Nächtliches Aufwachen</small>
+                <small>{{ _('sleep.night_waking') }}</small>
             </button>
         </div>
         
@@ -616,7 +798,7 @@
                         <path d="M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z"/>
                     </g>
                 </svg><br>
-                <small>Stillen (L)</small>
+                <small>{{ _('feeding.left') }}</small>
             </button>
             <button type="button" class="btn btn-feeding btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startFeedingRightModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; transform: scaleX(-1);">
@@ -624,7 +806,7 @@
                         <path d="M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z"/>
                     </g>
                 </svg><br>
-                <small>Stillen (R)</small>
+                <small>{{ _('feeding.right') }}</small>
             </button>
             <!-- Flasche -->
             <button type="button" class="btn btn-bottle btn-large w-100" data-bs-toggle="modal" data-bs-target="#bottleModal">
@@ -649,7 +831,7 @@
                         c-7.67-3.213-14.199-8.543-18.879-15.424c-4.784-7.034-7.304-15.259-7.31-23.78V250.105v-16.373v-11.18h0.374h206.56h0.374V233.732
                         z" fill="currentColor"/>
                 </svg><br>
-                <small>Flasche</small>
+                <small>{{ _('bottle.title') }}</small>
             </button>
         </div>
         
@@ -662,7 +844,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                         <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                     </svg><br>
-                    <small>Windel (nass)</small>
+                    <small>{{ _('diaper.wet') }}</small>
                 </button>
             </form>
             <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
@@ -671,7 +853,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                         <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                     </svg><br>
-                    <small>Windel (groß)</small>
+                    <small>{{ _('diaper.solid') }}</small>
                 </button>
             </form>
             <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
@@ -680,18 +862,18 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                         <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                     </svg><br>
-                    <small>Windel (beides)</small>
+                    <small>{{ _('diaper.both') }}</small>
                 </button>
             </form>
             <!-- Temperatur -->
             <button type="button" class="btn btn-temperature btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#temperatureModal">
                 <i class="bi bi-thermometer-half" style="font-size: 1.5rem;"></i><br>
-                <small>Temperatur</small>
+                <small>{{ _('temperature.title') }}</small>
             </button>
             <!-- Medizin -->
             <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
                 <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
-                <small>Medizin</small>
+                <small>{{ _('medicine.title') }}</small>
             </button>
         </div>
     </div>
@@ -701,7 +883,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="section-title mb-0">
-                    <i class="bi bi-list-ul"></i> Einträge
+                    <i class="bi bi-list-ul"></i> {{ _('common.today_entries') }}
                 </h6>
                 <div class="d-flex align-items-center gap-2">
                     <a href="{{ url_for('main.index', date=prev_date) }}" class="btn btn-sm btn-outline-secondary">
@@ -713,7 +895,7 @@
                         <i class="bi bi-chevron-right"></i>
                     </a>
                     <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-primary">
-                        Heute
+                        {{ _('common.today') }}
                     </a>
                     {% else %}
                     <span class="btn btn-sm btn-outline-secondary disabled">
@@ -779,7 +961,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="flex-grow-1">
-                                    <div class="fw-bold mb-1">{{ entry.display }}</div>
+                                    <div class="fw-bold mb-1">{{ entry|translate_entry_display }}</div>
                                     {% if entry.category == 'sleep' and entry.end_time %}
                                         <div class="time-text">
                                             {{ entry.timestamp|format_datetime_de }} - 
@@ -805,7 +987,7 @@
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     {% if entry.category == 'sleep' %}
-                                    <form method="POST" action="{{ url_for('edit.delete_sleep', sleep_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                    <form method="POST" action="{{ url_for('edit.delete_sleep', sleep_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('{{ _('common.delete_confirm') }}');">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -857,35 +1039,35 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Schlaf bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.nap') }}/{{ _('sleep.night_sleep') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_sleep_type" class="form-label">Typ</label>
+                                                <label for="edit_sleep_type" class="form-label">{{ _('common.type') }}</label>
                                                 <select class="form-select" id="edit_sleep_type" name="type" required>
-                                                    <option value="nap" {{ 'selected' if entry.type == 'nap' else '' }}>Nickerchen</option>
-                                                    <option value="night" {{ 'selected' if entry.type == 'night' else '' }}>Nachtschlaf</option>
+                                                    <option value="nap" {{ 'selected' if entry.type == 'nap' else '' }}>{{ _('sleep.nap') }}</option>
+                                                    <option value="night" {{ 'selected' if entry.type == 'night' else '' }}>{{ _('sleep.night_sleep') }}</option>
                                                 </select>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_sleep_start" class="form-label">Startzeit</label>
+                                                <label for="edit_sleep_start" class="form-label">{{ _('common.start_time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_sleep_start" name="start_time" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_sleep_end{{ entry.id }}" class="form-label">Endzeit (optional)</label>
+                                                <label for="edit_sleep_end{{ entry.id }}" class="form-label">{{ _('common.end_time') }}</label>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <input type="datetime-local" class="form-control" id="edit_sleep_end{{ entry.id }}" name="end_time" 
                                                            value="{{ entry.end_time[:16] if entry.end_time else '' }}">
-                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_sleep_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="Löschen">×</button>
+                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_sleep_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -896,35 +1078,35 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Stillen bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('feeding.left') }}/{{ _('feeding.right') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_feeding', feeding_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_feeding_timestamp" class="form-label">Startzeit</label>
+                                                <label for="edit_feeding_timestamp" class="form-label">{{ _('common.start_time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_feeding_timestamp" name="timestamp" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_feeding_end_time{{ entry.id }}" class="form-label">Endzeit (optional)</label>
+                                                <label for="edit_feeding_end_time{{ entry.id }}" class="form-label">{{ _('common.end_time') }}</label>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <input type="datetime-local" class="form-control" id="edit_feeding_end_time{{ entry.id }}" name="end_time" 
                                                            value="{{ entry.end_time[:16] if entry.end_time else '' }}">
-                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_feeding_end_time{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="Löschen">×</button>
+                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_feeding_end_time{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
                                                 </div>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_feeding_side" class="form-label">Brustseite</label>
+                                                <label for="edit_feeding_side" class="form-label">{{ _('feeding.side') }}</label>
                                                 <select class="form-select" id="edit_feeding_side" name="side" required>
-                                                    <option value="links" {{ 'selected' if entry.side == 'links' else '' }}>Links</option>
-                                                    <option value="rechts" {{ 'selected' if entry.side == 'rechts' else '' }}>Rechts</option>
+                                                    <option value="links" {{ 'selected' if entry.side == 'links' else '' }}>{{ _('feeding.left_short') }}</option>
+                                                    <option value="rechts" {{ 'selected' if entry.side == 'rechts' else '' }}>{{ _('feeding.right_short') }}</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -935,25 +1117,25 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Flasche bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('bottle.title') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_bottle', bottle_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_bottle_timestamp" class="form-label">Zeitpunkt</label>
+                                                <label for="edit_bottle_timestamp" class="form-label">{{ _('common.time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_bottle_timestamp" name="timestamp" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_bottle_amount" class="form-label">Menge (ml)</label>
+                                                <label for="edit_bottle_amount" class="form-label">{{ _('bottle.amount_ml') }}</label>
                                                 <input type="number" class="form-control" id="edit_bottle_amount" name="amount" 
                                                        min="1" max="500" value="{{ entry.amount }}" required>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -964,28 +1146,28 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Windel bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('diaper.wet') }}/{{ _('diaper.solid') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_diaper', diaper_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_diaper_timestamp" class="form-label">Zeitpunkt</label>
+                                                <label for="edit_diaper_timestamp" class="form-label">{{ _('common.time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_diaper_timestamp" name="timestamp" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_diaper_type" class="form-label">Art</label>
+                                                <label for="edit_diaper_type" class="form-label">{{ _('common.type') }}</label>
                                                 <select class="form-select" id="edit_diaper_type" name="type" required>
-                                                    <option value="nass" {{ 'selected' if entry.type == 'nass' else '' }}>Nass</option>
-                                                    <option value="groß" {{ 'selected' if entry.type == 'groß' else '' }}>Groß</option>
-                                                    <option value="beides" {{ 'selected' if entry.type == 'beides' else '' }}>Beides</option>
+                                                    <option value="nass" {{ 'selected' if entry.type == 'nass' else '' }}>{{ _('diaper.wet') }}</option>
+                                                    <option value="groß" {{ 'selected' if entry.type == 'groß' else '' }}>{{ _('diaper.solid') }}</option>
+                                                    <option value="beides" {{ 'selected' if entry.type == 'beides' else '' }}>{{ _('diaper.both') }}</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -996,25 +1178,25 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Temperatur bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('temperature.title') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_temperature', temp_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_temp_timestamp" class="form-label">Zeitpunkt</label>
+                                                <label for="edit_temp_timestamp" class="form-label">{{ _('common.time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_temp_timestamp" name="timestamp" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_temp_value" class="form-label">Temperatur (°C)</label>
+                                                <label for="edit_temp_value" class="form-label">{{ _('temperature.value') }}</label>
                                                 <input type="number" class="form-control" id="edit_temp_value" name="value" 
                                                        step="0.1" min="30" max="45" value="{{ entry.value }}" required>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -1025,30 +1207,30 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Medizin bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('medicine.title') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_medicine', med_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_med_timestamp" class="form-label">Zeitpunkt</label>
+                                                <label for="edit_med_timestamp" class="form-label">{{ _('common.time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_med_timestamp" name="timestamp" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_med_name" class="form-label">Medikamentenname</label>
+                                                <label for="edit_med_name" class="form-label">{{ _('medicine.name') }}</label>
                                                 <input type="text" class="form-control" id="edit_med_name" name="name" 
                                                        value="{{ entry.name }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_med_dose" class="form-label">Dosis</label>
+                                                <label for="edit_med_dose" class="form-label">{{ _('medicine.dose') }}</label>
                                                 <input type="text" class="form-control" id="edit_med_dose" name="dose" 
                                                        value="{{ entry.dose }}" required>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -1059,28 +1241,28 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Nächtliches Aufwachen bearbeiten</h5>
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.night_waking') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('edit.edit_night_waking', waking_id=entry.id) }}">
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label for="edit_night_waking_start{{ entry.id }}" class="form-label">Startzeit</label>
+                                                <label for="edit_night_waking_start{{ entry.id }}" class="form-label">{{ _('common.start_time') }}</label>
                                                 <input type="datetime-local" class="form-control" id="edit_night_waking_start{{ entry.id }}" name="start_time" 
                                                        value="{{ entry.timestamp[:16] }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit_night_waking_end{{ entry.id }}" class="form-label">Endzeit (optional)</label>
+                                                <label for="edit_night_waking_end{{ entry.id }}" class="form-label">{{ _('common.end_time') }}</label>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <input type="datetime-local" class="form-control" id="edit_night_waking_end{{ entry.id }}" name="end_time" 
                                                            value="{{ entry.end_time[:16] if entry.end_time else '' }}">
-                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_night_waking_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="Löschen">×</button>
+                                                    <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_night_waking_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                                            <button type="submit" class="btn btn-primary">Speichern</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                                         </div>
                                     </form>
                                 </div>
@@ -1090,7 +1272,7 @@
                         {% endfor %}
                     {% else %}
                         <div class="entry-item text-center text-muted">
-                            <p class="mb-0">Noch keine Einträge heute</p>
+                            <p class="mb-0">{{ _('common.no_entries_today_yet') }}</p>
                         </div>
                     {% endif %}
                 </div>
@@ -1105,20 +1287,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Flasche erfassen</h5>
+                <h5 class="modal-title">{{ _('bottle.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('bottle.create') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="amount" class="form-label">Menge (ml)</label>
+                        <label for="amount" class="form-label">{{ _('bottle.amount_ml') }}</label>
                         <input type="number" class="form-control form-control-lg" id="amount" name="amount" 
                                min="1" max="500" value="100" required autofocus>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn" style="background: var(--color-teal-medium); color: white;">Erfassen</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-medium); color: white;">{{ _('common.record') }}</button>
                 </div>
             </form>
         </div>
@@ -1130,20 +1312,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Temperatur erfassen</h5>
+                <h5 class="modal-title">{{ _('temperature.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('temperature.create') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="value" class="form-label">Temperatur (°C)</label>
+                        <label for="value" class="form-label">{{ _('temperature.value') }}</label>
                         <input type="number" class="form-control form-control-lg" id="value" name="value" 
                                step="0.1" min="30" max="45" value="37.0" required autofocus>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn" style="background: var(--color-teal-light); color: white;">Erfassen</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-light); color: white;">{{ _('common.record') }}</button>
                 </div>
             </form>
         </div>
@@ -1155,25 +1337,25 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Medizin erfassen</h5>
+                <h5 class="modal-title">{{ _('medicine.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('medicine.create') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Medikamentenname</label>
+                        <label for="name" class="form-label">{{ _('medicine.name') }}</label>
                         <input type="text" class="form-control form-control-lg" id="name" name="name" 
                                required autofocus>
                     </div>
                     <div class="mb-3">
-                        <label for="dose" class="form-label">Dosis</label>
+                        <label for="dose" class="form-label">{{ _('medicine.dose') }}</label>
                         <input type="text" class="form-control form-control-lg" id="dose" name="dose" 
-                               placeholder="z.B. 5ml, 1 Tablette" required>
+                               placeholder="{{ _('medicine.dose_placeholder') }}" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn" style="background: var(--color-teal-dark); color: white;">Erfassen</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-dark); color: white;">{{ _('common.record') }}</button>
                 </div>
             </form>
         </div>
@@ -1185,26 +1367,26 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nickerchen starten</h5>
+                <h5 class="modal-title">{{ _('sleep.start_nap') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('sleep.start_nap') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="nap_start_time" class="form-label">Startzeit</label>
+                        <label for="nap_start_time" class="form-label">{{ _('common.start_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="nap_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="nap_start_time" name="start_time" required>
-                                <small class="text-muted">Minuten anpassen</small>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="nap_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Start</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('common.start') }}</button>
                 </div>
             </form>
         </div>
@@ -1216,26 +1398,26 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nachtschlaf starten</h5>
+                <h5 class="modal-title">{{ _('sleep.start_night_sleep') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('sleep.start_night_sleep') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="night_start_time" class="form-label">Startzeit</label>
+                        <label for="night_start_time" class="form-label">{{ _('common.start_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="night_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="night_start_time" name="start_time" required>
-                                <small class="text-muted">Minuten anpassen</small>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="night_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Start</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('common.start') }}</button>
                 </div>
             </form>
         </div>
@@ -1247,26 +1429,26 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nächtliches Aufwachen starten</h5>
+                <h5 class="modal-title">{{ _('sleep.start_night_waking') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('sleep.start_night_waking') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="night_waking_start_time" class="form-label">Startzeit</label>
+                        <label for="night_waking_start_time" class="form-label">{{ _('common.start_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="night_waking_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="night_waking_start_time" name="start_time" required>
-                                <small class="text-muted">Minuten anpassen</small>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="night_waking_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Start</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('common.start') }}</button>
                 </div>
             </form>
         </div>
@@ -1278,26 +1460,26 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nächtliches Aufwachen beenden</h5>
+                <h5 class="modal-title">{{ _('sleep.end_night_waking') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('sleep.end_night_waking') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="night_waking_end_time" class="form-label">Endzeit</label>
+                        <label for="night_waking_end_time" class="form-label">{{ _('common.end_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="night_waking_minus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="night_waking_end_time" name="end_time" required>
-                                <small class="text-muted">Minuten anpassen</small>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="night_waking_plus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Beenden</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('sleep.end_sleep') }}</button>
                 </div>
             </form>
         </div>
@@ -1309,39 +1491,39 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Stillen (Links)</h5>
+                <h5 class="modal-title">{{ _('feeding.left') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('feeding.create') }}">
                 <input type="hidden" name="side" value="links">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="feeding_left_start_time" class="form-label">Startzeit</label>
+                        <label for="feeding_left_start_time" class="form-label">{{ _('common.start_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="feeding_left_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_left_start_time" name="start_time" required>
-                                <small class="text-muted">Minuten anpassen</small>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="feeding_left_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="feeding_left_end_time" class="form-label">Endzeit (optional)</label>
+                        <label for="feeding_left_end_time" class="form-label">{{ _('common.end_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="feeding_left_minus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_left_end_time" name="end_time">
-                                <small class="text-muted">Optional: Dauer dokumentieren</small>
+                                <small class="text-muted">{{ _('feeding.duration_optional') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="feeding_left_plus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
-                            <button type="button" class="btn btn-outline-danger" id="feeding_left_clear_end" style="width: 50px; height: 50px; font-size: 1.2rem;" title="Löschen">×</button>
+                            <button type="button" class="btn btn-outline-danger" id="feeding_left_clear_end" style="width: 50px; height: 50px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Speichern</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                 </div>
             </form>
         </div>
@@ -1353,39 +1535,39 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Stillen (Rechts)</h5>
+                <h5 class="modal-title">{{ _('feeding.right') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('feeding.create') }}">
                 <input type="hidden" name="side" value="rechts">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="feeding_right_start_time" class="form-label">Startzeit</label>
+                        <label for="feeding_right_start_time" class="form-label">{{ _('common.start_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="feeding_right_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_right_start_time" name="start_time" required>
-                                <small class="text-muted">Minuten anpassen</small>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="feeding_right_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="feeding_right_end_time" class="form-label">Endzeit (optional)</label>
+                        <label for="feeding_right_end_time" class="form-label">{{ _('common.end_time') }}</label>
                         <div class="d-flex align-items-center gap-3">
                             <button type="button" class="btn btn-outline-secondary" id="feeding_right_minus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
                             <div class="flex-grow-1 text-center">
                                 <input type="datetime-local" class="form-control form-control-lg text-center" id="feeding_right_end_time" name="end_time">
-                                <small class="text-muted">Optional: Dauer dokumentieren</small>
+                                <small class="text-muted">{{ _('feeding.duration_optional') }}</small>
                             </div>
                             <button type="button" class="btn btn-outline-secondary" id="feeding_right_plus_minute_end" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
-                            <button type="button" class="btn btn-outline-danger" id="feeding_right_clear_end" style="width: 50px; height: 50px; font-size: 1.2rem;" title="Löschen">×</button>
+                            <button type="button" class="btn btn-outline-danger" id="feeding_right_clear_end" style="width: 50px; height: 50px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Speichern</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
                 </div>
             </form>
         </div>
@@ -1733,7 +1915,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-plus-circle"></i> Ereignis eintragen
+                    <i class="bi bi-plus-circle"></i> {{ _('common.quick_entry') }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -1745,20 +1927,20 @@
                         <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="h-100">
                             <button type="submit" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
                                 <i class="bi bi-moon" style="font-size: 2rem;"></i>
-                                <small class="mt-2">Schlaf beenden</small>
+                                <small class="mt-2">{{ _('sleep.end_sleep') }}</small>
                             </button>
                         </form>
                         {% else %}
                         <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNapModal" data-bs-dismiss="modal">
                             <i class="bi bi-moon" style="font-size: 2rem;"></i>
-                            <small class="mt-2">Nickerchen</small>
+                            <small class="mt-2">{{ _('sleep.nap') }}</small>
                         </button>
                         {% endif %}
                     </div>
                     <div class="col-6 col-md-4">
                         <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNightSleepModal" data-bs-dismiss="modal">
                             <i class="bi bi-moon-stars" style="font-size: 2rem;"></i>
-                            <small class="mt-2">Nachtschlaf</small>
+                            <small class="mt-2">{{ _('sleep.night_sleep') }}</small>
                         </button>
                     </div>
                     {% if active_night_waking %}
@@ -1772,12 +1954,12 @@
                                 <path d="M18.44,33.86a1,1,0,0,0-.89-.09c-.45.17-4.43,1.77-4.71,4.83a2.27,2.27,0,0,0,1,2.22,2.35,2.35,0,0,0,1.25.34,3,3,0,0,0,1.58-.46c.78-.47,2.55-2,2.21-6.08A1,1,0,0,0,18.44,33.86ZM15.65,39c-.35.21-.63.2-.73.13s-.1-.24-.09-.34c.09-1,1.12-1.88,2.08-2.46A3.41,3.41,0,0,1,15.65,39Z" fill="currentColor"/>
                                 <path d="M50.38,40.56a2.31,2.31,0,0,0,1-2.22c-.28-3.06-4.26-4.66-4.72-4.83a1,1,0,0,0-.88.09,1,1,0,0,0-.47.76C45,38.42,46.77,40,47.55,40.44a3,3,0,0,0,1.57.47A2.42,2.42,0,0,0,50.38,40.56Zm-1.79-1.83a3.36,3.36,0,0,1-1.26-2.67c1,.59,2,1.47,2.07,2.46,0,.1,0,.28-.08.34A.74.74,0,0,1,48.59,38.73Z" fill="currentColor"/>
                             </svg>
-                            <small class="mt-2">Aufwachen beenden</small>
+                            <small class="mt-2">{{ _('sleep.end_night_waking') }}</small>
                         </button>
                     </div>
                     {% else %}
                     <div class="col-6 col-md-4">
-                        <button type="button" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNightWakingModal" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNightWakingModal" data-bs-dismiss="modal">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; color: var(--color-warning);">
                                 <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                                 <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
@@ -1786,7 +1968,7 @@
                                 <path d="M18.44,33.86a1,1,0,0,0-.89-.09c-.45.17-4.43,1.77-4.71,4.83a2.27,2.27,0,0,0,1,2.22,2.35,2.35,0,0,0,1.25.34,3,3,0,0,0,1.58-.46c.78-.47,2.55-2,2.21-6.08A1,1,0,0,0,18.44,33.86ZM15.65,39c-.35.21-.63.2-.73.13s-.1-.24-.09-.34c.09-1,1.12-1.88,2.08-2.46A3.41,3.41,0,0,1,15.65,39Z" fill="currentColor"/>
                                 <path d="M50.38,40.56a2.31,2.31,0,0,0,1-2.22c-.28-3.06-4.26-4.66-4.72-4.83a1,1,0,0,0-.88.09,1,1,0,0,0-.47.76C45,38.42,46.77,40,47.55,40.44a3,3,0,0,0,1.57.47A2.42,2.42,0,0,0,50.38,40.56Zm-1.79-1.83a3.36,3.36,0,0,1-1.26-2.67c1,.59,2,1.47,2.07,2.46,0,.1,0,.28-.08.34A.74.74,0,0,1,48.59,38.73Z" fill="currentColor"/>
                             </svg>
-                            <small class="mt-2">Nächtliches Aufwachen</small>
+                            <small class="mt-2">{{ _('sleep.night_waking') }}</small>
                         </button>
                     </div>
                     {% endif %}
@@ -1799,7 +1981,7 @@
                                     <path d="M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z"/>
                                 </g>
                             </svg>
-                            <small class="mt-2">Stillen (L)</small>
+                            <small class="mt-2">{{ _('feeding.left') }}</small>
                         </button>
                     </div>
                     <div class="col-6 col-md-4">
@@ -1809,7 +1991,7 @@
                                     <path d="M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z"/>
                                 </g>
                             </svg>
-                            <small class="mt-2">Stillen (R)</small>
+                            <small class="mt-2">{{ _('feeding.right') }}</small>
                         </button>
                     </div>
                     <div class="col-6 col-md-4">
@@ -1835,7 +2017,7 @@
                                     c-7.67-3.213-14.199-8.543-18.879-15.424c-4.784-7.034-7.304-15.259-7.31-23.78V250.105v-16.373v-11.18h0.374h206.56h0.374V233.732
                                     z" fill="currentColor"/>
                             </svg>
-                            <small class="mt-2">Flasche</small>
+                            <small class="mt-2">{{ _('bottle.title') }}</small>
                         </button>
                     </div>
                     
@@ -1847,7 +2029,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
                                     <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                                 </svg>
-                                <small class="mt-2">Windel (nass)</small>
+                                <small class="mt-2">{{ _('diaper.wet') }}</small>
                             </button>
                         </form>
                     </div>
@@ -1858,7 +2040,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
                                     <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                                 </svg>
-                                <small class="mt-2">Windel (groß)</small>
+                                <small class="mt-2">{{ _('diaper.solid') }}</small>
                             </button>
                         </form>
                     </div>
@@ -1869,7 +2051,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
                                     <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                                 </svg>
-                                <small class="mt-2">Windel (beides)</small>
+                                <small class="mt-2">{{ _('diaper.both') }}</small>
                             </button>
                         </form>
                     </div>
@@ -1878,13 +2060,13 @@
                     <div class="col-6 col-md-4">
                         <button type="button" class="btn btn-temperature w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#temperatureModal" data-bs-dismiss="modal">
                             <i class="bi bi-thermometer-half" style="font-size: 2rem;"></i>
-                            <small class="mt-2">Temperatur</small>
+                            <small class="mt-2">{{ _('temperature.title') }}</small>
                         </button>
                     </div>
                     <div class="col-6 col-md-4">
                         <button type="button" class="btn btn-medicine w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#medicineModal" data-bs-dismiss="modal">
                             <i class="bi bi-capsule" style="font-size: 2rem;"></i>
-                            <small class="mt-2">Medizin</small>
+                            <small class="mt-2">{{ _('medicine.title') }}</small>
                         </button>
                     </div>
                 </div>
