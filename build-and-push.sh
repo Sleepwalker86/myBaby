@@ -2,12 +2,25 @@
 
 # Build and Push Script for myBaby Docker Image
 # Multi-Architecture Build for Docker Hub
+# Usage: ./build-and-push.sh [VERSION]
+# Example: ./build-and-push.sh v1.0.1
 
 set -e
 
 DOCKER_USER="sleepwalker86"
 IMAGE_NAME="mybaby"
-VERSION="v1.0.0"
+
+# Version aus Argument oder Standard verwenden
+if [ -z "$1" ]; then
+    VERSION="v1.0.0"
+    echo "⚠️  Keine Version angegeben, verwende Standard: ${VERSION}"
+else
+    VERSION="$1"
+    # Entferne 'v' Präfix falls vorhanden und füge es wieder hinzu für Konsistenz
+    if [[ ! "$VERSION" =~ ^v ]]; then
+        VERSION="v${VERSION}"
+    fi
+fi
 
 echo "🚀 Building and pushing ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}"
 
@@ -43,4 +56,9 @@ echo "✅ Build und Push erfolgreich abgeschlossen!"
 echo "📦 Image verfügbar als:"
 echo "   - ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}"
 echo "   - ${DOCKER_USER}/${IMAGE_NAME}:latest"
+echo ""
+echo "💡 Tipp: Falls 'latest' lokal nicht aktualisiert wird, führe aus:"
+echo "   docker pull ${DOCKER_USER}/${IMAGE_NAME}:latest"
+echo "   oder lösche den lokalen Cache:"
+echo "   docker rmi ${DOCKER_USER}/${IMAGE_NAME}:latest"
 

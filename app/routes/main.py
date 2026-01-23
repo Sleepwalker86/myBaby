@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from app.models.models import (
     Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo, NightWaking
 )
@@ -6,6 +6,7 @@ from app.models.database import get_db
 from app.i18n import _
 from datetime import datetime, date, timedelta
 import pytz
+import os
 
 def get_baby_name():
     """Hilfsfunktion zum Abrufen des Baby-Namens"""
@@ -447,6 +448,18 @@ def index():
                          night_sleep_suggestion=night_sleep_suggestion,
                          baby_age_months=baby_age_months,
                          baby_name=baby_name)
+
+@bp.route('/api/audio-files')
+def get_audio_files():
+    """Gibt eine Liste aller verfügbaren Audio-Dateien zurück"""
+    static_folder = current_app.static_folder
+    audio_dir = os.path.join(static_folder, 'audio')
+    audio_files = []
+    if os.path.exists(audio_dir):
+        for file in os.listdir(audio_dir):
+            if file.endswith(('.mp3', '.wav', '.ogg', '.m4a')) and not file.startswith('.'):
+                audio_files.append(file)
+    return jsonify(sorted(audio_files))
 
 @bp.route('/settings/birth_date', methods=['POST'])
 def set_birth_date():

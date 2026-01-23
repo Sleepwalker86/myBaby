@@ -1552,11 +1552,33 @@ class BabyInfo:
         if selected_date is None:
             selected_date = date.today()
         
-        # Prüfe ob ein aktives Nickerchen existiert
+        # Prüfe ob ein aktiver Schlaf existiert
         active_sleep = Sleep.get_active_sleep()
-        if active_sleep and active_sleep.get('type') == 'nap':
-            # Wenn ein Nickerchen aktiv ist, gib einen Hinweis zurück
-            return [{'waiting_for_nap_end': True}]
+        if active_sleep:
+            sleep_type = active_sleep.get('type')
+            if sleep_type == 'nap':
+                # Wenn ein Nickerchen aktiv ist, gib einen Hinweis zurück
+                return [{'waiting_for_nap_end': True}]
+            elif sleep_type == 'night':
+                # Wenn Nachtschlaf aktiv ist und es ist heute, warte auf Aufwachen
+                # Prüfe ob der Nachtschlaf heute gestartet wurde oder noch von gestern läuft
+                try:
+                    start_time_str = active_sleep.get('start_time')
+                    if start_time_str:
+                        start_dt = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+                        if start_dt.tzinfo is None:
+                            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
+                        elif start_dt.tzinfo != tz_berlin:
+                            start_dt = start_dt.astimezone(tz_berlin)
+                        
+                        # Wenn der Nachtschlaf heute gestartet wurde oder noch läuft und es ist heute,
+                        # dann noch kein Nickerchen-Vorschlag
+                        if start_dt.date() == selected_date or selected_date == date.today():
+                            return [{'waiting_for_night_sleep_end': True}]
+                except (ValueError, AttributeError):
+                    # Bei Fehler, prüfe ob es heute ist
+                    if selected_date == date.today():
+                        return [{'waiting_for_night_sleep_end': True}]
         
         recommendations = BabyInfo.get_sleep_recommendations()
         min_naps, max_naps = recommendations['naps']
@@ -1600,18 +1622,99 @@ class BabyInfo:
         # Berechne verbleibende Tagschlafdauer
         remaining_day_sleep = target_day_sleep - total_day_sleep_hours
         
+        # Hole die empfohlene Nachtschlaf-Zeit, um zu prüfen ob die Zeit bis dahin zu lang ist
+        night_sleep_suggestion = BabyInfo.get_night_sleep_suggestion(selected_date)
+        time_until_night_sleep_too_long = False
+        
+        if night_sleep_suggestion and not night_sleep_suggestion.get('waiting_for_night_sleep_end'):
+            suggested_night_sleep_time = night_sleep_suggestion.get('suggested_time')
+            if suggested_night_sleep_time:
+                try:
+                    if isinstance(suggested_night_sleep_time, str):
+                        night_sleep_dt = datetime.fromisoformat(suggested_night_sleep_time.replace('Z', '+00:00'))
+                    else:
+                        night_sleep_dt = suggested_night_sleep_time
+                    if night_sleep_dt.tzinfo is None:
+                        night_sleep_dt = tz_berlin.localize(night_sleep_dt.replace(tzinfo=None))
+                    elif night_sleep_dt.tzinfo != tz_berlin:
+                        night_sleep_dt = night_sleep_dt.astimezone(tz_berlin)
+                    
+                    # Finde letztes Aufwachen für Berechnung
+                    now = datetime.now(tz_berlin)
+                    last_wake_time = None
+                    last_sleep_end = db.execute(
+                        '''SELECT end_time FROM sleep 
+                           WHERE end_time IS NOT NULL 
+                           AND date(end_time) = ?
+                           ORDER BY end_time DESC LIMIT 1''',
+                        (selected_date.isoformat(),)
+                    ).fetchone()
+                    
+                    if last_sleep_end:
+                        try:
+                            last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
+                            if last_wake_time.tzinfo is None:
+                                last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
+                        except (ValueError, AttributeError):
+                            pass
+                    
+                    if not last_wake_time or last_wake_time.date() != selected_date:
+                        last_wake_time = now
+                    
+                    # Berechne Zeit bis zum Nachtschlaf
+                    hours_until_night_sleep = (night_sleep_dt - last_wake_time).total_seconds() / 3600.0
+                    
+                    # Hole maximale empfohlene Wachzeit für das Alter
+                    age_months = BabyInfo.get_age_months()
+                    recommendations = BabyInfo.get_sleep_recommendations()
+                    min_wake_window, max_wake_window = recommendations.get('wake_window', (2.0, 3.0))
+                    
+                    # Wenn die Zeit bis zum Nachtschlaf länger als die maximale Wachzeit + 1 Stunde Puffer ist,
+                    # sollte trotzdem ein Nickerchen empfohlen werden
+                    max_acceptable_wake_time = max_wake_window + 1.0  # Puffer von 1 Stunde
+                    if hours_until_night_sleep > max_acceptable_wake_time:
+                        time_until_night_sleep_too_long = True
+                except (ValueError, AttributeError, TypeError):
+                    pass
+        
         # Entscheidungskriterien für ein weiteres Nickerchen:
         # 1. Anzahl noch nicht erreicht UND
-        # 2. Verbleibende Tagschlafdauer > 0.5 Stunden (mindestens 30 Minuten)
-        # Wenn die empfohlene Tagschlafdauer bereits erreicht ist, wird kein weiteres Nickerchen empfohlen
-        should_suggest_nap = (completed_naps < target_naps) and (remaining_day_sleep > 0.5)
+        #    (Verbleibende Tagschlafdauer > 0.5 Stunden ODER Zeit bis Nachtschlaf zu lang)
+        # ODER
+        # 2. Zeit bis zum Nachtschlaf ist zu lang (auch wenn Tagschlaf-Zeit erreicht)
+        should_suggest_nap = (
+            (completed_naps < target_naps) and (remaining_day_sleep > 0.5)
+        ) or time_until_night_sleep_too_long
         
         if should_suggest_nap:
             # Berechne nächste empfohlene Zeit basierend auf letztem Aufwachen
             now = datetime.now(tz_berlin)
             last_wake_time = None
             
+            # WICHTIG: Prüfe zuerst, ob ein aktiver Nachtschlaf existiert
+            # Wenn ja und es ist heute, dann sollte noch kein Nickerchen-Vorschlag gemacht werden
+            # Das erste Nickerchen wird erst nach dem Aufwachen berechnet
+            if active_sleep and active_sleep.get('type') == 'night':
+                try:
+                    start_time_str = active_sleep.get('start_time')
+                    if start_time_str:
+                        start_dt = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+                        if start_dt.tzinfo is None:
+                            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
+                        elif start_dt.tzinfo != tz_berlin:
+                            start_dt = start_dt.astimezone(tz_berlin)
+                        
+                        # Wenn der Nachtschlaf heute noch läuft (gestartet heute oder gestern, aber noch aktiv),
+                        # dann kein Nickerchen-Vorschlag bis zum Aufwachen
+                        if selected_date == date.today():
+                            return []
+                except (ValueError, AttributeError):
+                    # Bei Fehler, wenn es heute ist, kein Vorschlag
+                    if selected_date == date.today():
+                        return []
+            
             # Finde letztes Aufwachen (Ende eines Nickerchens oder Nachtschlafs)
+            # WICHTIG: Dies sollte das tatsächliche Ende eines Schlafs sein, nicht die aktuelle Zeit
             last_sleep_end = db.execute(
                 '''SELECT end_time FROM sleep 
                    WHERE end_time IS NOT NULL 
@@ -1628,9 +1731,11 @@ class BabyInfo:
                 except (ValueError, AttributeError):
                     pass
             
-            # Wenn kein Aufwachen heute, nimm aktuelles Datum/Zeit
+            # Wenn kein Aufwachen heute gefunden wurde
             if not last_wake_time or last_wake_time.date() != selected_date:
-                last_wake_time = now
+                # Kein Aufwachen heute = kein Nickerchen-Vorschlag möglich
+                # (Das erste Nickerchen wird erst nach dem Aufwachen aus dem Nachtschlaf berechnet)
+                return []
             
             # Prüfe ob bereits ein Vorschlag für heute existiert (in der Datenbank gespeichert)
             # Dies verhindert, dass die Zeit nach hinten geschoben wird
@@ -1852,37 +1957,48 @@ class BabyInfo:
                    ORDER BY end_time DESC LIMIT 1''',
             ).fetchone()
         
-        # Bestimme gewünschte Aufwachzeit für MORGEN
-        # Verwende die Aufwachzeit vom letzten Nachtschlaf (nicht vom letzten Nickerchen)
-        if last_night_sleep_end:
+        # NEUE LOGIK: Berechne Einschlafzeit basierend auf aktuellem Zustand, nicht auf fester Aufwachzeit
+        # Finde letztes Aufwachen für Wachzeit-Berechnung
+        last_wake_time = None
+        if last_sleep_end:
             try:
-                last_wake_time = datetime.fromisoformat(last_night_sleep_end['end_time'].replace('Z', '+00:00'))
+                last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
                 if last_wake_time.tzinfo is None:
                     last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
                 elif last_wake_time.tzinfo != tz_berlin:
                     last_wake_time = last_wake_time.astimezone(tz_berlin)
-                
-                # Verwende die Aufwachzeit vom letzten Nachtschlaf, aber für morgen
-                # z.B. wenn heute um 06:09 aufgewacht, dann morgen auch um 06:09 aufwachen
-                wake_hour = last_wake_time.hour
-                wake_minute = last_wake_time.minute
-                desired_wake_time = tz_berlin.localize(datetime.combine(selected_date + timedelta(days=1), datetime.min.time().replace(hour=wake_hour, minute=wake_minute)))
             except (ValueError, AttributeError):
-                # Fallback: Standard 7:00 Uhr morgen
-                desired_wake_time = tz_berlin.localize(datetime.combine(selected_date + timedelta(days=1), datetime.min.time().replace(hour=7)))
-        else:
-            # Kein Nachtschlaf-Aufwachen gefunden, verwende Standard 7:00 Uhr morgen
-            desired_wake_time = tz_berlin.localize(datetime.combine(selected_date + timedelta(days=1), datetime.min.time().replace(hour=7)))
+                pass
+        
+        # Wenn kein Aufwachen heute gefunden wurde, kann keine Berechnung gemacht werden
+        if not last_wake_time or last_wake_time.date() != selected_date:
+            # Für heute: verwende aktuelle Zeit als Basis (nur wenn es heute ist)
+            if selected_date == date.today():
+                last_wake_time = now
+            else:
+                # Für vergangene Tage ohne Aufwachen: kein Vorschlag möglich
+                return {
+                    'suggested_time': None,
+                    'night_sleep_duration': adjusted_night_sleep,
+                    'desired_wake_time': None,
+                    'total_day_sleep': total_day_sleep_hours,
+                    'target_day_sleep': target_day_sleep,
+                    'remaining_day_sleep': remaining_day_sleep
+                }
         
         # Für Wachzeit-Berechnung: Finde letztes Aufwachen (egal ob Nickerchen oder Nachtschlaf)
         # PERFORMANCE: Range-Query statt date()
-        last_sleep_end = db.execute(
-            '''SELECT end_time FROM sleep 
-               WHERE end_time IS NOT NULL 
-               AND end_time >= ? AND end_time <= ?
-               ORDER BY end_time DESC LIMIT 1''',
-            (day_start_str, day_end_str)
-        ).fetchone()
+        # WICHTIG: Dies wird jetzt oben verwendet, daher hier nur noch als Fallback
+        if not last_wake_time:
+            last_sleep_end = db.execute(
+                '''SELECT end_time FROM sleep 
+                   WHERE end_time IS NOT NULL 
+                   AND end_time >= ? AND end_time <= ?
+                   ORDER BY end_time DESC LIMIT 1''',
+                (day_start_str, day_end_str)
+            ).fetchone()
+        else:
+            last_sleep_end = None
         
         # Berechne bereits geschlafene Tagschlafdauer heute
         # PERFORMANCE: Range-Queries statt date() - nutzt Indizes besser
@@ -1971,63 +2087,88 @@ class BabyInfo:
             # Keine tatsächlichen Daten vorhanden, verwende Tabellenwert mit Anpassungen
             adjusted_night_sleep = target_night_sleep
         
-        # Finde letztes Aufwachen für Wachzeit-Berechnung
-        if last_sleep_end:
-            try:
-                last_wake_for_duration = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
-                if last_wake_for_duration.tzinfo is None:
-                    last_wake_for_duration = tz_berlin.localize(last_wake_for_duration.replace(tzinfo=None))
-                elif last_wake_for_duration.tzinfo != tz_berlin:
-                    last_wake_for_duration = last_wake_for_duration.astimezone(tz_berlin)
-                
-                # Berechne Wachzeit seit letztem Aufwachen
-                wake_duration = (now - last_wake_for_duration).total_seconds() / 3600.0
-                
-                # Wenn das Baby schon sehr lange wach ist (z.B. > 12h), 
-                # sollte die Nachtschlafdauer leicht reduziert werden, um früher einzuschlafen
-                # Dies führt zu einer etwas längeren Nachtschlafdauer (weil früher eingeschlafen wird)
-                # Aber die Einschlafzeit wird früher sein
-                if wake_duration > 12:
-                    # Baby ist sehr lange wach - reduziere Nachtschlafdauer leicht (z.B. -0.5h)
-                    # Dies führt zu früherer Einschlafzeit
-                    adjusted_night_sleep = max(adjusted_night_sleep - 0.5, target_night_sleep - 0.5)
-            except (ValueError, AttributeError):
-                pass
+        # Berechne Wachzeit seit letztem Aufwachen (für Übermüdungs-Bewertung)
+        wake_duration = None
+        if last_wake_time:
+            wake_duration = (now - last_wake_time).total_seconds() / 3600.0
+            
+            # Wenn das Baby schon sehr lange wach ist (z.B. > 12h), 
+            # sollte früher eingeschlafen werden (Übermüdung)
+            # Dies wird bei der Einschlafzeit-Berechnung berücksichtigt
         
-        # Leichte Anpassung basierend auf Tagschlaf
-        # Wenn zu wenig Tagschlaf, könnte Nachtschlaf etwas länger sein
-        # Aber nur minimal, damit die Einschlafzeit nicht zu spät wird
-        if remaining_day_sleep > 0.5:
-            # Noch nicht genug Tagschlaf - Nachtschlaf könnte etwas länger sein
-            adjusted_night_sleep = min(adjusted_night_sleep + 0.5, target_night_sleep + 0.58)
-        else:
-            # Genug Tagschlaf - füge eine leichte Anpassung hinzu (z.B. +0.25h)
-            adjusted_night_sleep = adjusted_night_sleep + 0.25
+        # NEUE LOGIK: Berechne Einschlafzeit basierend auf aktuellem Zustand
+        # Basis: Letztes Aufwachen + Wachzeit + Übermüdung + Tagschlaf-Status
         
-        # Berechne empfohlene Einschlafzeit für HEUTE
-        # Einschlafzeit = Aufwachzeit (morgen) - Nachtschlafdauer
-        suggested_sleep_time = desired_wake_time - timedelta(hours=adjusted_night_sleep)
+        # Berechne empfohlene Einschlafzeit basierend auf:
+        # 1. Aktueller Zeit (now)
+        # 2. Wie lange ist das Baby schon wach? (wake_duration)
+        # 3. Wie viel Tagschlaf fehlt noch? (remaining_day_sleep)
+        # 4. Empfohlene Nachtschlafdauer (adjusted_night_sleep)
         
-        # Stelle sicher, dass die Einschlafzeit am heutigen Tag liegt (nicht gestern)
-        # Wenn die berechnete Zeit vor Mitternacht liegt, sollte sie am heutigen Tag sein
-        if suggested_sleep_time.date() < selected_date:
-            # Die Zeit liegt am vorherigen Tag - das sollte nicht passieren
-            # Setze sie auf heute Abend
-            suggested_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=19, minute=30)))
+        # Startpunkt: Aktuelle Zeit
+        base_sleep_time = now
+        
+        # Anpassung 1: Übermüdung (wenn sehr lange wach)
+        if wake_duration is not None:
+            if wake_duration > 12:
+                # Sehr lange wach (>12h) - sollte früher schlafen
+                # Reduziere die Zeit um bis zu 2 Stunden
+                hours_to_subtract = min(2.0, (wake_duration - 12) * 0.3)
+                base_sleep_time = base_sleep_time - timedelta(hours=hours_to_subtract)
+            elif wake_duration > 10:
+                # Lange wach (10-12h) - sollte etwas früher schlafen
+                hours_to_subtract = (wake_duration - 10) * 0.2
+                base_sleep_time = base_sleep_time - timedelta(hours=hours_to_subtract)
+        
+        # Anpassung 2: Tagschlaf-Status
+        # Wenn noch viel Tagschlaf fehlt, könnte später schlafen (aber nicht zu spät)
+        # Wenn genug Tagschlaf, kann früher schlafen
+        if remaining_day_sleep > 1.0:
+            # Noch viel Tagschlaf fehlt - könnte etwas später schlafen
+            # Aber maximal bis 20:30 Uhr
+            max_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=20, minute=30)))
+            if base_sleep_time < max_sleep_time:
+                # Erlaube bis zu 30 Minuten später, wenn noch viel Tagschlaf fehlt
+                base_sleep_time = min(base_sleep_time + timedelta(minutes=30), max_sleep_time)
+        elif remaining_day_sleep < 0.5:
+            # Genug Tagschlaf - kann früher schlafen (wenn nicht schon zu spät)
+            # Aber nicht vor 18:00 Uhr
+            min_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=18, minute=0)))
+            if base_sleep_time > min_sleep_time:
+                # Erlaube bis zu 30 Minuten früher
+                base_sleep_time = max(base_sleep_time - timedelta(minutes=30), min_sleep_time)
+        
+        # Anpassung 3: Tageszeit-basierte Grenzen
+        # Nicht vor 17:00 Uhr (zu früh)
+        min_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=17, minute=0)))
+        if base_sleep_time < min_sleep_time:
+            base_sleep_time = min_sleep_time
+        
+        # Nicht nach 21:30 Uhr (zu spät, außer bei Übermüdung)
+        max_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=30)))
+        if wake_duration is None or wake_duration <= 12:
+            # Nur begrenzen wenn nicht übermüdet
+            if base_sleep_time > max_sleep_time:
+                base_sleep_time = max_sleep_time
+        
+        suggested_sleep_time = base_sleep_time
         
         # Stelle sicher, dass die Zeit nicht zu weit in der Vergangenheit liegt
-        # Aber erlaube, dass sie etwas in der Vergangenheit liegt (z.B. wenn es schon 20:00 ist)
-        # Nur wenn sie mehr als 2 Stunden in der Vergangenheit liegt, korrigiere sie
-        if suggested_sleep_time < now - timedelta(hours=2):
-            # Die Zeit liegt zu weit in der Vergangenheit, verwende mindestens 15 Minuten ab jetzt
+        # Mindestens 15 Minuten ab jetzt
+        if suggested_sleep_time < now:
             suggested_sleep_time = now + timedelta(minutes=15)
+        
+        # Berechne erwartete Aufwachzeit basierend auf Einschlafzeit + Nachtschlafdauer
+        # (nur für Anzeige, nicht für Berechnung verwendet)
+        expected_wake_time = suggested_sleep_time + timedelta(hours=adjusted_night_sleep)
         
         return {
             'suggested_time': suggested_sleep_time,
             'night_sleep_duration': adjusted_night_sleep,
-            'desired_wake_time': desired_wake_time,
+            'desired_wake_time': expected_wake_time,  # Erwartete Aufwachzeit (nur für Anzeige)
             'total_day_sleep': total_day_sleep_hours,
             'target_day_sleep': target_day_sleep,
-            'remaining_day_sleep': remaining_day_sleep
+            'remaining_day_sleep': remaining_day_sleep,
+            'wake_duration': wake_duration  # Wie lange ist das Baby schon wach
         }
 

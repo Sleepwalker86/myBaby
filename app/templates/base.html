@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MyBaby{% if baby_name %} - {{ baby_name }}{% endif %}</title>
     <meta name="lang" content="{{ current_language }}">
+    <!-- Theme sofort setzen, bevor der Rest geladen wird (verhindert Flash) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <!-- Favicon - SVG für moderne Browser (bevorzugt) -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="icon" type="image/svg+xml" sizes="any" href="{{ url_for('static', filename='favicon.svg') }}">
@@ -126,6 +133,11 @@
         }
         
         .btn-temperature {
+            background: var(--color-teal-light);
+            color: white;
+        }
+
+        .btn-play {
             background: var(--color-teal-light);
             color: white;
         }
@@ -422,10 +434,10 @@
             const darkModeIcon = document.getElementById('darkModeIcon');
             const html = document.documentElement;
             
-            // Lade gespeicherte Präferenz
+            // Lade gespeicherte Präferenz (Theme wurde bereits im <head> gesetzt, hier nur Icon aktualisieren)
             function loadTheme() {
                 const savedTheme = localStorage.getItem('theme') || 'light';
-                html.setAttribute('data-theme', savedTheme);
+                // Theme ist bereits im <head> gesetzt, nur Icon aktualisieren
                 updateIcon(savedTheme);
             }
             

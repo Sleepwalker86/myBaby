@@ -114,7 +114,8 @@
     "weekday_thursday": "Jueves",
     "weekday_friday": "Viernes",
     "weekday_saturday": "Sábado",
-    "weekday_sunday": "Domingo"
+    "weekday_sunday": "Domingo",
+    "min": "Min"
   },
     "entries": {
       "night_sleep": "Sueño nocturno",
@@ -177,7 +178,17 @@
       "language_desc": "Elige tu idioma preferido",
       "german": "Alemán",
       "english": "Inglés",
-      "spanish": "Español"
+      "spanish": "Español",
+      "version": "Versión",
+      "current_version": "Versión Actual",
+      "check_version": "Comprobar Versión",
+      "checking": "Comprobando...",
+      "update_available": "Actualización Disponible",
+      "latest_version": "Última Versión",
+      "up_to_date": "Actualizado",
+      "running_latest": "Estás usando la última versión",
+      "check_failed": "Error al Comprobar Versión",
+      "unknown_error": "Error Desconocido"
     },
     "messages": {
       "success": {
@@ -231,6 +242,15 @@
         "no_active_night_sleep": "No se encontró ningún sueño nocturno activo",
         "no_active_night_waking": "No se encontró ningún despertar nocturno activo"
       }
-    }
+    },
+    "audio": {
+    "title": "Reproductor de Audio",
+    "file_label": "Archivo de Audio:",
+    "select_file": "Seleccionar archivo de audio...",
+    "loading_files": "Cargando archivos de audio...",
+    "no_files": "No se encontraron archivos de audio",
+    "timer_label": "Temporizador:",
+    "repeat": "Repetir",
+    "timer_display": "Temporizador: {minutes}:{seconds}"
   }
-  
+}

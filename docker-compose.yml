@@ -2,9 +2,10 @@ version: '3.8'
 
 services:
   baby-tracking:
-    # Verwende das Image von Docker Hub
-    image: sleepwalker86/mybaby:v1.0.0
+    # Verwende das Image von Docker Hub (latest)
+    image: sleepwalker86/mybaby:latest
     # Oder baue lokal: build: .
+    # Oder verwende eine spezifische Version: image: sleepwalker86/mybaby:v1.0.1
     container_name: baby-tracking
     ports:
       - "8000:8000"

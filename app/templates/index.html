@@ -419,7 +419,7 @@
             'sleep': { color: 'var(--color-teal-dark)' },
             'temperature': { color: 'var(--color-pink)' },
             'medicine': { color: 'var(--color-pink)' },
-            'night_waking': { color: 'var(--color-warning)' }
+            'night_waking': { color: '#dc3545' }
         };
         
         // Finde Einschlafen- und Aufwachen-Zeit für Kalibrierung
@@ -809,7 +809,7 @@
                 <small>{{ _('feeding.right') }}</small>
             </button>
             <!-- Flasche -->
-            <button type="button" class="btn btn-bottle btn-large w-100" data-bs-toggle="modal" data-bs-target="#bottleModal">
+            <button type="button" class="btn btn-bottle btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#bottleModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                     <path d="M288.209,331.768c-13.486,0-25.843-2.991-37.793-5.891c-11.956-2.888-24.313-5.885-37.688-5.885
                         c-10.64,0-20.838,1.883-31.166,5.753l-4.05,1.509V445.54c0,3.696,1.032,7.11,3.08,10.156c1.974,2.907,4.811,5.254,8.003,6.604
@@ -832,6 +832,11 @@
                         z" fill="currentColor"/>
                 </svg><br>
                 <small>{{ _('bottle.title') }}</small>
+            </button>
+            <!-- Medizin -->
+            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
+                <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
+                <small>{{ _('medicine.title') }}</small>
             </button>
         </div>
         
@@ -870,11 +875,69 @@
                 <i class="bi bi-thermometer-half" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('temperature.title') }}</small>
             </button>
-            <!-- Medizin -->
-            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
-                <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
-                <small>{{ _('medicine.title') }}</small>
-            </button>
+        </div>
+    </div>
+
+    <!-- Audio-Player -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h6 class="section-title mb-3">
+                        <i class="bi bi-music-note-beamed"></i> {{ _('audio.title') }}
+                    </h6>
+                    <div class="audio-player">
+                        <!-- Dateiauswahl -->
+                        <div class="mb-3">
+                            <label for="audioFileSelect" class="form-label small">{{ _('audio.file_label') }}</label>
+                            <select id="audioFileSelect" class="form-select form-select-sm">
+                                <option value="">{{ _('audio.loading_files') }}</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Audio-Element (versteckt) -->
+                        <audio id="audioPlayer" preload="metadata"></audio>
+                        
+                        <!-- Steuerung -->
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <button id="playPauseBtn" class="btn btn-play btn-lg" disabled>
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span id="currentTime" class="small text-muted">0:00</span>
+                                    <span id="timerDisplay" class="small text-muted"></span>
+                                    <span id="duration" class="small text-muted">0:00</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Timer und Repeat -->
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <label class="small mb-0">{{ _('audio.timer_label') }}</label>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="timer" id="timer15" value="15">
+                                <label class="btn btn-outline-secondary" for="timer15">15 {{ _('common.min') }}</label>
+                                
+                                <input type="radio" class="btn-check" name="timer" id="timer30" value="30">
+                                <label class="btn btn-outline-secondary" for="timer30">30 {{ _('common.min') }}</label>
+                                
+                                <input type="radio" class="btn-check" name="timer" id="timer45" value="45">
+                                <label class="btn btn-outline-secondary" for="timer45">45 {{ _('common.min') }}</label>
+                                
+                                <input type="radio" class="btn-check" name="timer" id="timer60" value="60">
+                                <label class="btn btn-outline-secondary" for="timer60">60 {{ _('common.min') }}</label>
+                            </div>
+                            <button id="repeatBtn" class="btn btn-sm btn-outline-secondary ms-auto" style="display: none;">
+                                <i class="bi bi-arrow-repeat"></i> {{ _('audio.repeat') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -950,7 +1013,7 @@
                                     {% elif entry.category == 'medicine' %}
                                         <i class="bi bi-capsule" style="font-size: 1.5rem; color: var(--color-teal-dark);"></i>
                                     {% elif entry.category == 'night_waking' %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: var(--color-warning);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 24px; height: 24px; color: #dc3545;">
                                             <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                                             <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
                                             <path d="M42.88,29.46a7.67,7.67,0,0,1,3,.25,1,1,0,1,0,.6-1.9c-1.81-.58-5.35-.84-7.65,1.48l-.09.09a6.29,6.29,0,0,0-1.09,1.55,1,1,0,0,0,.45,1.34,1,1,0,0,0,.45.1,1,1,0,0,0,.89-.55A4.5,4.5,0,0,1,40,31c1,0,2.85.21,3.42,1.31a1,1,0,0,0,.89.54.91.91,0,0,0,.45-.11,1,1,0,0,0,.43-1.34A4,4,0,0,0,42.88,29.46Z" fill="currentColor"/>
@@ -1903,10 +1966,19 @@
         }
     });
 
-    // Auto-Refresh: Seite alle 60 Sekunden neu laden
-    setTimeout(function() {
-        window.location.reload();
-    }, 60000); // 60000 Millisekunden = 60 Sekunden
+    // Auto-Refresh: Seite alle 60 Sekunden neu laden, aber nicht wenn Audio läuft
+    function checkAndReload() {
+        const audioPlayer = document.getElementById('audioPlayer');
+        // Prüfe ob Audio läuft - wenn ja, überspringe den Refresh
+        if (audioPlayer && !audioPlayer.paused) {
+            // Audio läuft - setze Timer neu für nächsten Versuch
+            setTimeout(checkAndReload, 60000);
+        } else {
+            // Kein Audio läuft - Seite neu laden
+            window.location.reload();
+        }
+    }
+    setTimeout(checkAndReload, 60000); // 60000 Millisekunden = 60 Sekunden
 </script>
 
 <!-- Quick Entry Modal -->
@@ -2079,4 +2151,211 @@
 </div>
 
 <!-- Modal für Geburtsdatum -->
+
+<script>
+    // Audio-Player Funktionalität
+    document.addEventListener('DOMContentLoaded', function() {
+        // Übersetzungen für JavaScript
+        const translations = {
+            selectFile: {{ _('audio.select_file') | tojson }},
+            loadingFiles: {{ _('audio.loading_files') | tojson }},
+            noFiles: {{ _('audio.no_files') | tojson }},
+            repeat: {{ _('audio.repeat') | tojson }},
+            timerDisplay: {{ _('audio.timer_display') | tojson }}
+        };
+        
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const audioFileSelect = document.getElementById('audioFileSelect');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const progressBar = document.getElementById('progressBar');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const repeatBtn = document.getElementById('repeatBtn');
+        const timerRadios = document.querySelectorAll('input[name="timer"]');
+        
+        let timerInterval = null;
+        let timerEndTime = null;
+        // Repeat ist standardmäßig immer aktiv (default: true)
+        let isRepeating = true;
+        let selectedTimerMinutes = null;
+        
+        // Setze Repeat immer auf aktiv (Button ist ausgeblendet)
+        audioPlayer.loop = true; // HTML5 loop-Attribut für automatische Wiederholung
+        
+        // Lade Audio-Dateien
+        fetch('/api/audio-files')
+            .then(response => response.json())
+            .then(files => {
+                if (files.length === 0) {
+                    audioFileSelect.innerHTML = `<option value="">${translations.noFiles}</option>`;
+                    return;
+                }
+                
+                audioFileSelect.innerHTML = `<option value="">${translations.selectFile}</option>`;
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file;
+                    // Entferne Dateiendung für Anzeige
+                    const fileNameWithoutExtension = file.substring(0, file.lastIndexOf('.')) || file;
+                    option.textContent = fileNameWithoutExtension;
+                    audioFileSelect.appendChild(option);
+                });
+                
+                // Lade gespeicherte Audio-Datei oder wähle erste Datei
+                const savedFile = localStorage.getItem('audioPlayerFile');
+                let fileToSelect = savedFile;
+                
+                // Prüfe ob gespeicherte Datei noch existiert
+                if (!fileToSelect || !files.includes(fileToSelect)) {
+                    fileToSelect = files[0]; // Erste Datei als Standard
+                }
+                
+                if (fileToSelect) {
+                    audioFileSelect.value = fileToSelect;
+                    audioPlayer.src = `/static/audio/${fileToSelect}`;
+                    playPauseBtn.disabled = false;
+                    audioPlayer.load();
+                    // Speichere die Auswahl
+                    localStorage.setItem('audioPlayerFile', fileToSelect);
+                }
+            })
+            .catch(error => {
+                console.error('Fehler beim Laden der Audio-Dateien:', error);
+                audioFileSelect.innerHTML = `<option value="">${translations.noFiles}</option>`;
+            });
+        
+        // Datei auswählen
+        audioFileSelect.addEventListener('change', function() {
+            if (this.value) {
+                audioPlayer.src = `/static/audio/${this.value}`;
+                playPauseBtn.disabled = false;
+                audioPlayer.load();
+                // Speichere die Auswahl
+                localStorage.setItem('audioPlayerFile', this.value);
+            } else {
+                audioPlayer.src = '';
+                playPauseBtn.disabled = true;
+                localStorage.removeItem('audioPlayerFile');
+            }
+        });
+        
+        // Play/Pause
+        playPauseBtn.addEventListener('click', function() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                startTimer();
+            } else {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+                stopTimer();
+            }
+        });
+        
+        // Timer-Auswahl
+        timerRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    selectedTimerMinutes = parseInt(this.value);
+                    // Speichere Timer-Auswahl
+                    localStorage.setItem('audioPlayerTimer', selectedTimerMinutes.toString());
+                    if (!audioPlayer.paused) {
+                        startTimer();
+                    }
+                }
+            });
+        });
+        
+        // Wiederherstellen der Timer-Auswahl
+        const savedTimer = localStorage.getItem('audioPlayerTimer');
+        if (savedTimer) {
+            const timerValue = parseInt(savedTimer);
+            const timerRadio = document.querySelector(`input[name="timer"][value="${timerValue}"]`);
+            if (timerRadio) {
+                timerRadio.checked = true;
+                selectedTimerMinutes = timerValue;
+            }
+        }
+        
+        // Repeat ist immer aktiv (Button ist ausgeblendet)
+        // Kein Event-Listener nötig, da Repeat standardmäßig aktiv ist
+        
+        // Timer-Funktionen
+        function startTimer() {
+            stopTimer();
+            if (selectedTimerMinutes) {
+                timerEndTime = Date.now() + (selectedTimerMinutes * 60 * 1000);
+                updateTimerDisplay();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+            }
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            timerEndTime = null;
+            timerDisplay.textContent = '';
+        }
+        
+        function updateTimerDisplay() {
+            if (timerEndTime) {
+                const remaining = Math.max(0, timerEndTime - Date.now());
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                const timerText = translations.timerDisplay
+                    .replace('{minutes}', minutes)
+                    .replace('{seconds}', seconds.toString().padStart(2, '0'));
+                timerDisplay.textContent = timerText;
+                
+                if (remaining <= 0) {
+                    audioPlayer.pause();
+                    playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+                    stopTimer();
+                    // Repeat ist immer aktiv, daher automatisch neu starten
+                    setTimeout(() => {
+                        audioPlayer.currentTime = 0;
+                        audioPlayer.play();
+                        playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                        startTimer();
+                    }, 1000);
+                }
+            }
+        }
+        
+        // Audio-Events
+        audioPlayer.addEventListener('loadedmetadata', function() {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        });
+        
+        audioPlayer.addEventListener('timeupdate', function() {
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            if (audioPlayer.duration) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.style.width = progress + '%';
+            }
+        });
+        
+        audioPlayer.addEventListener('ended', function() {
+            // Repeat ist immer aktiv, daher automatisch neu starten
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+            playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+            if (selectedTimerMinutes) {
+                startTimer();
+            }
+        });
+        
+        // Zeit formatieren
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    });
+</script>
+
 {% endblock %}

@@ -10,8 +10,9 @@
 </div>
 
 <div class="row">
-    <div class="col-12 col-md-8 col-lg-6">
-        <div class="card card-modern">
+    <!-- Linke Spalte: Baby-Info -->
+    <div class="col-12 col-md-6 mb-4 mb-md-0">
+        <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.baby_info') }}</h5>
                 <form method="POST" action="{{ url_for('settings.update_settings') }}">
@@ -39,11 +40,10 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-12 col-md-8 col-lg-6">
-        <div class="card card-modern">
+    
+    <!-- Rechte Spalte: Display -->
+    <div class="col-12 col-md-6 mb-4 mb-md-0">
+        <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.display') }}</h5>
                 <div class="form-check form-switch d-flex align-items-center justify-content-between mb-4">
@@ -81,6 +81,27 @@
                             <i class="bi bi-translate"></i> {{ _('settings.spanish') }}
                         </a>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Version Card - volle Breite auf kleinen Displays, halbe Breite auf md/lg -->
+<div class="row mt-4">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card card-modern">
+            <div class="card-body">
+                <h5 class="card-title mb-4">{{ _('settings.version') }}</h5>
+                <div class="mb-3">
+                    <p class="mb-2">
+                        <strong>{{ _('settings.current_version') }}:</strong> 
+                        <span id="currentVersionDisplay">{{ current_version }}</span>
+                    </p>
+                    <button id="checkVersionBtn" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-clockwise"></i> {{ _('settings.check_version') }}
+                    </button>
+                    <div id="versionCheckResult" class="mt-3" style="display: none;"></div>
                 </div>
             </div>
         </div>
@@ -126,6 +147,77 @@
         // Theme beim Laden anwenden
         // Warte kurz, damit base.html fertig ist
         setTimeout(loadTheme, 50);
+    })();
+    
+    // Versionsprüfung
+    (function() {
+        const checkVersionBtn = document.getElementById('checkVersionBtn');
+        const versionCheckResult = document.getElementById('versionCheckResult');
+        
+        if (!checkVersionBtn) return;
+        
+        // Übersetzungen für JavaScript
+        const translations = {
+            checking: {{ _('settings.checking') | tojson }},
+            update_available: {{ _('settings.update_available') | tojson }},
+            latest_version: {{ _('settings.latest_version') | tojson }},
+            current_version: {{ _('settings.current_version') | tojson }},
+            up_to_date: {{ _('settings.up_to_date') | tojson }},
+            running_latest: {{ _('settings.running_latest') | tojson }},
+            check_failed: {{ _('settings.check_failed') | tojson }},
+            unknown_error: {{ _('settings.unknown_error') | tojson }}
+        };
+        
+        checkVersionBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            // Button deaktivieren und Loading-Status anzeigen
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${translations.checking}`;
+            
+            // Versionsprüfung durchführen
+            fetch('{{ url_for("settings.check_version") }}')
+                .then(response => response.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    versionCheckResult.style.display = 'block';
+                    
+                    if (data.success) {
+                        if (data.update_available) {
+                            versionCheckResult.className = 'mt-3 alert alert-warning';
+                            versionCheckResult.innerHTML = `
+                                <strong>${translations.update_available}</strong><br>
+                                ${translations.latest_version}: <strong>${data.latest_version}</strong><br>
+                                <small class="text-muted">${translations.current_version}: ${data.current_version}</small>
+                            `;
+                        } else {
+                            versionCheckResult.className = 'mt-3 alert alert-success';
+                            versionCheckResult.innerHTML = `
+                                <strong>${translations.up_to_date}</strong><br>
+                                <small class="text-muted">${translations.running_latest}: ${data.current_version}</small>
+                            `;
+                        }
+                    } else {
+                        versionCheckResult.className = 'mt-3 alert alert-danger';
+                        versionCheckResult.innerHTML = `
+                            <strong>${translations.check_failed}</strong><br>
+                            <small>${data.message || translations.unknown_error}</small>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    versionCheckResult.style.display = 'block';
+                    versionCheckResult.className = 'mt-3 alert alert-danger';
+                    versionCheckResult.innerHTML = `
+                        <strong>${translations.check_failed}</strong><br>
+                        <small>${error.message || translations.unknown_error}</small>
+                    `;
+                });
+        });
     })();
 </script>
 {% endblock %}
