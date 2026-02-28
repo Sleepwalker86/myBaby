@@ -23,12 +23,16 @@ def settings():
     baby_birth_date = BabyInfo.get_birth_date()
     baby_age_months = BabyInfo.get_age_months() if baby_birth_date else None
     current_version = get_current_version()
+    sleep_meta = BabyInfo.get_sleep_meta_settings()
     
-    return render_template('settings.html',
-                         baby_name=baby_name,
-                         baby_birth_date=baby_birth_date,
-                         baby_age_months=baby_age_months,
-                         current_version=current_version)
+    return render_template(
+        'settings.html',
+        baby_name=baby_name,
+        baby_birth_date=baby_birth_date,
+        baby_age_months=baby_age_months,
+        current_version=current_version,
+        sleep_meta=sleep_meta,
+    )
 
 @bp.route('/update', methods=['POST'])
 def update_settings():
@@ -49,6 +53,23 @@ def update_settings():
     BabyInfo.set_baby_info(name=name if name else None, birth_date=birth_date)
     
     flash('Einstellungen gespeichert', 'success')
+    return redirect(url_for('settings.settings'))
+
+
+@bp.route('/sleep-meta', methods=['POST'])
+def update_sleep_meta():
+    """Aktualisiert die Schlaf-Meta-Einstellungen (Qualität & Ort)"""
+    quality_text = request.form.get('sleep_quality_options', '')
+    location_text = request.form.get('sleep_location_options', '')
+    default_quality = request.form.get('default_sleep_quality', '').strip()
+    default_location = request.form.get('default_sleep_location', '').strip()
+    
+    qualities = [line.strip() for line in quality_text.splitlines() if line.strip()]
+    locations = [line.strip() for line in location_text.splitlines() if line.strip()]
+    
+    BabyInfo.set_sleep_meta_settings(qualities, locations, default_quality, default_location)
+    
+    flash('Schlaf-Einstellungen gespeichert', 'success')
     return redirect(url_for('settings.settings'))
 
 @bp.route('/check-version')

@@ -87,10 +87,11 @@
     </div>
 </div>
 
-<!-- Version Card - volle Breite auf kleinen Displays, halbe Breite auf md/lg -->
+<!-- Untere Reihe: Version & Schlaf-Einstellungen -->
 <div class="row mt-4">
-    <div class="col-12 col-md-6 col-lg-4">
-        <div class="card card-modern">
+    <!-- Version Card - volle Breite auf kleinen Displays, schmal auf größeren -->
+    <div class="col-12 col-md-6 col-lg-4 mb-4 mb-md-0">
+        <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.version') }}</h5>
                 <div class="mb-3">
@@ -103,6 +104,66 @@
                     </button>
                     <div id="versionCheckResult" class="mt-3" style="display: none;"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Schlaf-Einstellungen -->
+    <div class="col-12 col-md-6 col-lg-8">
+        <div class="card card-modern h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">{{ _('settings.sleep_meta_title') }}</h5>
+                <form method="POST" action="{{ url_for('settings.update_sleep_meta') }}">
+                    <div class="row">
+                        <div class="col-12 col-lg-6 mb-3">
+                            <label for="sleep_quality_options" class="form-label">
+                                <strong>{{ _('settings.sleep_quality_label') }}</strong>
+                            </label>
+                            <small class="form-text text-muted d-block mb-2">
+                                {{ _('settings.sleep_quality_help') }}
+                            </small>
+                            <textarea id="sleep_quality_options"
+                                      name="sleep_quality_options"
+                                      class="form-control"
+                                      rows="4">{% for q in sleep_meta.qualities %}{{ q }}{% if not loop.last %}&#10;{% endif %}{% endfor %}</textarea>
+                            
+                            <label for="default_sleep_quality" class="form-label mt-3">
+                                <strong>{{ _('settings.sleep_quality_default') }}</strong>
+                            </label>
+                            <select id="default_sleep_quality" name="default_sleep_quality" class="form-select">
+                                {% for q in sleep_meta.qualities %}
+                                <option value="{{ q }}" {% if q == sleep_meta.default_quality %}selected{% endif %}>{{ q }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-12 col-lg-6 mb-3">
+                            <label for="sleep_location_options" class="form-label">
+                                <strong>{{ _('settings.sleep_location_label') }}</strong>
+                            </label>
+                            <small class="form-text text-muted d-block mb-2">
+                                {{ _('settings.sleep_location_help') }}
+                            </small>
+                            <textarea id="sleep_location_options"
+                                      name="sleep_location_options"
+                                      class="form-control"
+                                      rows="4">{% for l in sleep_meta.locations %}{{ l }}{% if not loop.last %}&#10;{% endif %}{% endfor %}</textarea>
+                            
+                            <label for="default_sleep_location" class="form-label mt-3">
+                                <strong>{{ _('settings.sleep_location_default') }}</strong>
+                            </label>
+                            <select id="default_sleep_location" name="default_sleep_location" class="form-select">
+                                {% for l in sleep_meta.locations %}
+                                <option value="{{ l }}" {% if l == sleep_meta.default_location %}selected{% endif %}>{{ l }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {{ _('common.save') }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>

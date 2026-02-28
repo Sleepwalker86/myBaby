@@ -35,7 +35,9 @@
     "end_sleep": "End Sleep",
     "night_waking": "Night Waking",
     "start_night_waking": "Start Night Waking",
-    "end_night_waking": "End Night Waking"
+    "end_night_waking": "End Night Waking",
+    "sleep_quality_label": "How did your child fall asleep?",
+    "sleep_location_label": "Where did your child fall asleep?"
   },
   "feeding": {
     "left": "Feeding (L)",
@@ -160,7 +162,10 @@
     "avg_temperature": "Ø Temperature",
     "min": "Min",
     "max": "Max",
-    "no_data": "No data available"
+    "no_data": "No data available",
+    "sleep_meta_distribution": "Sleep Quality & Location",
+    "sleep_quality": "Sleep quality",
+    "sleep_location": "Sleep location"
   },
   "settings": {
     "title": "Settings",
@@ -188,7 +193,14 @@
     "up_to_date": "Up to Date",
     "running_latest": "You are running the latest version",
     "check_failed": "Version Check Failed",
-    "unknown_error": "Unknown Error"
+    "unknown_error": "Unknown Error",
+    "sleep_meta_title": "Sleep Recording",
+    "sleep_quality_label": "Sleep onset quality",
+    "sleep_quality_help": "One option per line, e.g. 'easy', 'hard', 'with crying'. These are shown in the sleep dialogs.",
+    "sleep_quality_default": "Default selection for sleep quality",
+    "sleep_location_label": "Sleep location",
+    "sleep_location_help": "One option per line, e.g. 'in own bed', 'in parents' bed', 'in arms', 'in baby hammock'.",
+    "sleep_location_default": "Default selection for sleep location"
   },
   "messages": {
     "success": {

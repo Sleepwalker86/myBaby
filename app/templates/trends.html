@@ -133,7 +133,7 @@
         </div>
     </div>
 
-    <!-- Schlafverteilung -->
+    <!-- Schlafverteilung + Einschlaf-Qualität/-Ort -->
     <div class="row mb-4">
         <div class="col-md-6 mb-3">
             <div class="card card-modern">
@@ -152,6 +152,53 @@
                 <div class="card-body">
                     <h5 class="card-title mb-3">{{ _('trends.wake_times') }}</h5>
                     <canvas id="wakeTimesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Einschlaf-Qualität & -Ort -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-modern">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">{{ _('trends.sleep_meta_distribution') }}</h5>
+                    {% if stats.sleep_quality_counts or stats.sleep_location_counts %}
+                    <div class="row">
+                        <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                            <h6 class="text-muted mb-2">{{ _('trends.sleep_quality') }}</h6>
+                            {% if stats.sleep_quality_counts %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for label, count in stats.sleep_quality_counts.items() %}
+                                    <li class="d-flex justify-content-between">
+                                        <span>{{ label }}</span>
+                                        <span class="text-muted">{{ count }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">{{ _('trends.no_data') }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <h6 class="text-muted mb-2">{{ _('trends.sleep_location') }}</h6>
+                            {% if stats.sleep_location_counts %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for label, count in stats.sleep_location_counts.items() %}
+                                    <li class="d-flex justify-content-between">
+                                        <span>{{ label }}</span>
+                                        <span class="text-muted">{{ count }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">{{ _('trends.no_data') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                        <p class="text-muted mb-0">{{ _('trends.no_data') }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

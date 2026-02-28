@@ -35,7 +35,9 @@
     "end_sleep": "Schlaf beenden",
     "night_waking": "Nächtliches Aufwachen",
     "start_night_waking": "Nächtliches Aufwachen starten",
-    "end_night_waking": "Nächtliches Aufwachen beenden"
+    "end_night_waking": "Nächtliches Aufwachen beenden",
+    "sleep_quality_label": "Wie ist dein Kind eingeschlafen?",
+    "sleep_location_label": "Wo ist dein Kind eingeschlafen?"
   },
   "feeding": {
     "left": "Stillen (L)",
@@ -160,7 +162,10 @@
     "avg_temperature": "Ø Temperatur",
     "min": "Min",
     "max": "Max",
-    "no_data": "Keine Daten verfügbar"
+    "no_data": "Keine Daten verfügbar",
+    "sleep_meta_distribution": "Einschlaf-Qualität & -Ort",
+    "sleep_quality": "Einschlaf-Qualität",
+    "sleep_location": "Einschlaf-Ort"
   },
   "settings": {
     "title": "Einstellungen",
@@ -188,7 +193,14 @@
     "up_to_date": "Auf dem neuesten Stand",
     "running_latest": "Du verwendest die neueste Version",
     "check_failed": "Versionsprüfung fehlgeschlagen",
-    "unknown_error": "Unbekannter Fehler"
+    "unknown_error": "Unbekannter Fehler",
+    "sleep_meta_title": "Schlaf-Erfassung",
+    "sleep_quality_label": "Einschlaf-Qualität",
+    "sleep_quality_help": "Eine Option pro Zeile, z.B. 'leicht', 'schwer', 'mit Weinen'. Diese erscheinen in den Schlaf-Dialogen.",
+    "sleep_quality_default": "Standard-Auswahl für Einschlaf-Qualität",
+    "sleep_location_label": "Einschlaf-Ort",
+    "sleep_location_help": "Eine Option pro Zeile, z.B. 'im eigenen Bett', 'im Elternbett', 'auf dem Arm', 'in der Federwiege'.",
+    "sleep_location_default": "Standard-Auswahl für Einschlaf-Ort"
   },
   "messages": {
     "success": {

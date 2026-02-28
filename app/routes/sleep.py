@@ -27,7 +27,11 @@ def start_nap():
             timestamp = get_local_now().isoformat()
     else:
         timestamp = get_local_now().isoformat()
-    sleep_id = Sleep.create_nap(timestamp)
+    
+    sleep_quality = request.form.get('sleep_quality') or None
+    sleep_location = request.form.get('sleep_location') or None
+    
+    sleep_id = Sleep.create_nap(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location)
     flash('Nickerchen gestartet', 'success')
     return redirect(url_for('main.index'))
 
@@ -58,7 +62,11 @@ def start_night_sleep():
             timestamp = get_local_now().isoformat()
     else:
         timestamp = get_local_now().isoformat()
-    sleep_id = Sleep.create_night_sleep(timestamp)
+    
+    sleep_quality = request.form.get('sleep_quality') or None
+    sleep_location = request.form.get('sleep_location') or None
+    
+    sleep_id = Sleep.create_night_sleep(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location)
     flash('Nachtschlaf gestartet', 'success')
     return redirect(url_for('main.index'))
 

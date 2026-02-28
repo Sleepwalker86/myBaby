@@ -2,29 +2,30 @@
 from app.models.database import get_db
 from datetime import datetime, date, timedelta
 import pytz
+import json
 
 tz_berlin = pytz.timezone('Europe/Berlin')
 
 class Sleep:
     """Schlaf-Tracking"""
     @staticmethod
-    def create_nap(start_time, end_time=None):
+    def create_nap(start_time, end_time=None, sleep_quality=None, sleep_location=None):
         """Erstellt ein Nickerchen"""
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO sleep (type, start_time, end_time) VALUES (?, ?, ?)',
-            ('nap', start_time, end_time)
+            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location) VALUES (?, ?, ?, ?, ?)',
+            ('nap', start_time, end_time, sleep_quality, sleep_location)
         )
         db.commit()
         return cursor.lastrowid
     
     @staticmethod
-    def create_night_sleep(start_time, end_time=None):
+    def create_night_sleep(start_time, end_time=None, sleep_quality=None, sleep_location=None):
         """Erstellt einen Nachtschlaf"""
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO sleep (type, start_time, end_time) VALUES (?, ?, ?)',
-            ('night', start_time, end_time)
+            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location) VALUES (?, ?, ?, ?, ?)',
+            ('night', start_time, end_time, sleep_quality, sleep_location)
         )
         db.commit()
         return cursor.lastrowid
@@ -304,6 +305,9 @@ class Sleep:
         night_hours = 0
         wake_times = []  # Aufwachzeiten
         sleep_times = []  # Einschlafzeiten
+        # Verteilung nach Einschlaf-Qualität und -Ort
+        quality_counts = {}
+        location_counts = {}
         
         # Verarbeite Einträge, die im Zeitraum gestartet haben
         for row in rows:
@@ -444,6 +448,32 @@ class Sleep:
             except (ValueError, AttributeError):
                 continue
         
+        # Verteilung nach Qualität/Ort im gewählten Zeitraum berechnen
+        # (nur Einträge innerhalb des Zeitbereichs)
+        range_start_q = range_start_str
+        range_end_q = range_end_str
+        quality_rows = db.execute(
+            '''SELECT sleep_quality FROM sleep
+               WHERE start_time >= ? AND start_time <= ? AND sleep_quality IS NOT NULL''',
+            (range_start_q, range_end_q)
+        ).fetchall()
+        for row in quality_rows:
+            q = (row['sleep_quality'] or '').strip()
+            if not q:
+                continue
+            quality_counts[q] = quality_counts.get(q, 0) + 1
+        
+        location_rows = db.execute(
+            '''SELECT sleep_location FROM sleep
+               WHERE start_time >= ? AND start_time <= ? AND sleep_location IS NOT NULL''',
+            (range_start_q, range_end_q)
+        ).fetchall()
+        for row in location_rows:
+            loc = (row['sleep_location'] or '').strip()
+            if not loc:
+                continue
+            location_counts[loc] = location_counts.get(loc, 0) + 1
+        
         # Durchschnitte berechnen
         total_sleep = sum(daily_sleep.values())
         total_days = len(daily_sleep)
@@ -463,7 +493,9 @@ class Sleep:
             'sleep_times': sleep_times,
             'avg_wake_time': round(avg_wake_time, 1),
             'avg_sleep_time': round(avg_sleep_time, 1),
-            'total_days': total_days
+            'total_days': total_days,
+            'sleep_quality_counts': quality_counts,
+            'sleep_location_counts': location_counts,
         }
 
 class NightWaking:
@@ -1509,6 +1541,117 @@ class BabyInfo:
         return max(0, months)
     
     @staticmethod
+    def get_sleep_meta_settings():
+        """
+        Liefert konfigurierbare Optionen für Einschlaf-Qualität und -Ort
+        sowie die Standardauswahl für die Modals.
+        """
+        # Standardwerte, falls nichts konfiguriert ist
+        default_qualities = ['leicht', 'schwer', 'mit Weinen']
+        default_locations = ['im eigenen Bett', 'im Elternbett', 'auf dem Arm', 'in der Federwiege']
+        
+        db = get_db()
+        row = db.execute(
+            '''SELECT sleep_quality_options, sleep_location_options,
+                      default_sleep_quality, default_sleep_location
+               FROM baby_info ORDER BY id LIMIT 1'''
+        ).fetchone()
+        
+        qualities = default_qualities
+        locations = default_locations
+        default_quality = default_qualities[0]
+        default_location = default_locations[0]
+        
+        if row:
+            try:
+                if row['sleep_quality_options']:
+                    qualities = json.loads(row['sleep_quality_options'])
+            except Exception:
+                pass
+            try:
+                if row['sleep_location_options']:
+                    locations = json.loads(row['sleep_location_options'])
+            except Exception:
+                pass
+            
+            if row['default_sleep_quality']:
+                default_quality = row['default_sleep_quality']
+            elif qualities:
+                default_quality = qualities[0]
+            
+            if row['default_sleep_location']:
+                default_location = row['default_sleep_location']
+            elif locations:
+                default_location = locations[0]
+        
+        # Fallbacks sichern
+        if not qualities:
+            qualities = default_qualities
+        if not locations:
+            locations = default_locations
+        if default_quality not in qualities:
+            default_quality = qualities[0]
+        if default_location not in locations:
+            default_location = locations[0]
+        
+        return {
+            'qualities': qualities,
+            'locations': locations,
+            'default_quality': default_quality,
+            'default_location': default_location,
+        }
+    
+    @staticmethod
+    def set_sleep_meta_settings(qualities, locations, default_quality, default_location):
+        """
+        Speichert konfigurierbare Optionen und Standardwerte für Schlaf-Metadaten.
+        qualities/locations: Listen von Strings.
+        """
+        db = get_db()
+        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        
+        # Aufräumen der Listen
+        qualities = [q.strip() for q in (qualities or []) if q.strip()]
+        locations = [l.strip() for l in (locations or []) if l.strip()]
+        
+        # Fallbacks, falls alles leer ist
+        if not qualities:
+            qualities = ['leicht', 'schwer', 'mit Weinen']
+        if not locations:
+            locations = ['im eigenen Bett', 'im Elternbett', 'auf dem Arm', 'in der Federwiege']
+        
+        if default_quality not in qualities:
+            default_quality = qualities[0]
+        if default_location not in locations:
+            default_location = locations[0]
+        
+        quality_json = json.dumps(qualities, ensure_ascii=False)
+        location_json = json.dumps(locations, ensure_ascii=False)
+        
+        now_str = datetime.now(tz_berlin).isoformat()
+        
+        if existing:
+            db.execute(
+                '''UPDATE baby_info
+                   SET sleep_quality_options = ?, sleep_location_options = ?,
+                       default_sleep_quality = ?, default_sleep_location = ?,
+                       updated_at = ?
+                   WHERE id = ?''',
+                (quality_json, location_json, default_quality, default_location, now_str, existing['id'])
+            )
+        else:
+            # Falls noch kein Eintrag existiert, einen mit Minimaldaten anlegen
+            db.execute(
+                '''INSERT INTO baby_info (name, birth_date, sleep_quality_options, sleep_location_options,
+                                          default_sleep_quality, default_sleep_location, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                ('', (date.today() - timedelta(days=180)).isoformat(),
+                 quality_json, location_json, default_quality, default_location, now_str)
+            )
+        
+        db.commit()
+    
+    @staticmethod
     def get_sleep_recommendations():
         """Gibt die empfohlenen Schlafzeiten basierend auf dem Alter zurück (nach Irina Kaiser / babyschlaffee.de)"""
         age_months = BabyInfo.get_age_months()
@@ -1958,7 +2101,16 @@ class BabyInfo:
             ).fetchone()
         
         # NEUE LOGIK: Berechne Einschlafzeit basierend auf aktuellem Zustand, nicht auf fester Aufwachzeit
-        # Finde letztes Aufwachen für Wachzeit-Berechnung
+        # Finde letztes Aufwachen (egal ob Nickerchen oder Nachtschlaf) für Wachzeit-Berechnung
+        # PERFORMANCE: Range-Query statt date()
+        last_sleep_end = db.execute(
+            '''SELECT end_time FROM sleep 
+               WHERE end_time IS NOT NULL 
+               AND end_time >= ? AND end_time <= ?
+               ORDER BY end_time DESC LIMIT 1''',
+            (day_start_str, day_end_str)
+        ).fetchone()
+        
         last_wake_time = None
         if last_sleep_end:
             try:
@@ -1970,37 +2122,7 @@ class BabyInfo:
             except (ValueError, AttributeError):
                 pass
         
-        # Wenn kein Aufwachen heute gefunden wurde, kann keine Berechnung gemacht werden
-        if not last_wake_time or last_wake_time.date() != selected_date:
-            # Für heute: verwende aktuelle Zeit als Basis (nur wenn es heute ist)
-            if selected_date == date.today():
-                last_wake_time = now
-            else:
-                # Für vergangene Tage ohne Aufwachen: kein Vorschlag möglich
-                return {
-                    'suggested_time': None,
-                    'night_sleep_duration': adjusted_night_sleep,
-                    'desired_wake_time': None,
-                    'total_day_sleep': total_day_sleep_hours,
-                    'target_day_sleep': target_day_sleep,
-                    'remaining_day_sleep': remaining_day_sleep
-                }
-        
-        # Für Wachzeit-Berechnung: Finde letztes Aufwachen (egal ob Nickerchen oder Nachtschlaf)
-        # PERFORMANCE: Range-Query statt date()
-        # WICHTIG: Dies wird jetzt oben verwendet, daher hier nur noch als Fallback
-        if not last_wake_time:
-            last_sleep_end = db.execute(
-                '''SELECT end_time FROM sleep 
-                   WHERE end_time IS NOT NULL 
-                   AND end_time >= ? AND end_time <= ?
-                   ORDER BY end_time DESC LIMIT 1''',
-                (day_start_str, day_end_str)
-            ).fetchone()
-        else:
-            last_sleep_end = None
-        
-        # Berechne bereits geschlafene Tagschlafdauer heute
+        # Berechne bereits geschlafene Tagschlafdauer heute (wird für adjusted_night_sleep benötigt)
         # PERFORMANCE: Range-Queries statt date() - nutzt Indizes besser
         prev_date = selected_date - timedelta(days=1)
         prev_day_start = datetime.combine(prev_date, datetime.min.time())
@@ -2087,6 +2209,22 @@ class BabyInfo:
             # Keine tatsächlichen Daten vorhanden, verwende Tabellenwert mit Anpassungen
             adjusted_night_sleep = target_night_sleep
         
+        # Wenn kein Aufwachen heute gefunden wurde, kann keine Berechnung gemacht werden
+        if not last_wake_time or last_wake_time.date() != selected_date:
+            # Für heute: verwende aktuelle Zeit als Basis (nur wenn es heute ist)
+            if selected_date == date.today():
+                last_wake_time = now
+            else:
+                # Für vergangene Tage ohne Aufwachen: kein Vorschlag möglich
+                return {
+                    'suggested_time': None,
+                    'night_sleep_duration': adjusted_night_sleep,
+                    'desired_wake_time': None,
+                    'total_day_sleep': total_day_sleep_hours,
+                    'target_day_sleep': target_day_sleep,
+                    'remaining_day_sleep': remaining_day_sleep
+                }
+        
         # Berechne Wachzeit seit letztem Aufwachen (für Übermüdungs-Bewertung)
         wake_duration = None
         if last_wake_time:
@@ -2096,60 +2234,87 @@ class BabyInfo:
             # sollte früher eingeschlafen werden (Übermüdung)
             # Dies wird bei der Einschlafzeit-Berechnung berücksichtigt
         
-        # NEUE LOGIK: Berechne Einschlafzeit basierend auf aktuellem Zustand
-        # Basis: Letztes Aufwachen + Wachzeit + Übermüdung + Tagschlaf-Status
+        # LOGIK: Berechne Einschlafzeit basierend auf realistischer Ziel-Aufwachzeit
+        # 1. Berechne Ziel-Aufwachzeit aus den letzten Nachtschläfen (realistisch, z.B. 07:00-08:00)
+        # 2. Berechne Einschlafzeit rückwärts: Einschlafzeit = Ziel-Aufwachzeit - Nachtschlafdauer
+        # 3. Passe Einschlafzeit leicht an basierend auf aktuellem Zustand (Übermüdung, Tagschlaf)
         
-        # Berechne empfohlene Einschlafzeit basierend auf:
-        # 1. Aktueller Zeit (now)
-        # 2. Wie lange ist das Baby schon wach? (wake_duration)
-        # 3. Wie viel Tagschlaf fehlt noch? (remaining_day_sleep)
-        # 4. Empfohlene Nachtschlafdauer (adjusted_night_sleep)
+        # Berechne Ziel-Aufwachzeit aus den letzten Nachtschläfen
+        # Hole die letzten 7 Nachtschläfe und berechne Durchschnitt der Aufwachzeiten
+        desired_wake_time = None
+        if recent_night_sleeps:
+            wake_times = []
+            for night_sleep in recent_night_sleeps:
+                try:
+                    end_dt = datetime.fromisoformat(night_sleep['end_time'].replace('Z', '+00:00'))
+                    if end_dt.tzinfo is None:
+                        end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                    # Nur Stunden und Minuten für Durchschnitt
+                    wake_times.append(end_dt.hour + end_dt.minute / 60.0)
+                except (ValueError, AttributeError):
+                    continue
+            
+            if wake_times:
+                avg_wake_hour = sum(wake_times) / len(wake_times)
+                # Erstelle Ziel-Aufwachzeit für morgen
+                tomorrow = selected_date + timedelta(days=1)
+                desired_wake_time = tz_berlin.localize(
+                    datetime.combine(tomorrow, datetime.min.time().replace(
+                        hour=int(avg_wake_hour), 
+                        minute=int((avg_wake_hour - int(avg_wake_hour)) * 60)
+                    ))
+                )
         
-        # Startpunkt: Aktuelle Zeit
-        base_sleep_time = now
+        # Fallback: Wenn keine Daten vorhanden, verwende Standard (07:00 Uhr)
+        if desired_wake_time is None:
+            tomorrow = selected_date + timedelta(days=1)
+            desired_wake_time = tz_berlin.localize(
+                datetime.combine(tomorrow, datetime.min.time().replace(hour=7, minute=0))
+            )
+        
+        # Berechne Basis-Einschlafzeit rückwärts: Einschlafzeit = Aufwachzeit - Nachtschlafdauer
+        base_sleep_time = desired_wake_time - timedelta(hours=adjusted_night_sleep)
         
         # Anpassung 1: Übermüdung (wenn sehr lange wach)
+        # Wenn das Baby schon sehr lange wach ist, sollte es etwas früher schlafen
         if wake_duration is not None:
             if wake_duration > 12:
-                # Sehr lange wach (>12h) - sollte früher schlafen
-                # Reduziere die Zeit um bis zu 2 Stunden
-                hours_to_subtract = min(2.0, (wake_duration - 12) * 0.3)
+                # Sehr lange wach (>12h) - sollte bis zu 1 Stunde früher schlafen
+                hours_to_subtract = min(1.0, (wake_duration - 12) * 0.2)
                 base_sleep_time = base_sleep_time - timedelta(hours=hours_to_subtract)
             elif wake_duration > 10:
                 # Lange wach (10-12h) - sollte etwas früher schlafen
-                hours_to_subtract = (wake_duration - 10) * 0.2
+                hours_to_subtract = (wake_duration - 10) * 0.15
                 base_sleep_time = base_sleep_time - timedelta(hours=hours_to_subtract)
         
         # Anpassung 2: Tagschlaf-Status
-        # Wenn noch viel Tagschlaf fehlt, könnte später schlafen (aber nicht zu spät)
-        # Wenn genug Tagschlaf, kann früher schlafen
+        # Wenn noch viel Tagschlaf fehlt, könnte etwas später schlafen (aber nicht zu spät)
+        # Wenn genug Tagschlaf, kann etwas früher schlafen
+        min_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=18, minute=0)))
+        max_sleep_time_normal = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=0)))
+        max_sleep_time_late = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=30)))
+        
         if remaining_day_sleep > 1.0:
-            # Noch viel Tagschlaf fehlt - könnte etwas später schlafen
-            # Aber maximal bis 20:30 Uhr
-            max_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=20, minute=30)))
-            if base_sleep_time < max_sleep_time:
-                # Erlaube bis zu 30 Minuten später, wenn noch viel Tagschlaf fehlt
-                base_sleep_time = min(base_sleep_time + timedelta(minutes=30), max_sleep_time)
+            # Noch viel Tagschlaf fehlt - könnte bis zu 30 Minuten später schlafen
+            # Aber maximal bis 21:00 Uhr
+            if base_sleep_time < max_sleep_time_normal:
+                base_sleep_time = min(base_sleep_time + timedelta(minutes=30), max_sleep_time_normal)
         elif remaining_day_sleep < 0.5:
-            # Genug Tagschlaf - kann früher schlafen (wenn nicht schon zu spät)
+            # Genug Tagschlaf - kann bis zu 30 Minuten früher schlafen
             # Aber nicht vor 18:00 Uhr
-            min_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=18, minute=0)))
             if base_sleep_time > min_sleep_time:
-                # Erlaube bis zu 30 Minuten früher
                 base_sleep_time = max(base_sleep_time - timedelta(minutes=30), min_sleep_time)
         
         # Anpassung 3: Tageszeit-basierte Grenzen
-        # Nicht vor 17:00 Uhr (zu früh)
-        min_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=17, minute=0)))
+        # Nicht vor 18:00 Uhr (zu früh)
         if base_sleep_time < min_sleep_time:
             base_sleep_time = min_sleep_time
         
-        # Nicht nach 21:30 Uhr (zu spät, außer bei Übermüdung)
-        max_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=30)))
+        # Nicht nach 21:30 Uhr (zu spät, außer bei starker Übermüdung)
         if wake_duration is None or wake_duration <= 12:
             # Nur begrenzen wenn nicht übermüdet
-            if base_sleep_time > max_sleep_time:
-                base_sleep_time = max_sleep_time
+            if base_sleep_time > max_sleep_time_late:
+                base_sleep_time = max_sleep_time_late
         
         suggested_sleep_time = base_sleep_time
         
@@ -2158,9 +2323,9 @@ class BabyInfo:
         if suggested_sleep_time < now:
             suggested_sleep_time = now + timedelta(minutes=15)
         
-        # Berechne erwartete Aufwachzeit basierend auf Einschlafzeit + Nachtschlafdauer
-        # (nur für Anzeige, nicht für Berechnung verwendet)
-        expected_wake_time = suggested_sleep_time + timedelta(hours=adjusted_night_sleep)
+        # Die Ziel-Aufwachzeit ist bereits berechnet (desired_wake_time)
+        # Sie wird nur leicht angepasst, wenn die Einschlafzeit stark verschoben wurde
+        expected_wake_time = desired_wake_time
         
         return {
             'suggested_time': suggested_sleep_time,

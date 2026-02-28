@@ -35,7 +35,9 @@
       "end_sleep": "Finalizar sueño",
       "night_waking": "Despertar nocturno",
       "start_night_waking": "Iniciar despertar nocturno",
-      "end_night_waking": "Finalizar despertar nocturno"
+      "end_night_waking": "Finalizar despertar nocturno",
+      "sleep_quality_label": "¿Cómo se ha dormido tu hijo?",
+      "sleep_location_label": "¿Dónde se ha dormido tu hijo?"
     },
     "feeding": {
       "left": "Lactancia (Izquierda)",
@@ -160,7 +162,10 @@
       "avg_temperature": "Ø Temperatura",
       "min": "Mín",
       "max": "Máx",
-      "no_data": "No hay datos disponibles"
+      "no_data": "No hay datos disponibles",
+      "sleep_meta_distribution": "Calidad y lugar al dormirse",
+      "sleep_quality": "Calidad al dormirse",
+      "sleep_location": "Lugar al dormirse"
     },
     "settings": {
       "title": "Configuración",
@@ -188,7 +193,14 @@
       "up_to_date": "Actualizado",
       "running_latest": "Estás usando la última versión",
       "check_failed": "Error al Comprobar Versión",
-      "unknown_error": "Error Desconocido"
+      "unknown_error": "Error Desconocido",
+      "sleep_meta_title": "Registro de sueño",
+      "sleep_quality_label": "Calidad al dormirse",
+      "sleep_quality_help": "Una opción por línea, p. ej. 'fácil', 'difícil', 'con llanto'. Estas se muestran en los diálogos de sueño.",
+      "sleep_quality_default": "Selección predeterminada para la calidad del sueño",
+      "sleep_location_label": "Lugar al dormirse",
+      "sleep_location_help": "Una opción por línea, p. ej. 'en su propia cama', 'en la cama de los padres', 'en brazos', 'en la cuna colgante'.",
+      "sleep_location_default": "Selección predeterminada para el lugar de sueño"
     },
     "messages": {
       "success": {

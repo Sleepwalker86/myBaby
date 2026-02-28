@@ -406,10 +406,11 @@ def index():
     timeline_events.sort(key=get_sort_key)
     wake_up_time_str = None
     
-    # Nickerchen-Vorschläge berechnen (nur für heute)
+    # Nickerchen- und Nachtschlaf-Vorschläge berechnen (nur für heute)
     nap_suggestions = []
     night_sleep_suggestion = None
     baby_age_months = None
+    sleep_meta = BabyInfo.get_sleep_meta_settings()
     if is_today:
         nap_suggestions = BabyInfo.get_nap_suggestions(selected_date)
         night_sleep_suggestion = BabyInfo.get_night_sleep_suggestion(selected_date)
@@ -447,7 +448,8 @@ def index():
                          nap_suggestions=nap_suggestions,
                          night_sleep_suggestion=night_sleep_suggestion,
                          baby_age_months=baby_age_months,
-                         baby_name=baby_name)
+                         baby_name=baby_name,
+                         sleep_meta=sleep_meta)
 
 @bp.route('/api/audio-files')
 def get_audio_files():
