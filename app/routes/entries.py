@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models.models import get_all_entries_today, get_all_entries_date_range
+from app.models.models import get_all_entries_today, get_all_entries_date_range, BabyInfo
 from datetime import datetime, date, timedelta
 import pytz
 from app.i18n import get_language, _
@@ -319,6 +319,7 @@ def entries():
         date_display = f"{week_start.strftime('%d.%m.%Y')} - {week_end.strftime('%d.%m.%Y')}"
     
     today = date.today()
+    sleep_meta = BabyInfo.get_sleep_meta_settings()
     # Wochentags-Mapping basierend auf aktueller Sprache
     lang = get_language()
     weekday_names = {
@@ -340,5 +341,6 @@ def entries():
                          date_display=date_display,
                          today=today,
                          timedelta=timedelta,
-                         weekday_names=weekday_names)
+                         weekday_names=weekday_names,
+                         sleep_meta=sleep_meta)
 

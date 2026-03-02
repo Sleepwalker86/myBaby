@@ -1044,6 +1044,13 @@
                                     {% else %}
                                         <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
                                     {% endif %}
+                                    {% if entry.category == 'sleep' and (entry.sleep_quality or entry.sleep_location) %}
+                                    <div class="text-muted small mt-1">
+                                        {% if entry.sleep_quality %}{{ entry.sleep_quality }}{% endif %}
+                                        {% if entry.sleep_quality and entry.sleep_location %} • {% endif %}
+                                        {% if entry.sleep_location %}{{ entry.sleep_location }}{% endif %}
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ entry.category }}{{ entry.id }}">
@@ -1126,6 +1133,22 @@
                                                            value="{{ entry.end_time[:16] if entry.end_time else '' }}">
                                                     <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_sleep_end{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
                                                 </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_sleep_quality{{ entry.id }}" class="form-label">{{ _('sleep.sleep_quality_label') }}</label>
+                                                <select id="edit_sleep_quality{{ entry.id }}" name="sleep_quality" class="form-select">
+                                                    {% for q in sleep_meta.qualities %}
+                                                    <option value="{{ q }}" {% if entry.sleep_quality == q or (not entry.sleep_quality and q == sleep_meta.default_quality) %}selected{% endif %}>{{ q }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit_sleep_location{{ entry.id }}" class="form-label">{{ _('sleep.sleep_location_label') }}</label>
+                                                <select id="edit_sleep_location{{ entry.id }}" name="sleep_location" class="form-select">
+                                                    {% for l in sleep_meta.locations %}
+                                                    <option value="{{ l }}" {% if entry.sleep_location == l or (not entry.sleep_location and l == sleep_meta.default_location) %}selected{% endif %}>{{ l }}</option>
+                                                    {% endfor %}
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="modal-footer">

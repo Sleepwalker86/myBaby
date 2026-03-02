@@ -9,6 +9,7 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 ### 📱 Hauptfunktionen
 
 - **Schlaf-Tracking**: Erfasse Nickerchen und Nachtschlaf mit automatischer Dauerberechnung
+- **Einschlaf-Details**: Dokumentiere, *wie* (z.B. leicht, schwer, mit Weinen) und *wo* (eigenes Bett, Elternbett, auf dem Arm, Federwiege) dein Kind eingeschlafen ist – konfigurierbare Optionen in den Einstellungen
 - **Nächtliches Aufwachen**: Dokumentiere nächtliche Wachphasen, die automatisch vom Nachtschlaf abgezogen werden
 - **Intelligente Schlaf-Vorschläge**: Die App berechnet basierend auf Alter und Schlafmustern, wann das nächste Nickerchen und der optimale Nachtschlaf ansteht
 - **Circular Timeline**: Visualisiere den Tagesverlauf als übersichtliches Kreisdiagramm
@@ -16,7 +17,7 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
-- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken
+- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken sowie eine Übersicht zur Einschlaf-Qualität und zum Einschlaf-Ort
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
 
@@ -137,6 +138,7 @@ Die Seite **Einträge** bietet:
 - **Nachtschlaf beenden**: Beim Aufwachen am Morgen "Schlaf beenden" drücken
 - **Nächtliches Aufwachen**: Wenn das Baby nachts wach wird, starte "Nächtliches Aufwachen". Beim Wiedereinschlafen beende es. Die Dauer wird automatisch vom Nachtschlaf abgezogen.
 - **Nickerchen nachtragen**: Du kannst auch Nickerchen mit angepasster Startzeit nachtragen
+- **Einschlaf-Qualität & -Ort**: Beim Starten (und später beim Bearbeiten) von Nickerchen und Nachtschlaf kannst du festhalten, wie gut und wo dein Kind eingeschlafen ist. Die Optionen (inkl. Standardwerte) konfigurierst du in den Einstellungen.
 - **Vorschläge beachten**: Die App berechnet basierend auf Alter und tatsächlichen Schlafmustern, wann das nächste Nickerchen und der optimale Nachtschlaf sinnvoll sind
 
 ### Schnellaktionen

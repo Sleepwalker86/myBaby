@@ -160,9 +160,92 @@
                         {% else %}
                             <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
                         {% endif %}
+                        {% if entry.category == 'sleep' and (entry.sleep_quality or entry.sleep_location) %}
+                        <div class="text-muted small mt-1">
+                            {% if entry.sleep_quality %}{{ entry.sleep_quality }}{% endif %}
+                            {% if entry.sleep_quality and entry.sleep_location %} • {% endif %}
+                            {% if entry.sleep_location %}{{ entry.sleep_location }}{% endif %}
+                        </div>
+                        {% endif %}
+                        {% if entry.category == 'sleep' %}
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editModal{{ entry.category }}{{ entry.id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form method="POST"
+                                  action="{{ url_for('edit.delete_sleep', sleep_id=entry.id) }}"
+                                  style="display: inline;"
+                                  onsubmit="return confirm('{{ _('common.delete_confirm') }}');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+            
+            {% if entry.category == 'sleep' %}
+            <!-- Edit Modal für Schlaf-Eintrag (Wochenansicht) -->
+            <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.nap') }}/{{ _('sleep.night_sleep') }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="edit_sleep_type_week{{ entry.id }}" class="form-label">{{ _('common.type') }}</label>
+                                    <select class="form-select" id="edit_sleep_type_week{{ entry.id }}" name="type" required>
+                                        <option value="nap" {{ 'selected' if entry.type == 'nap' else '' }}>{{ _('sleep.nap') }}</option>
+                                        <option value="night" {{ 'selected' if entry.type == 'night' else '' }}>{{ _('sleep.night_sleep') }}</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_start_week{{ entry.id }}" class="form-label">{{ _('common.start_time') }}</label>
+                                    <input type="datetime-local" class="form-control" id="edit_sleep_start_week{{ entry.id }}" name="start_time" 
+                                           value="{{ entry.timestamp[:16] }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_end_week{{ entry.id }}" class="form-label">{{ _('common.end_time') }}</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="datetime-local" class="form-control" id="edit_sleep_end_week{{ entry.id }}" name="end_time" 
+                                               value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                        <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_sleep_end_week{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_quality_week{{ entry.id }}" class="form-label">{{ _('sleep.sleep_quality_label') }}</label>
+                                    <select id="edit_sleep_quality_week{{ entry.id }}" name="sleep_quality" class="form-select">
+                                        {% for q in sleep_meta.qualities %}
+                                        <option value="{{ q }}" {% if entry.sleep_quality == q or (not entry.sleep_quality and q == sleep_meta.default_quality) %}selected{% endif %}>{{ q }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_location_week{{ entry.id }}" class="form-label">{{ _('sleep.sleep_location_label') }}</label>
+                                    <select id="edit_sleep_location_week{{ entry.id }}" name="sleep_location" class="form-select">
+                                        {% for l in sleep_meta.locations %}
+                                        <option value="{{ l }}" {% if entry.sleep_location == l or (not entry.sleep_location and l == sleep_meta.default_location) %}selected{% endif %}>{{ l }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         {% endfor %}
 
         {% if ns.current_day_date is not none %}
@@ -250,9 +333,92 @@
                         {% else %}
                             <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
                         {% endif %}
+                        {% if entry.category == 'sleep' and (entry.sleep_quality or entry.sleep_location) %}
+                        <div class="text-muted small mt-1">
+                            {% if entry.sleep_quality %}{{ entry.sleep_quality }}{% endif %}
+                            {% if entry.sleep_quality and entry.sleep_location %} • {% endif %}
+                            {% if entry.sleep_location %}{{ entry.sleep_location }}{% endif %}
+                        </div>
+                        {% endif %}
+                        {% if entry.category == 'sleep' %}
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editModalDaySleep{{ entry.id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form method="POST"
+                                  action="{{ url_for('edit.delete_sleep', sleep_id=entry.id) }}"
+                                  style="display: inline;"
+                                  onsubmit="return confirm('{{ _('common.delete_confirm') }}');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+            
+            {% if entry.category == 'sleep' %}
+            <!-- Edit Modal für Schlaf-Eintrag (Tagesansicht) -->
+            <div class="modal fade" id="editModalDaySleep{{ entry.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.nap') }}/{{ _('sleep.night_sleep') }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="edit_sleep_type_day{{ entry.id }}" class="form-label">{{ _('common.type') }}</label>
+                                    <select class="form-select" id="edit_sleep_type_day{{ entry.id }}" name="type" required>
+                                        <option value="nap" {{ 'selected' if entry.type == 'nap' else '' }}>{{ _('sleep.nap') }}</option>
+                                        <option value="night" {{ 'selected' if entry.type == 'night' else '' }}>{{ _('sleep.night_sleep') }}</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_start_day{{ entry.id }}" class="form-label">{{ _('common.start_time') }}</label>
+                                    <input type="datetime-local" class="form-control" id="edit_sleep_start_day{{ entry.id }}" name="start_time" 
+                                           value="{{ entry.timestamp[:16] }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_end_day{{ entry.id }}" class="form-label">{{ _('common.end_time') }}</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="datetime-local" class="form-control" id="edit_sleep_end_day{{ entry.id }}" name="end_time" 
+                                               value="{{ entry.end_time[:16] if entry.end_time else '' }}">
+                                        <button type="button" class="btn btn-outline-danger clear-end-time-btn" data-target="edit_sleep_end_day{{ entry.id }}" style="width: 50px; height: 38px; font-size: 1.2rem;" title="{{ _('common.delete') }}">×</button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_quality_day{{ entry.id }}" class="form-label">{{ _('sleep.sleep_quality_label') }}</label>
+                                    <select id="edit_sleep_quality_day{{ entry.id }}" name="sleep_quality" class="form-select">
+                                        {% for q in sleep_meta.qualities %}
+                                        <option value="{{ q }}" {% if entry.sleep_quality == q or (not entry.sleep_quality and q == sleep_meta.default_quality) %}selected{% endif %}>{{ q }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_location_day{{ entry.id }}" class="form-label">{{ _('sleep.sleep_location_label') }}</label>
+                                    <select id="edit_sleep_location_day{{ entry.id }}" name="sleep_location" class="form-select">
+                                        {% for l in sleep_meta.locations %}
+                                        <option value="{{ l }}" {% if entry.sleep_location == l or (not entry.sleep_location and l == sleep_meta.default_location) %}selected{% endif %}>{{ l }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         {% endfor %}
     {% endif %}
                     {% else %}

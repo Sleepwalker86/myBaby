@@ -241,18 +241,24 @@ class Sleep:
         return dict(row) if row else None
     
     @staticmethod
-    def update(sleep_id, start_time, end_time=None, sleep_type=None):
+    def update(sleep_id, start_time, end_time=None, sleep_type=None, sleep_quality=None, sleep_location=None):
         """Aktualisiert einen Schlaf-Eintrag"""
         db = get_db()
         if sleep_type:
             db.execute(
-                'UPDATE sleep SET type = ?, start_time = ?, end_time = ? WHERE id = ?',
-                (sleep_type, start_time, end_time, sleep_id)
+                '''UPDATE sleep 
+                   SET type = ?, start_time = ?, end_time = ?, 
+                       sleep_quality = ?, sleep_location = ?
+                   WHERE id = ?''',
+                (sleep_type, start_time, end_time, sleep_quality, sleep_location, sleep_id)
             )
         else:
             db.execute(
-                'UPDATE sleep SET start_time = ?, end_time = ? WHERE id = ?',
-                (start_time, end_time, sleep_id)
+                '''UPDATE sleep 
+                   SET start_time = ?, end_time = ?, 
+                       sleep_quality = ?, sleep_location = ?
+                   WHERE id = ?''',
+                (start_time, end_time, sleep_quality, sleep_location, sleep_id)
             )
         db.commit()
     
@@ -1040,7 +1046,8 @@ def get_all_entries_today(selected_date=None):
     
     # Schlaf: Einträge, die am Tag gestartet haben (nutzt Index auf start_time)
     sleep_rows = db.execute(
-        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time 
+        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
+                  sleep_quality, sleep_location
            FROM sleep 
            WHERE start_time >= ? AND start_time <= ?''',
         (day_start_str, day_end_str)
@@ -1053,13 +1060,16 @@ def get_all_entries_today(selected_date=None):
             'type': row['type'],
             'timestamp': row['timestamp'],
             'end_time': row['end_time'],
+            'sleep_quality': row['sleep_quality'],
+            'sleep_location': row['sleep_location'],
             'display': sleep_type_display
         })
     
     # Schlaf: Einträge, die am vorherigen Tag gestartet haben, aber am Tag enden
     # PERFORMANCE: Range-Query nutzt Indizes besser als date()
     sleep_rows_prev = db.execute(
-        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time 
+        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
+                  sleep_quality, sleep_location
            FROM sleep 
            WHERE start_time >= ? AND start_time <= ? 
            AND end_time >= ? AND end_time <= ?
@@ -1074,6 +1084,8 @@ def get_all_entries_today(selected_date=None):
             'type': row['type'],
             'timestamp': row['timestamp'],
             'end_time': row['end_time'],
+            'sleep_quality': row['sleep_quality'],
+            'sleep_location': row['sleep_location'],
             'display': sleep_type_display
         })
     
@@ -1227,7 +1239,8 @@ def get_all_entries_date_range(start_date, end_date):
     
     # PERFORMANCE: Eine Query für alle Schlaf-Einträge im Bereich
     sleep_rows = db.execute(
-        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time 
+        '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
+                  sleep_quality, sleep_location
            FROM sleep 
            WHERE (start_time >= ? AND start_time <= ?) 
            OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL)''',
@@ -1241,6 +1254,8 @@ def get_all_entries_date_range(start_date, end_date):
             'type': row['type'],
             'timestamp': row['timestamp'],
             'end_time': row['end_time'],
+            'sleep_quality': row['sleep_quality'],
+            'sleep_location': row['sleep_location'],
             'display': sleep_type_display
         })
     

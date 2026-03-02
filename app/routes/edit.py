@@ -11,12 +11,14 @@ def edit_sleep(sleep_id):
         start_time = request.form.get('start_time')
         end_time = request.form.get('end_time') or None
         sleep_type = request.form.get('type')
+        sleep_quality = request.form.get('sleep_quality') or None
+        sleep_location = request.form.get('sleep_location') or None
         
         if not start_time:
             flash('Startzeit ist erforderlich', 'error')
             return redirect(url_for('main.index'))
         
-        Sleep.update(sleep_id, start_time, end_time, sleep_type)
+        Sleep.update(sleep_id, start_time, end_time, sleep_type, sleep_quality, sleep_location)
         flash('Schlaf-Eintrag aktualisiert', 'success')
     except Exception as e:
         flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
