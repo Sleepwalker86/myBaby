@@ -160,6 +160,11 @@
                         {% else %}
                             <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
                         {% endif %}
+                        {% if entry.category == 'sleep' and entry.wake_duration %}
+                        <div class="text-muted small mt-1">
+                            {{ _('sleep.wake_duration_label') }}: {{ entry.wake_duration }}
+                        </div>
+                        {% endif %}
                         {% if entry.category == 'sleep' and (entry.sleep_quality or entry.sleep_location) %}
                         <div class="text-muted small mt-1">
                             {% if entry.sleep_quality %}{{ entry.sleep_quality }}{% endif %}
@@ -332,6 +337,11 @@
                             </div>
                         {% else %}
                             <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
+                        {% endif %}
+                        {% if entry.category == 'sleep' and entry.wake_duration %}
+                        <div class="text-muted small mt-1">
+                            {{ _('sleep.wake_duration_label') }}: {{ entry.wake_duration }}
+                        </div>
                         {% endif %}
                         {% if entry.category == 'sleep' and (entry.sleep_quality or entry.sleep_location) %}
                         <div class="text-muted small mt-1">

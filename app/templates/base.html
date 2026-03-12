@@ -442,6 +442,11 @@
             const darkModeIcon = document.getElementById('darkModeIcon');
             const html = document.documentElement;
             
+            // Wenn kein Icon vorhanden ist (z.B. auf manchen Seiten), Dark-Mode-Icon-Logik überspringen
+            if (!darkModeIcon) {
+                return;
+            }
+            
             // Lade gespeicherte Präferenz (Theme wurde bereits im <head> gesetzt, hier nur Icon aktualisieren)
             function loadTheme() {
                 const savedTheme = localStorage.getItem('theme') || 'light';

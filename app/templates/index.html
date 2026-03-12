@@ -1044,6 +1044,11 @@
                                     {% else %}
                                         <div class="time-text">{{ entry.timestamp|format_datetime_de }}</div>
                                     {% endif %}
+                                    {% if entry.category == 'sleep' and entry.wake_duration %}
+                                    <div class="text-muted small mt-1">
+                                        {{ _('sleep.wake_duration_label') }}: {{ entry.wake_duration }}
+                                    </div>
+                                    {% endif %}
                                     {% if entry.category == 'sleep' and (entry.sleep_quality or entry.sleep_location) %}
                                     <div class="text-muted small mt-1">
                                         {% if entry.sleep_quality %}{{ entry.sleep_quality }}{% endif %}
@@ -1487,6 +1492,11 @@
                             {% endfor %}
                         </select>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="nap_sleep_comment" class="form-label">{{ _('sleep.sleep_comment_label') }}</label>
+                        <textarea id="nap_sleep_comment" name="sleep_comment" class="form-control" rows="2" placeholder="{{ _('sleep.sleep_comment_placeholder') }}"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
@@ -1535,6 +1545,11 @@
                             <option value="{{ l }}" {% if l == sleep_meta.default_location %}selected{% endif %}>{{ l }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="night_sleep_comment" class="form-label">{{ _('sleep.sleep_comment_label') }}</label>
+                        <textarea id="night_sleep_comment" name="sleep_comment" class="form-control" rows="2" placeholder="{{ _('sleep.sleep_comment_placeholder') }}"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

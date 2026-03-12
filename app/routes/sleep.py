@@ -30,8 +30,9 @@ def start_nap():
     
     sleep_quality = request.form.get('sleep_quality') or None
     sleep_location = request.form.get('sleep_location') or None
+    sleep_comment = request.form.get('sleep_comment') or None
     
-    sleep_id = Sleep.create_nap(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location)
+    sleep_id = Sleep.create_nap(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location, sleep_comment=sleep_comment)
     flash('Nickerchen gestartet', 'success')
     return redirect(url_for('main.index'))
 
@@ -65,8 +66,9 @@ def start_night_sleep():
     
     sleep_quality = request.form.get('sleep_quality') or None
     sleep_location = request.form.get('sleep_location') or None
+    sleep_comment = request.form.get('sleep_comment') or None
     
-    sleep_id = Sleep.create_night_sleep(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location)
+    sleep_id = Sleep.create_night_sleep(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location, sleep_comment=sleep_comment)
     flash('Nachtschlaf gestartet', 'success')
     return redirect(url_for('main.index'))
 

@@ -37,7 +37,10 @@
     "start_night_waking": "Nächtliches Aufwachen starten",
     "end_night_waking": "Nächtliches Aufwachen beenden",
     "sleep_quality_label": "Wie ist dein Kind eingeschlafen?",
-    "sleep_location_label": "Wo ist dein Kind eingeschlafen?"
+    "sleep_location_label": "Wo ist dein Kind eingeschlafen?",
+    "wake_duration_label": "Wachzeit seit letztem Schlaf",
+    "sleep_comment_label": "Kommentar (optional)",
+    "sleep_comment_placeholder": "z.B. nach dem Stillen auf dem Arm eingeschlafen"
   },
   "feeding": {
     "left": "Stillen (L)",

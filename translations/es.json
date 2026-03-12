@@ -37,7 +37,10 @@
       "start_night_waking": "Iniciar despertar nocturno",
       "end_night_waking": "Finalizar despertar nocturno",
       "sleep_quality_label": "¿Cómo se ha dormido tu hijo?",
-      "sleep_location_label": "¿Dónde se ha dormido tu hijo?"
+      "sleep_location_label": "¿Dónde se ha dormido tu hijo?",
+      "wake_duration_label": "Tiempo despierto desde el último sueño",
+      "sleep_comment_label": "Comentario (opcional)",
+      "sleep_comment_placeholder": "p. ej. se durmió en brazos después de la toma"
     },
     "feeding": {
       "left": "Lactancia (Izquierda)",

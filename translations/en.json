@@ -37,7 +37,10 @@
     "start_night_waking": "Start Night Waking",
     "end_night_waking": "End Night Waking",
     "sleep_quality_label": "How did your child fall asleep?",
-    "sleep_location_label": "Where did your child fall asleep?"
+    "sleep_location_label": "Where did your child fall asleep?",
+    "wake_duration_label": "Awake time since last sleep",
+    "sleep_comment_label": "Comment (optional)",
+    "sleep_comment_placeholder": "e.g. fell asleep in arms after feeding"
   },
   "feeding": {
     "left": "Feeding (L)",

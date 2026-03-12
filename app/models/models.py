@@ -9,23 +9,23 @@ tz_berlin = pytz.timezone('Europe/Berlin')
 class Sleep:
     """Schlaf-Tracking"""
     @staticmethod
-    def create_nap(start_time, end_time=None, sleep_quality=None, sleep_location=None):
+    def create_nap(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
         """Erstellt ein Nickerchen"""
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location) VALUES (?, ?, ?, ?, ?)',
-            ('nap', start_time, end_time, sleep_quality, sleep_location)
+            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment) VALUES (?, ?, ?, ?, ?, ?)',
+            ('nap', start_time, end_time, sleep_quality, sleep_location, sleep_comment)
         )
         db.commit()
         return cursor.lastrowid
     
     @staticmethod
-    def create_night_sleep(start_time, end_time=None, sleep_quality=None, sleep_location=None):
+    def create_night_sleep(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
         """Erstellt einen Nachtschlaf"""
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location) VALUES (?, ?, ?, ?, ?)',
-            ('night', start_time, end_time, sleep_quality, sleep_location)
+            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment) VALUES (?, ?, ?, ?, ?, ?)',
+            ('night', start_time, end_time, sleep_quality, sleep_location, sleep_comment)
         )
         db.commit()
         return cursor.lastrowid
@@ -1044,6 +1044,35 @@ def get_all_entries_today(selected_date=None):
     
     entries = []
     
+    def _format_wake_duration(prev_end_str, current_start_str):
+        """Hilfsfunktion: formatiert Wachzeit zwischen zwei Zeitpunkten als 'Xh Ym' oder 'Xm'"""
+        if not prev_end_str or not current_start_str:
+            return None
+        try:
+            prev_dt = datetime.fromisoformat(str(prev_end_str).replace('Z', '+00:00'))
+            cur_dt = datetime.fromisoformat(str(current_start_str).replace('Z', '+00:00'))
+            if prev_dt.tzinfo is None:
+                prev_dt = tz_berlin.localize(prev_dt.replace(tzinfo=None))
+            else:
+                prev_dt = prev_dt.astimezone(tz_berlin)
+            if cur_dt.tzinfo is None:
+                cur_dt = tz_berlin.localize(cur_dt.replace(tzinfo=None))
+            else:
+                cur_dt = cur_dt.astimezone(tz_berlin)
+            if cur_dt <= prev_dt:
+                return None
+            total_minutes = int((cur_dt - prev_dt).total_seconds() // 60)
+            hours = total_minutes // 60
+            minutes = total_minutes % 60
+            if hours > 0 and minutes > 0:
+                return f"{hours}h {minutes}m"
+            elif hours > 0:
+                return f"{hours}h"
+            else:
+                return f"{minutes}m"
+        except Exception:
+            return None
+    
     # Schlaf: Einträge, die am Tag gestartet haben (nutzt Index auf start_time)
     sleep_rows = db.execute(
         '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
@@ -1053,6 +1082,14 @@ def get_all_entries_today(selected_date=None):
         (day_start_str, day_end_str)
     ).fetchall()
     for row in sleep_rows:
+        # Finde letztes Schlaf-Ende vor diesem Eintrag für Wachzeit-Berechnung
+        prev_end = db.execute(
+            '''SELECT end_time FROM sleep 
+               WHERE end_time IS NOT NULL AND end_time < ?
+               ORDER BY end_time DESC LIMIT 1''',
+            (row['timestamp'],)
+        ).fetchone()
+        wake_duration = _format_wake_duration(prev_end['end_time'], row['timestamp']) if prev_end else None
         sleep_type_display = "Nachtschlaf" if row['type'] == 'night' else "Nickerchen"
         entries.append({
             'id': row['id'],
@@ -1062,6 +1099,7 @@ def get_all_entries_today(selected_date=None):
             'end_time': row['end_time'],
             'sleep_quality': row['sleep_quality'],
             'sleep_location': row['sleep_location'],
+            'wake_duration': wake_duration,
             'display': sleep_type_display
         })
     
@@ -1077,6 +1115,13 @@ def get_all_entries_today(selected_date=None):
         (prev_day_start_str, prev_day_end_str, day_start_str, day_end_str)
     ).fetchall()
     for row in sleep_rows_prev:
+        prev_end = db.execute(
+            '''SELECT end_time FROM sleep 
+               WHERE end_time IS NOT NULL AND end_time < ?
+               ORDER BY end_time DESC LIMIT 1''',
+            (row['timestamp'],)
+        ).fetchone()
+        wake_duration = _format_wake_duration(prev_end['end_time'], row['timestamp']) if prev_end else None
         sleep_type_display = "Nachtschlaf" if row['type'] == 'night' else "Nickerchen"
         entries.append({
             'id': row['id'],
@@ -1086,6 +1131,7 @@ def get_all_entries_today(selected_date=None):
             'end_time': row['end_time'],
             'sleep_quality': row['sleep_quality'],
             'sleep_location': row['sleep_location'],
+            'wake_duration': wake_duration,
             'display': sleep_type_display
         })
     
@@ -1247,6 +1293,39 @@ def get_all_entries_date_range(start_date, end_date):
         (range_start_str, range_end_str, range_start_str, range_end_str)
     ).fetchall()
     for row in sleep_rows:
+        # Wachzeit seit letztem Schlaf
+        prev_end = db.execute(
+            '''SELECT end_time FROM sleep 
+               WHERE end_time IS NOT NULL AND end_time < ?
+               ORDER BY end_time DESC LIMIT 1''',
+            (row['timestamp'],)
+        ).fetchone()
+        wake_duration = None
+        if prev_end:
+            try:
+                prev_dt = datetime.fromisoformat(str(prev_end['end_time']).replace('Z', '+00:00'))
+                cur_dt = datetime.fromisoformat(str(row['timestamp']).replace('Z', '+00:00'))
+                if prev_dt.tzinfo is None:
+                    prev_dt = tz_berlin.localize(prev_dt.replace(tzinfo=None))
+                else:
+                    prev_dt = prev_dt.astimezone(tz_berlin)
+                if cur_dt.tzinfo is None:
+                    cur_dt = tz_berlin.localize(cur_dt.replace(tzinfo=None))
+                else:
+                    cur_dt = cur_dt.astimezone(tz_berlin)
+                if cur_dt > prev_dt:
+                    total_minutes = int((cur_dt - prev_dt).total_seconds() // 60)
+                    hours = total_minutes // 60
+                    minutes = total_minutes % 60
+                    if hours > 0 and minutes > 0:
+                        wake_duration = f"{hours}h {minutes}m"
+                    elif hours > 0:
+                        wake_duration = f"{hours}h"
+                    else:
+                        wake_duration = f"{minutes}m"
+            except Exception:
+                wake_duration = None
+        
         sleep_type_display = "Nachtschlaf" if row['type'] == 'night' else "Nickerchen"
         entries.append({
             'id': row['id'],
@@ -1256,6 +1335,7 @@ def get_all_entries_date_range(start_date, end_date):
             'end_time': row['end_time'],
             'sleep_quality': row['sleep_quality'],
             'sleep_location': row['sleep_location'],
+            'wake_duration': wake_duration,
             'display': sleep_type_display
         })
     
