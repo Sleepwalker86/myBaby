@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from app.models.models import (
-    Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo, NightWaking
+    Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo, NightWaking, Illness
 )
 from app.models.database import get_db
 from app.i18n import _

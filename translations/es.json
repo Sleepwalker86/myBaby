@@ -73,6 +73,12 @@
       "name": "Nombre del medicamento",
       "dose": "Dosis",
       "dose_placeholder": "p. ej. 5ml, 1 tableta"
+  },
+  "illness": {
+    "title": "Enfermedad",
+    "type": "Tipo de enfermedad",
+    "symptoms": "Síntomas",
+    "notes": "Notas"
     },
     "common": {
       "timeline": "Cronología diaria",
@@ -133,7 +139,8 @@
       "diaper_both": "Pañal (ambos)",
       "temperature": "Temperatura",
       "medicine": "Medicación",
-      "night_waking": "Despertar nocturno"
+      "night_waking": "Despertar nocturno",
+      "illness": "Enfermedad"
     },
     "trends": {
       "title": "Tendencias y estadísticas",
@@ -168,7 +175,9 @@
       "no_data": "No hay datos disponibles",
       "sleep_meta_distribution": "Calidad y lugar al dormirse",
       "sleep_quality": "Calidad al dormirse",
-      "sleep_location": "Lugar al dormirse"
+      "sleep_location": "Lugar al dormirse",
+      "illness_stats": "Estadísticas de enfermedades",
+      "avg_illness_entries": "Ø registros de enfermedades por día"
     },
     "settings": {
       "title": "Configuración",
@@ -223,6 +232,7 @@
         "diaper_both_recorded": "Pañal (ambos) registrado",
         "temperature_recorded": "Temperatura ({value}°C) registrada",
         "medicine_recorded": "Medicación ({name}, {dose}) registrada",
+        "illness_recorded": "Enfermedad registrada",
         "sleep_updated": "Registro de sueño actualizado",
         "feeding_updated": "Registro de lactancia actualizado",
         "bottle_updated": "Registro de biberón actualizado",
@@ -236,6 +246,7 @@
         "diaper_deleted": "Registro de pañal eliminado",
         "temperature_deleted": "Registro de temperatura eliminado",
         "medicine_deleted": "Registro de medicación eliminado",
+        "illness_deleted": "Registro de enfermedad eliminado",
         "night_waking_deleted": "Despertar nocturno eliminado"
       },
       "error": {

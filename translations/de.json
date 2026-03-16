@@ -74,6 +74,12 @@
     "dose": "Dosis",
     "dose_placeholder": "z.B. 5ml, 1 Tablette"
   },
+  "illness": {
+    "title": "Erkrankung",
+    "type": "Art der Erkrankung",
+    "symptoms": "Symptome",
+    "notes": "Notizen"
+  },
   "common": {
     "timeline": "Tagesverlauf",
     "today_entries": "Heutige Einträge",
@@ -133,7 +139,8 @@
     "diaper_both": "Windel (beides)",
     "temperature": "Temperatur",
     "medicine": "Medizin",
-    "night_waking": "Nächtliches Aufwachen"
+    "night_waking": "Nächtliches Aufwachen",
+    "illness": "Erkrankung"
   },
   "trends": {
     "title": "Trends & Statistiken",
@@ -168,7 +175,9 @@
     "no_data": "Keine Daten verfügbar",
     "sleep_meta_distribution": "Einschlaf-Qualität & -Ort",
     "sleep_quality": "Einschlaf-Qualität",
-    "sleep_location": "Einschlaf-Ort"
+    "sleep_location": "Einschlaf-Ort",
+    "illness_stats": "Erkrankungs-Statistiken",
+    "avg_illness_entries": "Ø Erkrankungs-Einträge pro Tag"
   },
   "settings": {
     "title": "Einstellungen",
@@ -223,6 +232,7 @@
       "diaper_both_recorded": "Windel (beides) erfasst",
       "temperature_recorded": "Temperatur ({value}°C) erfasst",
       "medicine_recorded": "Medizin ({name}, {dose}) erfasst",
+      "illness_recorded": "Erkrankung erfasst",
       "sleep_updated": "Schlaf-Eintrag aktualisiert",
       "feeding_updated": "Still-Eintrag aktualisiert",
       "bottle_updated": "Flasche-Eintrag aktualisiert",
@@ -236,6 +246,7 @@
       "diaper_deleted": "Windel-Eintrag gelöscht",
       "temperature_deleted": "Temperatur-Eintrag gelöscht",
       "medicine_deleted": "Medizin-Eintrag gelöscht",
+      "illness_deleted": "Erkrankungs-Eintrag gelöscht",
       "night_waking_deleted": "Nächtliches Aufwachen gelöscht"
     },
     "error": {

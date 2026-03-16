@@ -74,6 +74,12 @@
     "dose": "Dose",
     "dose_placeholder": "e.g. 5ml, 1 tablet"
   },
+  "illness": {
+    "title": "Illness",
+    "type": "Type of illness",
+    "symptoms": "Symptoms",
+    "notes": "Notes"
+  },
   "common": {
     "timeline": "Daily Timeline",
     "today_entries": "Today's Entries",
@@ -133,7 +139,8 @@
     "diaper_both": "Diaper (both)",
     "temperature": "Temperature",
     "medicine": "Medicine",
-    "night_waking": "Night Waking"
+    "night_waking": "Night Waking",
+    "illness": "Illness"
   },
   "trends": {
     "title": "Trends & Statistics",
@@ -168,7 +175,9 @@
     "no_data": "No data available",
     "sleep_meta_distribution": "Sleep Quality & Location",
     "sleep_quality": "Sleep quality",
-    "sleep_location": "Sleep location"
+    "sleep_location": "Sleep location",
+    "illness_stats": "Illness Statistics",
+    "avg_illness_entries": "Ø Illness entries per day"
   },
   "settings": {
     "title": "Settings",
@@ -223,6 +232,7 @@
       "diaper_both_recorded": "Diaper (both) recorded",
       "temperature_recorded": "Temperature ({value}°C) recorded",
       "medicine_recorded": "Medicine ({name}, {dose}) recorded",
+      "illness_recorded": "Illness recorded",
       "sleep_updated": "Sleep entry updated",
       "feeding_updated": "Feeding entry updated",
       "bottle_updated": "Bottle entry updated",
@@ -236,6 +246,7 @@
       "diaper_deleted": "Diaper entry deleted",
       "temperature_deleted": "Temperature entry deleted",
       "medicine_deleted": "Medicine entry deleted",
+      "illness_deleted": "Illness entry deleted"
       "night_waking_deleted": "Night waking deleted"
     },
     "error": {
