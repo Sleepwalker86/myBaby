@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models.models import Sleep, Temperature, Diaper, Feeding
+from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness
 from datetime import datetime, date, timedelta
 
 bp = Blueprint('trends', __name__, url_prefix='/trends')
@@ -41,11 +41,15 @@ def trends():
     # Still-Statistiken holen
     feeding_stats = Feeding.get_feeding_statistics(start_date, end_date)
     
+    # Erkrankungs-Statistiken holen
+    illness_stats = Illness.get_illness_statistics(start_date, end_date)
+    
     return render_template('trends.html',
                          stats=stats,
                          temp_stats=temp_stats,
                          diaper_stats=diaper_stats,
                          feeding_stats=feeding_stats,
+                         illness_stats=illness_stats,
                          start_date=start_date,
                          end_date=end_date)
 

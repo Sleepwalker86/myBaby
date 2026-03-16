@@ -1021,6 +1021,73 @@ class Medicine:
         db.execute('DELETE FROM medicine WHERE id = ?', (med_id,))
         db.commit()
 
+class Illness:
+    """Erkrankungen-Tracking"""
+    @staticmethod
+    def create(start_time, end_time, illness_type, symptoms=None, notes=None):
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO illness (start_time, end_time, type, symptoms, notes) VALUES (?, ?, ?, ?, ?)',
+            (start_time, end_time, illness_type, symptoms, notes)
+        )
+        db.commit()
+        return cursor.lastrowid
+    
+    @staticmethod
+    def update(illness_id, start_time, end_time, illness_type, symptoms=None, notes=None):
+        db = get_db()
+        db.execute(
+            'UPDATE illness SET start_time = ?, end_time = ?, type = ?, symptoms = ?, notes = ? WHERE id = ?',
+            (start_time, end_time, illness_type, symptoms, notes, illness_id)
+        )
+        db.commit()
+    
+    @staticmethod
+    def delete(illness_id):
+        db = get_db()
+        db.execute('DELETE FROM illness WHERE id = ?', (illness_id,))
+        db.commit()
+    
+    @staticmethod
+    def get_by_id(illness_id):
+        db = get_db()
+        row = db.execute('SELECT * FROM illness WHERE id = ?', (illness_id,)).fetchone()
+        return dict(row) if row else None
+    
+    @staticmethod
+    def get_illness_statistics(start_date, end_date):
+        """Einfache Statistik: Anzahl Erkrankungs-Episoden im Zeitraum"""
+        db = get_db()
+        if isinstance(start_date, str):
+            start_date_obj = date.fromisoformat(start_date)
+        else:
+            start_date_obj = start_date
+        if isinstance(end_date, str):
+            end_date_obj = date.fromisoformat(end_date)
+        else:
+            end_date_obj = end_date
+        
+        range_start = datetime.combine(start_date_obj, datetime.min.time())
+        range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
+        range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
+        range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
+        
+        rows = db.execute(
+            '''SELECT id FROM illness
+               WHERE start_time >= ? AND start_time <= ?''',
+            (range_start_str, range_end_str)
+        ).fetchall()
+        
+        total_count = len(rows)
+        days_count = (end_date_obj - start_date_obj).days + 1
+        avg_count = round(total_count / days_count, 2) if days_count > 0 else 0
+        
+        return {
+            'total_count': total_count,
+            'avg_count': avg_count,
+            'days_count': days_count,
+        }
+
 def get_all_entries_today(selected_date=None):
     """Gibt alle Einträge eines bestimmten Tages chronologisch zurück"""
     db = get_db()
@@ -1257,6 +1324,25 @@ def get_all_entries_today(selected_date=None):
             'display': f"Medizin ({row['name']}, {row['dose']})"
         })
     
+    # Erkrankungen
+    illness_rows = db.execute(
+        '''SELECT id, start_time as timestamp, end_time, type, symptoms, notes
+           FROM illness 
+           WHERE start_time >= ? AND start_time <= ?''',
+        (day_start_str, day_end_str)
+    ).fetchall()
+    for row in illness_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'illness',
+            'timestamp': row['timestamp'],
+            'end_time': row['end_time'],
+            'type': row['type'],
+            'symptoms': row['symptoms'],
+            'notes': row['notes'],
+            'display': 'Erkrankung'
+        })
+    
     # Sortiere nach Zeitstempel
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
     return entries
@@ -1435,6 +1521,25 @@ def get_all_entries_date_range(start_date, end_date):
             'name': row['name'],
             'dose': row['dose'],
             'display': f"Medizin ({row['name']}, {row['dose']})"
+        })
+    
+    # Erkrankungen im Bereich
+    illness_rows = db.execute(
+        '''SELECT id, start_time as timestamp, end_time, type, symptoms, notes
+           FROM illness 
+           WHERE start_time >= ? AND start_time <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in illness_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'illness',
+            'timestamp': row['timestamp'],
+            'end_time': row['end_time'],
+            'type': row['type'],
+            'symptoms': row['symptoms'],
+            'notes': row['notes'],
+            'display': 'Erkrankung'
         })
     
     return entries
