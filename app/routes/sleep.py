@@ -1,128 +1,103 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Sleep, NightWaking
-from datetime import datetime
 import pytz
+
+from app.form_datetime import normalize_form_datetime
 
 # Zeitzone für Deutschland/Berlin
 tz_berlin = pytz.timezone('Europe/Berlin')
 
+
 def get_local_now():
     """Gibt die aktuelle Zeit in der Berliner Zeitzone zurück"""
+    from datetime import datetime
     return datetime.now(tz_berlin)
 
+
+def _effective_timestamp(form_key):
+    """Liest und normalisiert einen Zeitstempel aus dem Formular; Fallback: jetzt (Berlin)."""
+    raw = request.form.get(form_key)
+    if raw and str(raw).strip():
+        normalized = normalize_form_datetime(raw)
+        if normalized:
+            return normalized
+    return get_local_now().isoformat()
+
+
 bp = Blueprint('sleep', __name__, url_prefix='/sleep')
+
 
 @bp.route('/nap/start', methods=['POST'])
 def start_nap():
     """Startet ein Nickerchen"""
-    # Prüfe ob eine Startzeit übergeben wurde
-    if 'start_time' in request.form and request.form['start_time']:
-        try:
-            # Parse die übergebene Zeit
-            timestamp = datetime.fromisoformat(request.form['start_time'])
-            if timestamp.tzinfo is None:
-                timestamp = tz_berlin.localize(timestamp)
-            timestamp = timestamp.isoformat()
-        except (ValueError, TypeError):
-            timestamp = get_local_now().isoformat()
-    else:
-        timestamp = get_local_now().isoformat()
-    
+    timestamp = _effective_timestamp('start_time')
+
     sleep_quality = request.form.get('sleep_quality') or None
     sleep_location = request.form.get('sleep_location') or None
     sleep_comment = request.form.get('sleep_comment') or None
-    
-    sleep_id = Sleep.create_nap(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location, sleep_comment=sleep_comment)
+
+    Sleep.create_nap(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location, sleep_comment=sleep_comment)
     flash('Nickerchen gestartet', 'success')
     return redirect(url_for('main.index'))
+
 
 @bp.route('/nap/end', methods=['POST'])
 def end_nap():
     """Beendet ein Nickerchen"""
     active_sleep = Sleep.get_active_sleep()
     if active_sleep and active_sleep['type'] == 'nap':
-        timestamp = get_local_now().isoformat()
+        timestamp = _effective_timestamp('end_time')
         Sleep.end_sleep(active_sleep['id'], timestamp)
         flash('Nickerchen beendet', 'success')
     else:
         flash('Kein aktives Nickerchen gefunden', 'warning')
     return redirect(url_for('main.index'))
 
+
 @bp.route('/night/start', methods=['POST'])
 def start_night_sleep():
     """Startet den Nachtschlaf"""
-    # Prüfe ob eine Startzeit übergeben wurde
-    if 'start_time' in request.form and request.form['start_time']:
-        try:
-            # Parse die übergebene Zeit
-            timestamp = datetime.fromisoformat(request.form['start_time'])
-            if timestamp.tzinfo is None:
-                timestamp = tz_berlin.localize(timestamp)
-            timestamp = timestamp.isoformat()
-        except (ValueError, TypeError):
-            timestamp = get_local_now().isoformat()
-    else:
-        timestamp = get_local_now().isoformat()
-    
+    timestamp = _effective_timestamp('start_time')
+
     sleep_quality = request.form.get('sleep_quality') or None
     sleep_location = request.form.get('sleep_location') or None
     sleep_comment = request.form.get('sleep_comment') or None
-    
-    sleep_id = Sleep.create_night_sleep(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location, sleep_comment=sleep_comment)
+
+    Sleep.create_night_sleep(timestamp, sleep_quality=sleep_quality, sleep_location=sleep_location, sleep_comment=sleep_comment)
     flash('Nachtschlaf gestartet', 'success')
     return redirect(url_for('main.index'))
+
 
 @bp.route('/night/end', methods=['POST'])
 def end_night_sleep():
     """Beendet den Nachtschlaf"""
     active_sleep = Sleep.get_active_sleep()
     if active_sleep and active_sleep['type'] == 'night':
-        timestamp = get_local_now().isoformat()
+        timestamp = _effective_timestamp('end_time')
         Sleep.end_sleep(active_sleep['id'], timestamp)
         flash('Nachtschlaf beendet', 'success')
     else:
         flash('Kein aktiver Nachtschlaf gefunden', 'warning')
     return redirect(url_for('main.index'))
 
+
 @bp.route('/night_waking/start', methods=['POST'])
 def start_night_waking():
     """Startet ein nächtliches Aufwachen"""
-    # Prüfe ob eine Startzeit übergeben wurde
-    if 'start_time' in request.form and request.form['start_time']:
-        try:
-            # Parse die übergebene Zeit
-            timestamp = datetime.fromisoformat(request.form['start_time'])
-            if timestamp.tzinfo is None:
-                timestamp = tz_berlin.localize(timestamp)
-            timestamp = timestamp.isoformat()
-        except (ValueError, TypeError):
-            timestamp = get_local_now().isoformat()
-    else:
-        timestamp = get_local_now().isoformat()
-    waking_id = NightWaking.create(timestamp)
+    timestamp = _effective_timestamp('start_time')
+    NightWaking.create(timestamp)
     flash('Nächtliches Aufwachen gestartet', 'success')
     return redirect(url_for('main.index'))
+
 
 @bp.route('/night_waking/end', methods=['POST'])
 def end_night_waking():
     """Beendet ein nächtliches Aufwachen"""
     active_waking = NightWaking.get_active()
     if active_waking:
-        # Prüfe ob eine Endzeit übergeben wurde
-        if 'end_time' in request.form and request.form['end_time']:
-            try:
-                # Parse die übergebene Zeit
-                timestamp = datetime.fromisoformat(request.form['end_time'])
-                if timestamp.tzinfo is None:
-                    timestamp = tz_berlin.localize(timestamp)
-                timestamp = timestamp.isoformat()
-            except (ValueError, TypeError):
-                timestamp = get_local_now().isoformat()
-        else:
-            timestamp = get_local_now().isoformat()
+        timestamp = _effective_timestamp('end_time')
         NightWaking.end_waking(active_waking['id'], timestamp)
         flash('Nächtliches Aufwachen beendet', 'success')
     else:
         flash('Kein aktives nächtliches Aufwachen gefunden', 'warning')
     return redirect(url_for('main.index'))
-

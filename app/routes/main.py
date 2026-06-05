@@ -210,17 +210,18 @@ def format_duration_hours(hours):
 @bp.route('/')
 def index():
     """Hauptseite mit Tagesübersicht"""
-    # Datum aus Request (Standard: heute)
-    selected_date_str = request.args.get('date', date.today().isoformat())
+    berlin_today = datetime.now(tz_berlin).date()
+    # Datum aus Request (Standard: heute in Europe/Berlin)
+    selected_date_str = request.args.get('date', berlin_today.isoformat())
     try:
         selected_date = date.fromisoformat(selected_date_str)
     except ValueError:
-        selected_date = date.today()
+        selected_date = berlin_today
     
     # Vorheriger und nächster Tag
     prev_date = (selected_date - timedelta(days=1)).isoformat()
     next_date = (selected_date + timedelta(days=1)).isoformat()
-    is_today = selected_date == date.today()
+    is_today = selected_date == berlin_today
     
     # Aktueller Schlafstatus (nur für heute relevant)
     active_sleep = Sleep.get_active_sleep() if is_today else None
@@ -420,9 +421,9 @@ def index():
     date_display = selected_date.strftime('%d.%m.%Y')
     if is_today:
         date_display = _('common.today')
-    elif selected_date == date.today() - timedelta(days=1):
+    elif selected_date == berlin_today - timedelta(days=1):
         date_display = _('common.yesterday')
-    elif selected_date == date.today() - timedelta(days=2):
+    elif selected_date == berlin_today - timedelta(days=2):
         date_display = _('common.day_before_yesterday')
     
     # Baby-Name für persönlichere Anzeige

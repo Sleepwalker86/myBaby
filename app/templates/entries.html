@@ -174,6 +174,11 @@
                             {% if entry.sleep_location %}{{ entry.sleep_location }}{% endif %}
                         </div>
                         {% endif %}
+                        {% if entry.category == 'sleep' and entry.sleep_comment %}
+                        <div class="text-muted small mt-1">
+                            <strong>{{ _('sleep.sleep_comment_caption') }}:</strong> {{ entry.sleep_comment }}
+                        </div>
+                        {% endif %}
                         {% if entry.category == 'illness' %}
                         <div class="text-muted small mt-1">
                             {% if entry.type %}
@@ -236,7 +241,7 @@
                             <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.nap') }}/{{ _('sleep.night_sleep') }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
+                        <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}" class="client-tz-submit">
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label for="edit_sleep_type_week{{ entry.id }}" class="form-label">{{ _('common.type') }}</label>
@@ -274,6 +279,10 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_comment_week{{ entry.id }}" class="form-label">{{ _('sleep.sleep_comment_label') }}</label>
+                                    <textarea id="edit_sleep_comment_week{{ entry.id }}" name="sleep_comment" class="form-control" rows="2" placeholder="{{ _('sleep.sleep_comment_placeholder') }}">{{ entry.sleep_comment or '' }}</textarea>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
@@ -293,7 +302,7 @@
                             <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('illness.title') }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form method="POST" action="{{ url_for('illness.update', illness_id=entry.id) }}">
+                        <form method="POST" action="{{ url_for('illness.update', illness_id=entry.id) }}" class="client-tz-submit">
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label for="edit_illness_start_week{{ entry.id }}" class="form-label">{{ _('common.start_time') }}</label>
@@ -451,6 +460,11 @@
                             {% if entry.sleep_location %}{{ entry.sleep_location }}{% endif %}
                         </div>
                         {% endif %}
+                        {% if entry.category == 'sleep' and entry.sleep_comment %}
+                        <div class="text-muted small mt-1">
+                            <strong>{{ _('sleep.sleep_comment_caption') }}:</strong> {{ entry.sleep_comment }}
+                        </div>
+                        {% endif %}
                         {% if entry.category == 'illness' %}
                         <div class="text-muted small mt-1">
                             {% if entry.type %}
@@ -513,7 +527,7 @@
                             <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.nap') }}/{{ _('sleep.night_sleep') }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
+                        <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}" class="client-tz-submit">
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label for="edit_sleep_type_day{{ entry.id }}" class="form-label">{{ _('common.type') }}</label>
@@ -551,6 +565,10 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                <div class="mb-3">
+                                    <label for="edit_sleep_comment_day{{ entry.id }}" class="form-label">{{ _('sleep.sleep_comment_label') }}</label>
+                                    <textarea id="edit_sleep_comment_day{{ entry.id }}" name="sleep_comment" class="form-control" rows="2" placeholder="{{ _('sleep.sleep_comment_placeholder') }}">{{ entry.sleep_comment or '' }}</textarea>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
@@ -570,7 +588,7 @@
                             <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('illness.title') }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form method="POST" action="{{ url_for('illness.update', illness_id=entry.id) }}">
+                        <form method="POST" action="{{ url_for('illness.update', illness_id=entry.id) }}" class="client-tz-submit">
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <label for="edit_illness_start_day{{ entry.id }}" class="form-label">{{ _('common.start_time') }}</label>

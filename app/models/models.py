@@ -241,24 +241,24 @@ class Sleep:
         return dict(row) if row else None
     
     @staticmethod
-    def update(sleep_id, start_time, end_time=None, sleep_type=None, sleep_quality=None, sleep_location=None):
+    def update(sleep_id, start_time, end_time=None, sleep_type=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
         """Aktualisiert einen Schlaf-Eintrag"""
         db = get_db()
         if sleep_type:
             db.execute(
                 '''UPDATE sleep 
                    SET type = ?, start_time = ?, end_time = ?, 
-                       sleep_quality = ?, sleep_location = ?
+                       sleep_quality = ?, sleep_location = ?, sleep_comment = ?
                    WHERE id = ?''',
-                (sleep_type, start_time, end_time, sleep_quality, sleep_location, sleep_id)
+                (sleep_type, start_time, end_time, sleep_quality, sleep_location, sleep_comment, sleep_id)
             )
         else:
             db.execute(
                 '''UPDATE sleep 
                    SET start_time = ?, end_time = ?, 
-                       sleep_quality = ?, sleep_location = ?
+                       sleep_quality = ?, sleep_location = ?, sleep_comment = ?
                    WHERE id = ?''',
-                (start_time, end_time, sleep_quality, sleep_location, sleep_id)
+                (start_time, end_time, sleep_quality, sleep_location, sleep_comment, sleep_id)
             )
         db.commit()
     
@@ -1143,7 +1143,7 @@ def get_all_entries_today(selected_date=None):
     # Schlaf: Einträge, die am Tag gestartet haben (nutzt Index auf start_time)
     sleep_rows = db.execute(
         '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
-                  sleep_quality, sleep_location
+                  sleep_quality, sleep_location, sleep_comment
            FROM sleep 
            WHERE start_time >= ? AND start_time <= ?''',
         (day_start_str, day_end_str)
@@ -1166,6 +1166,7 @@ def get_all_entries_today(selected_date=None):
             'end_time': row['end_time'],
             'sleep_quality': row['sleep_quality'],
             'sleep_location': row['sleep_location'],
+            'sleep_comment': row['sleep_comment'],
             'wake_duration': wake_duration,
             'display': sleep_type_display
         })
@@ -1174,7 +1175,7 @@ def get_all_entries_today(selected_date=None):
     # PERFORMANCE: Range-Query nutzt Indizes besser als date()
     sleep_rows_prev = db.execute(
         '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
-                  sleep_quality, sleep_location
+                  sleep_quality, sleep_location, sleep_comment
            FROM sleep 
            WHERE start_time >= ? AND start_time <= ? 
            AND end_time >= ? AND end_time <= ?
@@ -1198,6 +1199,7 @@ def get_all_entries_today(selected_date=None):
             'end_time': row['end_time'],
             'sleep_quality': row['sleep_quality'],
             'sleep_location': row['sleep_location'],
+            'sleep_comment': row['sleep_comment'],
             'wake_duration': wake_duration,
             'display': sleep_type_display
         })
@@ -1372,7 +1374,7 @@ def get_all_entries_date_range(start_date, end_date):
     # PERFORMANCE: Eine Query für alle Schlaf-Einträge im Bereich
     sleep_rows = db.execute(
         '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
-                  sleep_quality, sleep_location
+                  sleep_quality, sleep_location, sleep_comment
            FROM sleep 
            WHERE (start_time >= ? AND start_time <= ?) 
            OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL)''',
@@ -1421,6 +1423,7 @@ def get_all_entries_date_range(start_date, end_date):
             'end_time': row['end_time'],
             'sleep_quality': row['sleep_quality'],
             'sleep_location': row['sleep_location'],
+            'sleep_comment': row['sleep_comment'],
             'wake_duration': wake_duration,
             'display': sleep_type_display
         })

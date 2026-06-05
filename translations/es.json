@@ -40,7 +40,8 @@
       "sleep_location_label": "¿Dónde se ha dormido tu hijo?",
       "wake_duration_label": "Tiempo despierto desde el último sueño",
       "sleep_comment_label": "Comentario (opcional)",
-      "sleep_comment_placeholder": "p. ej. se durmió en brazos después de la toma"
+      "sleep_comment_placeholder": "p. ej. se durmió en brazos después de la toma",
+      "sleep_comment_caption": "Comentario"
     },
     "feeding": {
       "left": "Lactancia (Izquierda)",
@@ -177,7 +178,14 @@
       "sleep_quality": "Calidad al dormirse",
       "sleep_location": "Lugar al dormirse",
       "illness_stats": "Estadísticas de enfermedades",
-      "avg_illness_entries": "Ø registros de enfermedades por día"
+      "avg_illness_entries": "Ø registros de enfermedades por día",
+      "last_7_days": "7 días",
+      "last_30_days": "30 días",
+      "last_90_days": "90 días",
+      "section_care": "Cuidado y salud",
+      "section_sleep": "Gráficos de sueño",
+      "section_temperature": "Temperatura",
+      "swipe_hint": "Desliza para más gráficos"
     },
     "settings": {
       "title": "Configuración",

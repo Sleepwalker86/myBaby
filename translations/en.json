@@ -40,7 +40,8 @@
     "sleep_location_label": "Where did your child fall asleep?",
     "wake_duration_label": "Awake time since last sleep",
     "sleep_comment_label": "Comment (optional)",
-    "sleep_comment_placeholder": "e.g. fell asleep in arms after feeding"
+    "sleep_comment_placeholder": "e.g. fell asleep in arms after feeding",
+    "sleep_comment_caption": "Comment"
   },
   "feeding": {
     "left": "Feeding (L)",
@@ -177,7 +178,14 @@
     "sleep_quality": "Sleep quality",
     "sleep_location": "Sleep location",
     "illness_stats": "Illness Statistics",
-    "avg_illness_entries": "Ø Illness entries per day"
+    "avg_illness_entries": "Ø Illness entries per day",
+    "last_7_days": "7 days",
+    "last_30_days": "30 days",
+    "last_90_days": "90 days",
+    "section_care": "Care & Health",
+    "section_sleep": "Sleep Charts",
+    "section_temperature": "Temperature",
+    "swipe_hint": "Swipe for more charts"
   },
   "settings": {
     "title": "Settings",
