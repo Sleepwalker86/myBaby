@@ -17,7 +17,7 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
-- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken sowie eine Übersicht zur Einschlaf-Qualität und zum Einschlaf-Ort
+- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken sowie eine Übersicht zur Einschlaf-Qualität und zum Einschlaf-Ort (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
 
@@ -48,6 +48,7 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Persönlich**: Gib deinem Baby einen Namen - die App wird persönlicher
 - **Mehrsprachig**: Wechsle zwischen Deutsch, Englisch und Spanisch in den Einstellungen
 - **Lokal & sicher**: Alle Daten bleiben auf deinem Gerät, keine Cloud, keine Anmeldung
+- **Zeitzonen & Zeiten**: Start- und Endzeiten aus dem Browser werden als UTC-ISO übermittelt und serverseitig nach Europe/Berlin normalisiert; das Dashboard-Datum „heute“ folgt ebenfalls Berlin. Beim Schlaf beenden wird die Gerätezeit mitgeschickt. Optionale Schlaf-Kommentare werden im Tagesverlauf und unter Einträgen angezeigt.
 
 ## Installation
 

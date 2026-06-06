@@ -40,7 +40,8 @@
     "sleep_location_label": "Wo ist dein Kind eingeschlafen?",
     "wake_duration_label": "Wachzeit seit letztem Schlaf",
     "sleep_comment_label": "Kommentar (optional)",
-    "sleep_comment_placeholder": "z.B. nach dem Stillen auf dem Arm eingeschlafen"
+    "sleep_comment_placeholder": "z.B. nach dem Stillen auf dem Arm eingeschlafen",
+    "sleep_comment_caption": "Kommentar"
   },
   "feeding": {
     "left": "Stillen (L)",
@@ -177,7 +178,14 @@
     "sleep_quality": "Einschlaf-Qualität",
     "sleep_location": "Einschlaf-Ort",
     "illness_stats": "Erkrankungs-Statistiken",
-    "avg_illness_entries": "Ø Erkrankungs-Einträge pro Tag"
+    "avg_illness_entries": "Ø Erkrankungs-Einträge pro Tag",
+    "last_7_days": "7 Tage",
+    "last_30_days": "30 Tage",
+    "last_90_days": "90 Tage",
+    "section_care": "Pflege & Gesundheit",
+    "section_sleep": "Schlaf-Charts",
+    "section_temperature": "Temperatur",
+    "swipe_hint": "Wischen für weitere Charts"
   },
   "settings": {
     "title": "Einstellungen",

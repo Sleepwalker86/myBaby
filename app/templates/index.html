@@ -759,7 +759,7 @@
         <div class="col-4 mb-3">
             <!-- Schlaf -->
             {% if active_sleep %}
-            <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2">
+            <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2 client-tz-submit" data-inject-client-now="end_time">
                 <button type="submit" class="btn btn-sleep btn-large w-100">
                     <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
                     <small>{{ _('sleep.end_sleep') }}</small>
@@ -1076,6 +1076,11 @@
                                         {% if entry.sleep_location %}{{ entry.sleep_location }}{% endif %}
                                     </div>
                                     {% endif %}
+                                    {% if entry.category == 'sleep' and entry.sleep_comment %}
+                                    <div class="text-muted small mt-1">
+                                        <strong>{{ _('sleep.sleep_comment_caption') }}:</strong> {{ entry.sleep_comment }}
+                                    </div>
+                                    {% endif %}
                         {% if entry.category == 'illness' %}
                         <div class="text-muted small mt-1">
                             {% if entry.type %}
@@ -1150,7 +1155,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.nap') }}/{{ _('sleep.night_sleep') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_sleep', sleep_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_sleep_type" class="form-label">{{ _('common.type') }}</label>
@@ -1188,6 +1193,10 @@
                                                     {% endfor %}
                                                 </select>
                                             </div>
+                                            <div class="mb-3">
+                                                <label for="edit_sleep_comment{{ entry.id }}" class="form-label">{{ _('sleep.sleep_comment_label') }}</label>
+                                                <textarea id="edit_sleep_comment{{ entry.id }}" name="sleep_comment" class="form-control" rows="2" placeholder="{{ _('sleep.sleep_comment_placeholder') }}">{{ entry.sleep_comment or '' }}</textarea>
+                                            </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
@@ -1205,7 +1214,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('feeding.left') }}/{{ _('feeding.right') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_feeding', feeding_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_feeding', feeding_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_feeding_timestamp" class="form-label">{{ _('common.start_time') }}</label>
@@ -1244,7 +1253,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('bottle.title') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_bottle', bottle_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_bottle', bottle_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_bottle_timestamp" class="form-label">{{ _('common.time') }}</label>
@@ -1273,7 +1282,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('diaper.wet') }}/{{ _('diaper.solid') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_diaper', diaper_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_diaper', diaper_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_diaper_timestamp" class="form-label">{{ _('common.time') }}</label>
@@ -1305,7 +1314,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('temperature.title') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_temperature', temp_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_temperature', temp_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_temp_timestamp" class="form-label">{{ _('common.time') }}</label>
@@ -1334,7 +1343,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('medicine.title') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_medicine', med_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_medicine', med_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_med_timestamp" class="form-label">{{ _('common.time') }}</label>
@@ -1368,7 +1377,7 @@
                                         <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('sleep.night_waking') }}</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form method="POST" action="{{ url_for('edit.edit_night_waking', waking_id=entry.id) }}">
+                                    <form method="POST" action="{{ url_for('edit.edit_night_waking', waking_id=entry.id) }}" class="client-tz-submit">
                                         <div class="modal-body">
                                             <div class="mb-3">
                                                 <label for="edit_night_waking_start{{ entry.id }}" class="form-label">{{ _('common.start_time') }}</label>
@@ -1494,7 +1503,7 @@
                 <h5 class="modal-title">{{ _('illness.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('illness.create') }}">
+            <form method="POST" action="{{ url_for('illness.create') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="illness_start_time" class="form-label">{{ _('common.start_time') }}</label>
@@ -1541,7 +1550,7 @@
                 <h5 class="modal-title">{{ _('sleep.start_nap') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('sleep.start_nap') }}">
+            <form method="POST" action="{{ url_for('sleep.start_nap') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="nap_start_time" class="form-label">{{ _('common.start_time') }}</label>
@@ -1595,7 +1604,7 @@
                 <h5 class="modal-title">{{ _('sleep.start_night_sleep') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('sleep.start_night_sleep') }}">
+            <form method="POST" action="{{ url_for('sleep.start_night_sleep') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="night_start_time" class="form-label">{{ _('common.start_time') }}</label>
@@ -1649,7 +1658,7 @@
                 <h5 class="modal-title">{{ _('sleep.start_night_waking') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('sleep.start_night_waking') }}">
+            <form method="POST" action="{{ url_for('sleep.start_night_waking') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="night_waking_start_time" class="form-label">{{ _('common.start_time') }}</label>
@@ -1680,7 +1689,7 @@
                 <h5 class="modal-title">{{ _('sleep.end_night_waking') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('sleep.end_night_waking') }}">
+            <form method="POST" action="{{ url_for('sleep.end_night_waking') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="night_waking_end_time" class="form-label">{{ _('common.end_time') }}</label>
@@ -1696,7 +1705,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
-                    <button type="submit" class="btn btn-primary">{{ _('sleep.end_sleep') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('sleep.end_night_waking') }}</button>
                 </div>
             </form>
         </div>
@@ -1711,7 +1720,7 @@
                 <h5 class="modal-title">{{ _('feeding.left') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('feeding.create') }}">
+            <form method="POST" action="{{ url_for('feeding.create') }}" class="client-tz-submit">
                 <input type="hidden" name="side" value="links">
                 <div class="modal-body">
                     <div class="mb-3">
@@ -1755,7 +1764,7 @@
                 <h5 class="modal-title">{{ _('feeding.right') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('feeding.create') }}">
+            <form method="POST" action="{{ url_for('feeding.create') }}" class="client-tz-submit">
                 <input type="hidden" name="side" value="rechts">
                 <div class="modal-body">
                     <div class="mb-3">
@@ -2169,7 +2178,7 @@
                     <!-- Schlaf -->
                     <div class="col-6 col-md-4">
                         {% if active_sleep %}
-                        <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="h-100">
+                        <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="h-100 client-tz-submit" data-inject-client-now="end_time">
                             <button type="submit" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
                                 <i class="bi bi-moon" style="font-size: 2rem;"></i>
                                 <small class="mt-2">{{ _('sleep.end_sleep') }}</small>
