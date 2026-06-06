@@ -42,10 +42,21 @@ class Sleep:
     
     @staticmethod
     def get_active_sleep():
-        """Gibt den aktiven Schlaf zurück (falls vorhanden)"""
+        """Gibt den aktiven Schlaf zurück (falls vorhanden) – neuesten ohne Endzeit"""
         db = get_db()
         row = db.execute(
             'SELECT * FROM sleep WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1'
+        ).fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_active_sleep_by_type(sleep_type):
+        """Gibt den aktiven Schlaf eines bestimmten Typs zurück ('nap' oder 'night').
+        Verhindert, dass ein offenes Nickerchen einen aktiven Nachtschlaf überdeckt."""
+        db = get_db()
+        row = db.execute(
+            'SELECT * FROM sleep WHERE end_time IS NULL AND type = ? ORDER BY start_time DESC LIMIT 1',
+            (sleep_type,)
         ).fetchone()
         return dict(row) if row else None
     

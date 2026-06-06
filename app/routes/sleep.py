@@ -44,8 +44,8 @@ def start_nap():
 @bp.route('/nap/end', methods=['POST'])
 def end_nap():
     """Beendet ein Nickerchen"""
-    active_sleep = Sleep.get_active_sleep()
-    if active_sleep and active_sleep['type'] == 'nap':
+    active_sleep = Sleep.get_active_sleep_by_type('nap')
+    if active_sleep:
         timestamp = _effective_timestamp('end_time')
         Sleep.end_sleep(active_sleep['id'], timestamp)
         flash('Nickerchen beendet', 'success')
@@ -71,8 +71,8 @@ def start_night_sleep():
 @bp.route('/night/end', methods=['POST'])
 def end_night_sleep():
     """Beendet den Nachtschlaf"""
-    active_sleep = Sleep.get_active_sleep()
-    if active_sleep and active_sleep['type'] == 'night':
+    active_sleep = Sleep.get_active_sleep_by_type('night')
+    if active_sleep:
         timestamp = _effective_timestamp('end_time')
         Sleep.end_sleep(active_sleep['id'], timestamp)
         flash('Nachtschlaf beendet', 'success')
