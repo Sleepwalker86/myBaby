@@ -76,6 +76,12 @@ def update_sleep_meta():
     flash('Schlaf-Einstellungen gespeichert', 'success')
     return redirect(url_for('settings.settings'))
 
+def _g(row, key, default=''):
+    """sqlite3.Row als dict lesen (unterstützt kein .get())"""
+    d = dict(row)
+    return d.get(key, default)
+
+
 @bp.route('/export/csv')
 def export_csv():
     """Exportiert alle Einträge als CSV"""
@@ -83,24 +89,24 @@ def export_csv():
     output = io.StringIO()
     writer = csv.writer(output)
 
-    writer.writerow(['category', 'id', 'timestamp', 'end_time', 'type', 'amount_ml',
+    writer.writerow(['category', 'id', 'timestamp', 'end_time', 'type', 'amount',
                      'amount_g', 'food', 'side', 'value', 'name', 'dose',
                      'weight_kg', 'height_cm', 'notes'])
 
-    # Schlaf
+    # Schlaf (start_time = timestamp, Notiz = sleep_comment)
     for r in db.execute('SELECT * FROM sleep ORDER BY start_time').fetchall():
-        writer.writerow(['sleep', r['id'], r['start_time'], r['end_time'], r['type'],
-                         '', '', '', '', '', '', '', '', '', r.get('sleep_comment', '')])
+        writer.writerow(['sleep', r['id'], r['start_time'], _g(r, 'end_time'), r['type'],
+                         '', '', '', '', '', '', '', '', '', _g(r, 'sleep_comment')])
 
-    # Stillen
-    for r in db.execute('SELECT * FROM feeding ORDER BY start_time').fetchall():
-        writer.writerow(['feeding', r['id'], r['start_time'], r['end_time'], '',
+    # Stillen (timestamp, side, end_time)
+    for r in db.execute('SELECT * FROM feeding ORDER BY timestamp').fetchall():
+        writer.writerow(['feeding', r['id'], r['timestamp'], _g(r, 'end_time'), '',
                          '', '', '', r['side'], '', '', '', '', '', ''])
 
-    # Flasche
+    # Flasche (amount, kein amount_ml)
     for r in db.execute('SELECT * FROM bottle ORDER BY timestamp').fetchall():
         writer.writerow(['bottle', r['id'], r['timestamp'], '', '',
-                         r['amount_ml'], '', '', '', '', '', '', '', '', r.get('notes', '')])
+                         r['amount'], '', '', '', '', '', '', '', '', _g(r, 'notes')])
 
     # Windel
     for r in db.execute('SELECT * FROM diaper ORDER BY timestamp').fetchall():
@@ -120,22 +126,22 @@ def export_csv():
     # Brei
     for r in db.execute('SELECT * FROM porridge ORDER BY timestamp').fetchall():
         writer.writerow(['porridge', r['id'], r['timestamp'], '', '',
-                         '', r['amount_g'], r.get('food', ''), '', '', '', '', '', '', r.get('notes', '')])
+                         '', r['amount_g'], _g(r, 'food'), '', '', '', '', '', '', _g(r, 'notes')])
 
     # Gewicht
     for r in db.execute('SELECT * FROM weight ORDER BY timestamp').fetchall():
         writer.writerow(['weight', r['id'], r['timestamp'], '', '',
-                         '', '', '', '', '', '', '', r['weight_kg'], '', r.get('notes', '')])
+                         '', '', '', '', '', '', '', r['weight_kg'], '', _g(r, 'notes')])
 
     # Größe
     for r in db.execute('SELECT * FROM height ORDER BY timestamp').fetchall():
         writer.writerow(['height', r['id'], r['timestamp'], '', '',
-                         '', '', '', '', '', '', '', '', r['height_cm'], r.get('notes', '')])
+                         '', '', '', '', '', '', '', '', r['height_cm'], _g(r, 'notes')])
 
     # Erkrankungen
     for r in db.execute('SELECT * FROM illness ORDER BY start_time').fetchall():
-        writer.writerow(['illness', r['id'], r['start_time'], r.get('end_time', ''), r.get('type', ''),
-                         '', '', '', '', '', '', '', '', '', r.get('notes', '')])
+        writer.writerow(['illness', r['id'], r['start_time'], _g(r, 'end_time'), _g(r, 'type'),
+                         '', '', '', '', '', '', '', '', '', _g(r, 'notes')])
 
     filename = f"mybaby_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     return Response(
@@ -158,7 +164,7 @@ def export_backup():
         'version': get_current_version(),
         'baby_info': rows_to_list(db.execute('SELECT * FROM baby_info').fetchall()),
         'sleep': rows_to_list(db.execute('SELECT * FROM sleep ORDER BY start_time').fetchall()),
-        'feeding': rows_to_list(db.execute('SELECT * FROM feeding ORDER BY start_time').fetchall()),
+        'feeding': rows_to_list(db.execute('SELECT * FROM feeding ORDER BY timestamp').fetchall()),
         'bottle': rows_to_list(db.execute('SELECT * FROM bottle ORDER BY timestamp').fetchall()),
         'diaper': rows_to_list(db.execute('SELECT * FROM diaper ORDER BY timestamp').fetchall()),
         'temperature': rows_to_list(db.execute('SELECT * FROM temperature ORDER BY timestamp').fetchall()),
