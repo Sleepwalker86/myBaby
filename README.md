@@ -18,9 +18,10 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
 - **Brei-Tracking**: Dokumentiere Breigaben mit Menge (g) und optionaler Nahrungsangabe
 - **Gewichtstracking**: Erfasse das Gewicht deines Babys und verfolge die Wachstumskurve im Trends-Bereich
+- **Größentracking**: Erfasse die Körpergröße deines Babys; Trends zeigt Gewicht und Größe kombiniert in einem Chart mit zwei Y-Achsen
 - **Erkrankungen**: Dokumentiere Krankheitsphasen mit Typ, Symptomen und Notizen
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
-- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken, Temperaturverlauf sowie die Gewichts-Wachstumskurve (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
+- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken, Temperaturverlauf sowie die kombinierte Wachstumskurve für Gewicht & Größe (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
 
