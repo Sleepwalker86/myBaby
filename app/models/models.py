@@ -1198,6 +1198,53 @@ class Weight:
         return [dict(r) for r in rows]
 
 
+class Height:
+    """Größen-Tracking"""
+
+    @staticmethod
+    def create(timestamp, height_cm, notes=None):
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO height (timestamp, height_cm, notes) VALUES (?, ?, ?)',
+            (timestamp, height_cm, notes)
+        )
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def get_all():
+        db = get_db()
+        rows = db.execute('SELECT * FROM height ORDER BY timestamp ASC').fetchall()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_by_id(height_id):
+        db = get_db()
+        row = db.execute('SELECT * FROM height WHERE id = ?', (height_id,)).fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_latest():
+        db = get_db()
+        row = db.execute('SELECT * FROM height ORDER BY timestamp DESC LIMIT 1').fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def update(height_id, timestamp, height_cm, notes=None):
+        db = get_db()
+        db.execute(
+            'UPDATE height SET timestamp = ?, height_cm = ?, notes = ? WHERE id = ?',
+            (timestamp, height_cm, notes, height_id)
+        )
+        db.commit()
+
+    @staticmethod
+    def delete(height_id):
+        db = get_db()
+        db.execute('DELETE FROM height WHERE id = ?', (height_id,))
+        db.commit()
+
+
 def get_all_entries_today(selected_date=None):
     """Gibt alle Einträge eines bestimmten Tages chronologisch zurück"""
     db = get_db()
@@ -1488,6 +1535,23 @@ def get_all_entries_today(selected_date=None):
             'weight_kg': row['weight_kg'],
             'notes': row['notes'],
             'display': f"Gewicht ({row['weight_kg']} kg)"
+        })
+
+    # Größe
+    height_rows = db.execute(
+        '''SELECT id, timestamp, height_cm, notes
+           FROM height
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
+    ).fetchall()
+    for row in height_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'height',
+            'timestamp': row['timestamp'],
+            'height_cm': row['height_cm'],
+            'notes': row['notes'],
+            'display': f"Größe ({row['height_cm']} cm)"
         })
 
     # Sortiere nach Zeitstempel
