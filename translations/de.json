@@ -58,6 +58,14 @@
     "give": "Flasche geben",
     "amount_ml": "Menge (ml)"
   },
+  "weight": {
+    "title": "Gewicht",
+    "record": "Gewicht erfassen",
+    "weight_kg": "Gewicht (kg)",
+    "notes_optional": "Notizen (optional)",
+    "growth_chart": "Wachstumskurve",
+    "latest": "Letztes Gewicht"
+  },
   "porridge": {
     "title": "Brei",
     "give": "Brei geben",
@@ -248,7 +256,11 @@
       "medicine_recorded": "Medizin ({name}, {dose}) erfasst",
       "porridge_recorded": "Brei ({amount} g) erfasst",
       "porridge_updated": "Brei-Eintrag aktualisiert",
+      "weight_recorded": "{weight} kg erfasst",
+      "weight_updated": "Gewichtseintrag aktualisiert",
+      "weight_deleted": "Gewichtseintrag gelöscht",
       "illness_recorded": "Erkrankung erfasst",
+      "illness_updated": "Erkrankung aktualisiert",
       "sleep_updated": "Schlaf-Eintrag aktualisiert",
       "feeding_updated": "Still-Eintrag aktualisiert",
       "bottle_updated": "Flasche-Eintrag aktualisiert",

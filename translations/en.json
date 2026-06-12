@@ -58,6 +58,14 @@
     "give": "Give Bottle",
     "amount_ml": "Amount (ml)"
   },
+  "weight": {
+    "title": "Weight",
+    "record": "Record weight",
+    "weight_kg": "Weight (kg)",
+    "notes_optional": "Notes (optional)",
+    "growth_chart": "Growth chart",
+    "latest": "Latest weight"
+  },
   "porridge": {
     "title": "Porridge",
     "give": "Give Porridge",
@@ -248,7 +256,11 @@
       "medicine_recorded": "Medicine ({name}, {dose}) recorded",
       "porridge_recorded": "Porridge ({amount} g) recorded",
       "porridge_updated": "Porridge entry updated",
+      "weight_recorded": "{weight} kg recorded",
+      "weight_updated": "Weight entry updated",
+      "weight_deleted": "Weight entry deleted",
       "illness_recorded": "Illness recorded",
+      "illness_updated": "Illness updated",
       "sleep_updated": "Sleep entry updated",
       "feeding_updated": "Feeding entry updated",
       "bottle_updated": "Bottle entry updated",

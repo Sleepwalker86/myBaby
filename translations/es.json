@@ -58,6 +58,14 @@
       "give": "Dar biberón",
       "amount_ml": "Cantidad (ml)"
     },
+    "weight": {
+      "title": "Peso",
+      "record": "Registrar peso",
+      "weight_kg": "Peso (kg)",
+      "notes_optional": "Notas (opcional)",
+      "growth_chart": "Curva de crecimiento",
+      "latest": "Último peso"
+    },
     "porridge": {
       "title": "Papilla",
       "give": "Dar papilla",
@@ -248,7 +256,11 @@
         "medicine_recorded": "Medicación ({name}, {dose}) registrada",
         "porridge_recorded": "Papilla ({amount} g) registrada",
         "porridge_updated": "Registro de papilla actualizado",
+        "weight_recorded": "{weight} kg registrado",
+        "weight_updated": "Registro de peso actualizado",
+        "weight_deleted": "Registro de peso eliminado",
         "illness_recorded": "Enfermedad registrada",
+        "illness_updated": "Enfermedad actualizada",
         "sleep_updated": "Registro de sueño actualizado",
         "feeding_updated": "Registro de lactancia actualizado",
         "bottle_updated": "Registro de biberón actualizado",

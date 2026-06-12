@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Porridge
 from app.i18n import _
+from app.form_datetime import normalize_form_datetime
 from datetime import datetime
 import pytz
 
@@ -47,7 +48,7 @@ def update(porridge_id):
         return redirect(url_for('main.index'))
 
     food = request.form.get('food', '').strip() or None
-    timestamp = request.form.get('timestamp', get_local_now().isoformat())
+    timestamp = normalize_form_datetime(request.form.get('timestamp', '')) or get_local_now().isoformat()
     Porridge.update(porridge_id, timestamp, amount, food)
     flash(_('messages.success.porridge_updated'), 'success')
     return redirect(url_for('main.index'))

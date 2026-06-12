@@ -408,6 +408,43 @@
             </div>
         </div>
         {% endif %}
+
+        {% if weight_entries %}
+        <!-- Gewicht / Wachstumskurve -->
+        <div class="accordion-item card-modern mb-3 border-0">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#trendsWeight" aria-expanded="false" aria-controls="trendsWeight">
+                    <i class="bi bi-graph-up me-2"></i>{{ _('weight.growth_chart') }}
+                </button>
+            </h2>
+            <div id="trendsWeight" class="accordion-collapse collapse">
+                <div class="accordion-body pt-2">
+                    <div class="card card-modern">
+                        <div class="card-body">
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <small class="text-muted">{{ _('weight.latest') }}</small>
+                                    <div class="fw-bold fs-5">{{ weight_entries[-1].weight_kg }} kg</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">{{ _('trends.min') }}</small>
+                                    <div class="fw-bold">{{ weight_entries | map(attribute='weight_kg') | min }} kg</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">{{ _('trends.max') }}</small>
+                                    <div class="fw-bold">{{ weight_entries | map(attribute='weight_kg') | max }} kg</div>
+                                </div>
+                            </div>
+                            <div class="trends-chart-wrap">
+                                <canvas id="weightChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -727,6 +764,66 @@
                         },
                         min: Math.min(...tempValues) - 0.5,
                         max: Math.max(...tempValues) + 0.5
+                    }
+                }
+            }
+        }));
+    }
+    {% endif %}
+
+    // Wachstumskurve
+    {% if weight_entries %}
+    const weightData = {{ weight_entries | tojson }};
+    if (weightData.length > 0) {
+        weightData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const weightLabels = weightData.map(w => {
+            const dt = new Date(w.timestamp);
+            return dt.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        });
+        const weightValues = weightData.map(w => w.weight_kg);
+
+        registerTrendsChart(new Chart(document.getElementById('weightChart'), {
+            type: 'line',
+            data: {
+                labels: weightLabels,
+                datasets: [{
+                    label: '{{ _('weight.weight_kg') }}',
+                    data: weightValues,
+                    borderColor: 'rgb(99, 179, 237)',
+                    backgroundColor: 'rgba(99, 179, 237, 0.15)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: isMobileTrends ? 2.5 : 2,
+                    pointRadius: isMobileTrends ? 5 : 4,
+                    pointHoverRadius: isMobileTrends ? 7 : 6
+                }]
+            },
+            options: {
+                ...trendsBaseOptions(),
+                plugins: {
+                    ...trendsBaseOptions().plugins,
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const w = weightData[context.dataIndex];
+                                let label = w.weight_kg + ' kg';
+                                if (w.notes) label += ' – ' + w.notes;
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: trendsAxisTicks(isMobileTrends ? 4 : 8) },
+                    y: {
+                        ...trendsValueAxis(false),
+                        title: {
+                            display: !isMobileTrends,
+                            text: '{{ _('weight.weight_kg') }}',
+                            font: { size: chartFontSize }
+                        },
+                        min: Math.max(0, Math.min(...weightValues) - 0.5),
+                        max: Math.max(...weightValues) + 0.5
                     }
                 }
             }

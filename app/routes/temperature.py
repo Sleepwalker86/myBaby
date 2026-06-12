@@ -16,7 +16,7 @@ def create():
     """Erstellt einen Temperatur-Eintrag"""
     try:
         value = float(request.form.get('value', 0))
-        if value <= 0 or value > 45:
+        if value <= 0 or value > 42:
             raise ValueError()
     except (ValueError, TypeError):
         flash('Ungültige Temperatur', 'error')

@@ -840,7 +840,7 @@
             </button>
             <!-- Brei -->
             <button type="button" class="btn btn-bottle btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#porridgeModal">
-                <i class="bi bi-bowl-hot" style="font-size: 1.5rem;"></i><br>
+                <i class="bi bi-egg-fried" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('porridge.title') }}</small>
             </button>
             <!-- Medizin -->
@@ -886,9 +886,14 @@
                 <small>{{ _('temperature.title') }}</small>
             </button>
             <!-- Erkrankung -->
-            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#illnessModal">
+            <button type="button" class="btn btn-medicine btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#illnessModal">
                 <i class="bi bi-hospital" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('illness.title') }}</small>
+            </button>
+            <!-- Gewicht -->
+            <button type="button" class="btn btn-sleep btn-large w-100" data-bs-toggle="modal" data-bs-target="#weightModal">
+                <i class="bi bi-graph-up" style="font-size: 1.5rem;"></i><br>
+                <small>{{ _('weight.title') }}</small>
             </button>
         </div>
     </div>
@@ -1504,6 +1509,39 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
                     <button type="submit" class="btn" style="background: var(--color-teal-medium); color: white;">{{ _('common.record') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Gewicht Modal -->
+<div class="modal fade" id="weightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('weight.record') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('weight.create') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="weightKg" class="form-label">{{ _('weight.weight_kg') }}</label>
+                        <input type="number" class="form-control form-control-lg" id="weightKg" name="weight_kg"
+                               step="0.01" min="0.5" max="49.9" placeholder="z.B. 4.5" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weightTimestamp" class="form-label">{{ _('common.time') }}</label>
+                        <input type="datetime-local" class="form-control" id="weightTimestamp" name="timestamp">
+                    </div>
+                    <div class="mb-3">
+                        <label for="weightNotes" class="form-label">{{ _('weight.notes_optional') }}</label>
+                        <input type="text" class="form-control" id="weightNotes" name="notes" placeholder="">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('common.record') }}</button>
                 </div>
             </form>
         </div>
