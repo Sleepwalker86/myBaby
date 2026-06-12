@@ -63,7 +63,10 @@ def translate_entry_display(entry):
         name = entry.get('name', '')
         dose = entry.get('dose', '')
         return _('entries.medicine') + f" ({name}, {dose})"
-    
+    elif category == 'weight':
+        weight_kg = entry.get('weight_kg', 0)
+        return _('weight.title') + f" ({weight_kg} kg)"
+
     # Fallback: Original display verwenden
     return entry.get('display', '')
 
