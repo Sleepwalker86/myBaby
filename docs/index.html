@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>myBaby – Baby-Tracking App</title>
+  <meta name="description" content="Einfaches und intuitives Baby-Tracking für Schlaf, Stillen, Windeln, Temperatur und mehr. Selbst gehostet, keine Cloud, keine Anmeldung." />
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --primary-dark: #574fd6;
+      --accent: #ff6584;
+      --bg: #0f0f1a;
+      --bg2: #1a1a2e;
+      --bg3: #16213e;
+      --text: #e8e8f0;
+      --text-muted: #9090b0;
+      --card: #1e1e35;
+      --border: #2a2a4a;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,15,26,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--primary); color: #fff; padding: 0.4rem 1.2rem;
+      border-radius: 999px; text-decoration: none; font-size: 0.85rem; font-weight: 600;
+      transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--primary-dark); }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background: radial-gradient(ellipse at 50% 0%, #2d1b6940 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.4);
+      color: var(--primary);
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      padding: 0.85rem 2rem; border-radius: 999px;
+      text-decoration: none; font-weight: 600; font-size: 1rem;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.5); }
+    .btn-secondary {
+      background: var(--card); color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.85rem 2rem; border-radius: 999px;
+      text-decoration: none; font-weight: 600; font-size: 1rem;
+      transition: border-color .2s;
+    }
+    .btn-secondary:hover { border-color: var(--primary); }
+
+    /* SCREENSHOTS SLIDER */
+    .screenshots-section {
+      padding: 4rem 2rem;
+      overflow: hidden;
+    }
+    .screenshots-section h2 { text-align: center; font-size: 2rem; margin-bottom: 2.5rem; }
+    .screenshots-scroll {
+      display: flex; gap: 1.5rem;
+      overflow-x: auto;
+      padding: 1rem 2rem 2rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .screenshots-scroll::-webkit-scrollbar { display: none; }
+    .screenshot-item {
+      flex: 0 0 280px;
+      scroll-snap-align: start;
+    }
+    .screenshot-item img {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transition: transform .3s;
+    }
+    .screenshot-item img:hover { transform: scale(1.03); }
+    .screenshot-item p {
+      text-align: center; color: var(--text-muted);
+      font-size: 0.85rem; margin-top: 0.75rem;
+    }
+
+    /* FEATURES */
+    .features-section {
+      padding: 5rem 2rem;
+      background: var(--bg2);
+    }
+    .features-section h2 { text-align: center; font-size: 2rem; margin-bottom: 0.75rem; }
+    .features-section .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 3rem; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .feature-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .feature-card p { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* INSTALL */
+    .install-section {
+      padding: 5rem 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .install-section h2 { text-align: center; font-size: 2rem; margin-bottom: 0.75rem; }
+    .install-section .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 3rem; }
+    .install-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab-btn {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 0.5rem 1.25rem;
+      border-radius: 999px; cursor: pointer; font-size: 0.9rem;
+      transition: all .2s;
+    }
+    .tab-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    pre {
+      background: #0a0a15;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+    code { color: #a8d8a8; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .comment { color: #5566aa; }
+
+    /* PRIVACY */
+    .privacy-section {
+      padding: 4rem 2rem;
+      background: var(--bg2);
+      text-align: center;
+    }
+    .privacy-section h2 { font-size: 2rem; margin-bottom: 1rem; }
+    .privacy-section p { color: var(--text-muted); max-width: 550px; margin: 0 auto 2rem; }
+    .privacy-badges { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .badge {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.5rem 1.25rem;
+      font-size: 0.85rem; color: var(--text-muted);
+    }
+    .badge span { color: #6aff8a; margin-right: 0.4rem; }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hero { padding: 4rem 1.5rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🍼 myBaby</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#screenshots">Screenshots</a>
+    <a href="#install">Installation</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/sleepwalker86/myBaby" target="_blank">GitHub →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">Open Source · Self-Hosted · Kostenlos</div>
+  <h1>Baby-Tracking,<br /><span>das einfach funktioniert</span></h1>
+  <p>Schlaf, Stillen, Windeln, Temperatur, Medikamente – alles an einem Ort. Lokal, sicher, ohne Cloud.</p>
+  <div class="hero-buttons">
+    <a class="btn-primary" href="#install">Jetzt installieren</a>
+    <a class="btn-secondary" href="https://github.com/sleepwalker86/myBaby" target="_blank">⭐ GitHub</a>
+  </div>
+</section>
+
+<!-- SCREENSHOTS -->
+<section class="screenshots-section" id="screenshots">
+  <h2>Wie es aussieht</h2>
+  <div class="screenshots-scroll">
+    <div class="screenshot-item">
+      <img src="screenshots/01-dashboard-overview.png" alt="Dashboard Übersicht" loading="lazy" />
+      <p>Dashboard Übersicht</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/02-sleep-recommendations.png" alt="Schlaf-Empfehlungen" loading="lazy" />
+      <p>Intelligente Schlafempfehlungen</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/03-circular-timeline.png" alt="Circular Timeline" loading="lazy" />
+      <p>Circular Timeline</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/04-quick-actions.png" alt="Schnellaktionen" loading="lazy" />
+      <p>Schnellaktionen</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/05-entries-day-view.png" alt="Tagesansicht" loading="lazy" />
+      <p>Einträge – Tagesansicht</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/06-entries-week-view.png" alt="Wochenansicht" loading="lazy" />
+      <p>Einträge – Wochenansicht</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/07-settings.png" alt="Einstellungen" loading="lazy" />
+      <p>Einstellungen</p>
+    </div>
+    <div class="screenshot-item">
+      <img src="screenshots/08-trends.png" alt="Trends & Statistiken" loading="lazy" />
+      <p>Trends & Statistiken</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <h2>Alles was du brauchst</h2>
+  <p class="subtitle">Entwickelt für den echten Alltag mit Baby – schnell, übersichtlich, mobil-optimiert.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">😴</div>
+      <h3>Schlaf-Tracking</h3>
+      <p>Nickerchen und Nachtschlaf separat tracken. Mit automatischer Dauerberechnung, Qualitätsbewertung und Einschlaf-Ort.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Intelligente Schlafempfehlungen</h3>
+      <p>Basierend auf dem Alter deines Babys und wissenschaftlichen Empfehlungen berechnet die App optimale Schlafzeiten.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🕐</div>
+      <h3>Circular Timeline</h3>
+      <p>Alle Aktivitäten des Tages als 24-Stunden-Kreisdiagramm – auf einen Blick alles im Überblick.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🍼</div>
+      <h3>Stillen & Flasche</h3>
+      <p>Links/rechts Stillzeiten mit optionaler Endzeit. Flaschenmengen in ml. Alles mit Zeitstempel.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🩺</div>
+      <h3>Gesundheit</h3>
+      <p>Temperaturmessungen, Medikamentengaben und Krankheitsphasen dokumentieren und nachverfolgen.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Trends & Statistiken</h3>
+      <p>Schlafmuster, Windel- und Stillstatistiken mit Schnellfilter 7/30/90 Tage. Mobil optimiert mit wischbaren Charts.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌍</div>
+      <h3>Mehrsprachig</h3>
+      <p>Vollständig übersetzt auf Deutsch, Englisch und Spanisch. Sprache jederzeit in den Einstellungen wechselbar.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌙</div>
+      <h3>Dark Mode</h3>
+      <p>Augenfreundliche Darstellung für nächtliche Eintragungen – damit du und dein Baby nicht aufwachen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="install-section" id="install">
+  <h2>Installation</h2>
+  <p class="subtitle">In wenigen Minuten startklar – keine Cloud, keine Anmeldung, deine Daten bleiben bei dir.</p>
+
+  <div class="install-tabs">
+    <button class="tab-btn active" onclick="showTab('docker')">Docker (empfohlen)</button>
+    <button class="tab-btn" onclick="showTab('compose')">Docker Compose</button>
+  </div>
+
+  <div class="tab-content active" id="tab-docker">
+    <pre><code><span class="comment"># App starten</span>
+docker run -d \
+  --name myBaby \
+  -p 8000:8000 \
+  -v $(pwd)/data:/data \
+  sleepwalker86/mybaby:latest
+
+<span class="comment"># Im Browser öffnen:</span>
+<span class="comment"># http://localhost:8000</span></code></pre>
+  </div>
+
+  <div class="tab-content" id="tab-compose">
+    <pre><code><span class="comment"># docker-compose.yml herunterladen und starten</span>
+docker-compose up -d
+
+<span class="comment"># Im Browser öffnen:</span>
+<span class="comment"># http://localhost:8000</span>
+
+<span class="comment"># Stoppen:</span>
+docker-compose down</code></pre>
+  </div>
+
+  <p style="text-align:center; color: var(--text-muted); margin-top: 1.5rem; font-size: 0.9rem;">
+    Mehr Details im <a href="https://github.com/sleepwalker86/myBaby" style="color: var(--primary);">GitHub Repository</a>
+  </p>
+</section>
+
+<!-- PRIVACY -->
+<section class="privacy-section">
+  <h2>Deine Daten gehören dir</h2>
+  <p>myBaby läuft komplett auf deinem eigenen Gerät. Es werden keine Daten an externe Server gesendet – garantiert.</p>
+  <div class="privacy-badges">
+    <div class="badge"><span>✓</span> Keine Cloud</div>
+    <div class="badge"><span>✓</span> Keine Anmeldung</div>
+    <div class="badge"><span>✓</span> Keine Werbung</div>
+    <div class="badge"><span>✓</span> Open Source</div>
+    <div class="badge"><span>✓</span> Kostenlos</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>myBaby – Open Source Baby-Tracking App</p>
+  <p style="margin-top: 0.5rem;">
+    <a href="https://github.com/sleepwalker86/myBaby" target="_blank">GitHub</a> ·
+    <a href="https://hub.docker.com/r/sleepwalker86/mybaby" target="_blank">Docker Hub</a>
+  </p>
+</footer>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
