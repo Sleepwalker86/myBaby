@@ -25,7 +25,10 @@ def create():
 
     notes = request.form.get('notes', '').strip() or None
     timestamp_raw = request.form.get('timestamp', '')
-    timestamp = normalize_form_datetime(timestamp_raw) or get_local_now().isoformat()
+    if timestamp_raw and len(timestamp_raw) == 10:  # nur Datum (YYYY-MM-DD)
+        timestamp = timestamp_raw + 'T12:00:00'
+    else:
+        timestamp = normalize_form_datetime(timestamp_raw) or get_local_now().isoformat()
     Weight.create(timestamp, weight_kg, notes)
     flash(_('messages.success.weight_recorded').format(weight=weight_kg), 'success')
     return redirect(url_for('main.index'))
@@ -50,7 +53,10 @@ def update(weight_id):
 
     notes = request.form.get('notes', '').strip() or None
     timestamp_raw = request.form.get('timestamp', '')
-    timestamp = normalize_form_datetime(timestamp_raw) or get_local_now().isoformat()
+    if timestamp_raw and len(timestamp_raw) == 10:  # nur Datum (YYYY-MM-DD)
+        timestamp = timestamp_raw + 'T12:00:00'
+    else:
+        timestamp = normalize_form_datetime(timestamp_raw) or get_local_now().isoformat()
     Weight.update(weight_id, timestamp, weight_kg, notes)
     flash(_('messages.success.weight_updated'), 'success')
     return redirect(url_for('main.index'))

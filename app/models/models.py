@@ -1473,6 +1473,23 @@ def get_all_entries_today(selected_date=None):
             'display': 'Erkrankung'
         })
     
+    # Gewicht
+    weight_rows = db.execute(
+        '''SELECT id, timestamp, weight_kg, notes
+           FROM weight
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
+    ).fetchall()
+    for row in weight_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'weight',
+            'timestamp': row['timestamp'],
+            'weight_kg': row['weight_kg'],
+            'notes': row['notes'],
+            'display': f"Gewicht ({row['weight_kg']} kg)"
+        })
+
     # Sortiere nach Zeitstempel
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
     return entries

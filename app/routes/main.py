@@ -63,7 +63,10 @@ def translate_entry_display(entry):
         name = entry.get('name', '')
         dose = entry.get('dose', '')
         return _('entries.medicine') + f" ({name}, {dose})"
-    
+    elif category == 'weight':
+        weight_kg = entry.get('weight_kg', 0)
+        return _('weight.title') + f" ({weight_kg} kg)"
+
     # Fallback: Original display verwenden
     return entry.get('display', '')
 
@@ -449,7 +452,8 @@ def index():
                          night_sleep_suggestion=night_sleep_suggestion,
                          baby_age_months=baby_age_months,
                          baby_name=baby_name,
-                         sleep_meta=sleep_meta)
+                         sleep_meta=sleep_meta,
+                         now_date=datetime.now(tz_berlin).date().isoformat())
 
 @bp.route('/api/audio-files')
 def get_audio_files():
