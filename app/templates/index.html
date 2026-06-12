@@ -1178,10 +1178,6 @@
                                         </button>
                                     </form>
                                     {% elif entry.category == 'height' %}
-                                    <button type="button" class="btn btn-sm btn-outline-primary me-1"
-                                            data-bs-toggle="modal" data-bs-target="#editModalheight{{ entry.id }}">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
                                     <form method="POST" action="{{ url_for('height.delete', height_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('{{ _('common.delete_confirm') }}');">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
