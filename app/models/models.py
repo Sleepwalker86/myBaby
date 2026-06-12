@@ -1125,8 +1125,8 @@ class Illness:
         
         rows = db.execute(
             '''SELECT id FROM illness
-               WHERE start_time >= ? AND start_time <= ?''',
-            (range_start_str, range_end_str)
+               WHERE start_time <= ? AND (end_time IS NULL OR end_time >= ?)''',
+            (range_end_str, range_start_str)
         ).fetchall()
         
         total_count = len(rows)
@@ -1138,6 +1138,65 @@ class Illness:
             'avg_count': avg_count,
             'days_count': days_count,
         }
+
+class Weight:
+    """Gewichtstracking"""
+
+    @staticmethod
+    def create(timestamp, weight_kg, notes=None):
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO weight (timestamp, weight_kg, notes) VALUES (?, ?, ?)',
+            (timestamp, weight_kg, notes)
+        )
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def get_all():
+        db = get_db()
+        rows = db.execute('SELECT * FROM weight ORDER BY timestamp ASC').fetchall()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_by_id(weight_id):
+        db = get_db()
+        row = db.execute('SELECT * FROM weight WHERE id = ?', (weight_id,)).fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_latest():
+        db = get_db()
+        row = db.execute('SELECT * FROM weight ORDER BY timestamp DESC LIMIT 1').fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def update(weight_id, timestamp, weight_kg, notes=None):
+        db = get_db()
+        db.execute(
+            'UPDATE weight SET timestamp = ?, weight_kg = ?, notes = ? WHERE id = ?',
+            (timestamp, weight_kg, notes, weight_id)
+        )
+        db.commit()
+
+    @staticmethod
+    def delete(weight_id):
+        db = get_db()
+        db.execute('DELETE FROM weight WHERE id = ?', (weight_id,))
+        db.commit()
+
+    @staticmethod
+    def get_in_range(start_date, end_date):
+        db = get_db()
+        from datetime import datetime as _dt
+        start_str = _dt.combine(start_date, _dt.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
+        end_str = _dt.combine(end_date, _dt.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
+        rows = db.execute(
+            'SELECT * FROM weight WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
+            (start_str, end_str)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
 
 def get_all_entries_today(selected_date=None):
     """Gibt alle Einträge eines bestimmten Tages chronologisch zurück"""
@@ -1708,12 +1767,13 @@ def get_latest_activities(limit=3):
         (limit * 2,)
     ).fetchall()
     for row in porridge_rows:
+        food_str = f', {row["food"]}' if row['food'] else ''
         all_entries.append({
             'category': 'porridge',
             'timestamp': row['timestamp'],
             'amount': row['amount'],
             'food': row['food'],
-            'display': f"Brei ({row['amount']} g)"
+            'display': f"Brei ({row['amount']} g{food_str})"
         })
 
     # Sortiere nach Zeitstempel und nimm die letzten N

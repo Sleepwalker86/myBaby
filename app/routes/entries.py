@@ -33,6 +33,13 @@ def translate_entry_display(entry):
     elif category == 'bottle':
         amount = entry.get('amount', 0)
         return _('bottle.title') + f" ({amount} ml)"
+    elif category == 'porridge':
+        amount = entry.get('amount', 0)
+        food = entry.get('food', '')
+        label = _('porridge.title') + f" ({amount} g)"
+        if food:
+            label += f' – {food}'
+        return label
     elif category == 'diaper':
         diaper_type = entry.get('type', '')
         if diaper_type == 'nass':

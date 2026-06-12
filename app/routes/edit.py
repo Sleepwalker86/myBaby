@@ -143,7 +143,7 @@ def edit_temperature(temp_id):
         timestamp = normalize_form_datetime(ts_raw) if ts_raw and str(ts_raw).strip() else None
         value = float(request.form.get('value', 0))
 
-        if not timestamp or value <= 0 or value > 45:
+        if not timestamp or value <= 0 or value > 42:
             flash('Ungültige Eingabe', 'error')
             return redirect(url_for('main.index'))
 
@@ -242,7 +242,6 @@ def edit_porridge(porridge_id):
 
     food = request.form.get('food', '').strip() or None
     timestamp_raw = request.form.get('timestamp', '')
-    from app.form_datetime import normalize_form_datetime
     timestamp = normalize_form_datetime(timestamp_raw) if timestamp_raw.strip() else None
     Porridge.update(porridge_id, timestamp, amount, food)
     flash('Brei-Eintrag aktualisiert', 'success')
