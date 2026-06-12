@@ -63,8 +63,15 @@
     "record": "Gewicht erfassen",
     "weight_kg": "Gewicht (kg)",
     "notes_optional": "Notizen (optional)",
-    "growth_chart": "Wachstumskurve",
+    "growth_chart": "Wachstum",
     "latest": "Letztes Gewicht"
+  },
+  "height": {
+    "title": "Größe",
+    "record": "Größe erfassen",
+    "height_cm": "Größe (cm)",
+    "notes_optional": "Notizen (optional)",
+    "latest": "Letzte Größe"
   },
   "porridge": {
     "title": "Brei",
@@ -259,6 +266,9 @@
       "weight_recorded": "{weight} kg erfasst",
       "weight_updated": "Gewichtseintrag aktualisiert",
       "weight_deleted": "Gewichtseintrag gelöscht",
+      "height_recorded": "{height} cm erfasst",
+      "height_updated": "Größeneintrag aktualisiert",
+      "height_deleted": "Größeneintrag gelöscht",
       "illness_recorded": "Erkrankung erfasst",
       "illness_updated": "Erkrankung aktualisiert",
       "sleep_updated": "Schlaf-Eintrag aktualisiert",

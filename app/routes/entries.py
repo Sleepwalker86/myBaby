@@ -58,6 +58,9 @@ def translate_entry_display(entry):
     elif category == 'weight':
         weight_kg = entry.get('weight_kg', 0)
         return _('weight.title') + f" ({weight_kg} kg)"
+    elif category == 'height':
+        height_cm = entry.get('height_cm', 0)
+        return _('height.title') + f" ({height_cm} cm)"
 
     # Fallback: Original display verwenden
     return entry.get('display', '')

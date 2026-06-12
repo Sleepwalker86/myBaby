@@ -63,8 +63,15 @@
       "record": "Registrar peso",
       "weight_kg": "Peso (kg)",
       "notes_optional": "Notas (opcional)",
-      "growth_chart": "Curva de crecimiento",
+      "growth_chart": "Crecimiento",
       "latest": "Último peso"
+    },
+    "height": {
+      "title": "Talla",
+      "record": "Registrar talla",
+      "height_cm": "Talla (cm)",
+      "notes_optional": "Notas (opcional)",
+      "latest": "Última talla"
     },
     "porridge": {
       "title": "Papilla",
@@ -259,6 +266,9 @@
         "weight_recorded": "{weight} kg registrado",
         "weight_updated": "Registro de peso actualizado",
         "weight_deleted": "Registro de peso eliminado",
+        "height_recorded": "{height} cm registrado",
+        "height_updated": "Registro de talla actualizado",
+        "height_deleted": "Registro de talla eliminado",
         "illness_recorded": "Enfermedad registrada",
         "illness_updated": "Enfermedad actualizada",
         "sleep_updated": "Registro de sueño actualizado",

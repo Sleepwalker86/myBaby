@@ -63,8 +63,15 @@
     "record": "Record weight",
     "weight_kg": "Weight (kg)",
     "notes_optional": "Notes (optional)",
-    "growth_chart": "Growth chart",
+    "growth_chart": "Growth",
     "latest": "Latest weight"
+  },
+  "height": {
+    "title": "Height",
+    "record": "Record height",
+    "height_cm": "Height (cm)",
+    "notes_optional": "Notes (optional)",
+    "latest": "Latest height"
   },
   "porridge": {
     "title": "Porridge",
@@ -259,6 +266,9 @@
       "weight_recorded": "{weight} kg recorded",
       "weight_updated": "Weight entry updated",
       "weight_deleted": "Weight entry deleted",
+      "height_recorded": "{height} cm recorded",
+      "height_updated": "Height entry updated",
+      "height_deleted": "Height entry deleted",
       "illness_recorded": "Illness recorded",
       "illness_updated": "Illness updated",
       "sleep_updated": "Sleep entry updated",
