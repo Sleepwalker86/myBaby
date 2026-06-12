@@ -778,6 +778,46 @@ class Bottle:
         db.execute('DELETE FROM bottle WHERE id = ?', (bottle_id,))
         db.commit()
 
+class Porridge:
+    """Brei-Tracking"""
+    @staticmethod
+    def create(timestamp, amount, food=None):
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO porridge (timestamp, amount, food) VALUES (?, ?, ?)',
+            (timestamp, amount, food)
+        )
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def get_latest():
+        db = get_db()
+        row = db.execute('SELECT * FROM porridge ORDER BY timestamp DESC LIMIT 1').fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_by_id(porridge_id):
+        db = get_db()
+        row = db.execute('SELECT * FROM porridge WHERE id = ?', (porridge_id,)).fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def update(porridge_id, timestamp, amount, food=None):
+        db = get_db()
+        db.execute(
+            'UPDATE porridge SET timestamp = ?, amount = ?, food = ? WHERE id = ?',
+            (timestamp, amount, food, porridge_id)
+        )
+        db.commit()
+
+    @staticmethod
+    def delete(porridge_id):
+        db = get_db()
+        db.execute('DELETE FROM porridge WHERE id = ?', (porridge_id,))
+        db.commit()
+
+
 class Diaper:
     """Windel-Tracking"""
     @staticmethod
@@ -1319,6 +1359,24 @@ def get_all_entries_today(selected_date=None):
             'display': f"Temperatur ({row['value']}°C)"
         })
     
+    # Brei
+    porridge_rows = db.execute(
+        '''SELECT id, "porridge" as category, timestamp, amount, food
+           FROM porridge
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
+    ).fetchall()
+    for row in porridge_rows:
+        food_str = f', {row["food"]}' if row['food'] else ''
+        entries.append({
+            'id': row['id'],
+            'category': 'porridge',
+            'timestamp': row['timestamp'],
+            'amount': row['amount'],
+            'food': row['food'],
+            'display': f"Brei ({row['amount']} g{food_str})"
+        })
+
     # Medizin
     # PERFORMANCE: Range-Query statt date()
     med_rows = db.execute(
@@ -1643,7 +1701,21 @@ def get_latest_activities(limit=3):
             'dose': row['dose'],
             'display': f"Medizin ({row['name']}, {row['dose']})"
         })
-    
+
+    # Brei
+    porridge_rows = db.execute(
+        'SELECT id, "porridge" as category, timestamp, amount, food FROM porridge ORDER BY timestamp DESC LIMIT ?',
+        (limit * 2,)
+    ).fetchall()
+    for row in porridge_rows:
+        all_entries.append({
+            'category': 'porridge',
+            'timestamp': row['timestamp'],
+            'amount': row['amount'],
+            'food': row['food'],
+            'display': f"Brei ({row['amount']} g)"
+        })
+
     # Sortiere nach Zeitstempel und nimm die letzten N
     all_entries.sort(key=lambda x: x['timestamp'], reverse=True)
     return all_entries[:limit]

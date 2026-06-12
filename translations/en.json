@@ -58,6 +58,12 @@
     "give": "Give Bottle",
     "amount_ml": "Amount (ml)"
   },
+  "porridge": {
+    "title": "Porridge",
+    "give": "Give Porridge",
+    "amount_g": "Amount (g)",
+    "food_optional": "Food (optional)"
+  },
   "diaper": {
     "wet": "Diaper (wet)",
     "solid": "Diaper (solid)",
@@ -240,6 +246,8 @@
       "diaper_both_recorded": "Diaper (both) recorded",
       "temperature_recorded": "Temperature ({value}°C) recorded",
       "medicine_recorded": "Medicine ({name}, {dose}) recorded",
+      "porridge_recorded": "Porridge ({amount} g) recorded",
+      "porridge_updated": "Porridge entry updated",
       "illness_recorded": "Illness recorded",
       "sleep_updated": "Sleep entry updated",
       "feeding_updated": "Feeding entry updated",
@@ -254,7 +262,8 @@
       "diaper_deleted": "Diaper entry deleted",
       "temperature_deleted": "Temperature entry deleted",
       "medicine_deleted": "Medicine entry deleted",
-      "illness_deleted": "Illness entry deleted"
+      "porridge_deleted": "Porridge entry deleted",
+      "illness_deleted": "Illness entry deleted",
       "night_waking_deleted": "Night waking deleted"
     },
     "error": {

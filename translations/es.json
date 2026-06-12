@@ -58,6 +58,12 @@
       "give": "Dar biberón",
       "amount_ml": "Cantidad (ml)"
     },
+    "porridge": {
+      "title": "Papilla",
+      "give": "Dar papilla",
+      "amount_g": "Cantidad (g)",
+      "food_optional": "Alimento (opcional)"
+    },
     "diaper": {
       "wet": "Pañal (mojado)",
       "solid": "Pañal (sucio)",
@@ -240,6 +246,8 @@
         "diaper_both_recorded": "Pañal (ambos) registrado",
         "temperature_recorded": "Temperatura ({value}°C) registrada",
         "medicine_recorded": "Medicación ({name}, {dose}) registrada",
+        "porridge_recorded": "Papilla ({amount} g) registrada",
+        "porridge_updated": "Registro de papilla actualizado",
         "illness_recorded": "Enfermedad registrada",
         "sleep_updated": "Registro de sueño actualizado",
         "feeding_updated": "Registro de lactancia actualizado",
@@ -254,6 +262,7 @@
         "diaper_deleted": "Registro de pañal eliminado",
         "temperature_deleted": "Registro de temperatura eliminado",
         "medicine_deleted": "Registro de medicación eliminado",
+        "porridge_deleted": "Registro de papilla eliminado",
         "illness_deleted": "Registro de enfermedad eliminado",
         "night_waking_deleted": "Despertar nocturno eliminado"
       },

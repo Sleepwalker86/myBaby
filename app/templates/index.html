@@ -2,17 +2,6 @@
 
 {% block content %}
 <div class="container-fluid px-3">
-    <!-- Schneller Eintrag Button -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-new-event btn-lg" data-bs-toggle="modal" data-bs-target="#quickEntryModal">
-                    <i class="bi bi-plus-circle"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Schlafstatus -->
     <div class="row mb-4">
         <div class="col-12">
@@ -25,10 +14,13 @@
                             </h5>
                             <p class="mb-0 text-muted">{{ _('status.sleep_duration_today') }}: <strong>{{ sleep_duration }}</strong></p>
                         </div>
-                        <div>
+                        <div class="d-flex align-items-center gap-2">
                             <span class="status-badge {{ 'sleeping' if active_sleep else 'awake' }}">
                                 {{ sleep_status }}
                             </span>
+                            <button type="button" class="btn btn-new-event btn-lg" data-bs-toggle="modal" data-bs-target="#quickEntryModal">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -846,6 +838,11 @@
                 </svg><br>
                 <small>{{ _('bottle.title') }}</small>
             </button>
+            <!-- Brei -->
+            <button type="button" class="btn btn-bottle btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#porridgeModal">
+                <i class="bi bi-bowl-hot" style="font-size: 1.5rem;"></i><br>
+                <small>{{ _('porridge.title') }}</small>
+            </button>
             <!-- Medizin -->
             <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
                 <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
@@ -901,10 +898,12 @@
         <div class="col-12">
             <div class="card card-modern">
                 <div class="card-body">
-                    <h6 class="section-title mb-3">
+                    <h6 class="section-title mb-0" role="button" data-bs-toggle="collapse" data-bs-target="#audioPlayerCollapse" aria-expanded="false" aria-controls="audioPlayerCollapse" style="cursor:pointer;">
                         <i class="bi bi-music-note-beamed"></i> {{ _('audio.title') }}
+                        <i class="bi bi-chevron-down ms-2 small" id="audioChevron"></i>
                     </h6>
-                    <div class="audio-player">
+                    <div class="collapse" id="audioPlayerCollapse">
+                    <div class="audio-player mt-3">
                         <!-- Dateiauswahl -->
                         <div class="mb-3">
                             <label for="audioFileSelect" class="form-label small">{{ _('audio.file_label') }}</label>
@@ -954,6 +953,7 @@
                             </button>
                         </div>
                     </div>
+                    </div><!-- /#audioPlayerCollapse -->
                 </div>
             </div>
         </div>
@@ -1137,6 +1137,12 @@
                                     </form>
                                     {% elif entry.category == 'night_waking' %}
                                     <form method="POST" action="{{ url_for('edit.delete_night_waking', waking_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Eintrag wirklich löschen?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% elif entry.category == 'porridge' %}
+                                    <form method="POST" action="{{ url_for('edit.delete_porridge', porridge_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('{{ _('common.delete_confirm') }}');">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -1401,6 +1407,40 @@
                                 </div>
                             </div>
                         </div>
+                        {% elif entry.category == 'porridge' %}
+                        <div class="modal fade" id="editModal{{ entry.category }}{{ entry.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{{ _('common.edit_entry') }} - {{ _('porridge.title') }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('edit.edit_porridge', porridge_id=entry.id) }}" class="client-tz-submit">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">{{ _('common.time') }}</label>
+                                                <input type="datetime-local" class="form-control" name="timestamp"
+                                                       value="{{ entry.timestamp[:16] }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">{{ _('porridge.amount_g') }}</label>
+                                                <input type="number" class="form-control" name="amount"
+                                                       value="{{ entry.amount }}" min="1" max="2000" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">{{ _('porridge.food_optional') }}</label>
+                                                <input type="text" class="form-control" name="food"
+                                                       value="{{ entry.food or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                                            <button type="submit" class="btn btn-primary">{{ _('common.save') }}</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                         {% endif %}
                         {% endfor %}
                     {% else %}
@@ -1429,6 +1469,36 @@
                         <label for="amount" class="form-label">{{ _('bottle.amount_ml') }}</label>
                         <input type="number" class="form-control form-control-lg" id="amount" name="amount" 
                                min="1" max="500" value="100" required autofocus>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn" style="background: var(--color-teal-medium); color: white;">{{ _('common.record') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Brei Modal -->
+<div class="modal fade" id="porridgeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('porridge.title') }} {{ _('common.record') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('porridge.create') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="porridgeAmount" class="form-label">{{ _('porridge.amount_g') }}</label>
+                        <input type="number" class="form-control form-control-lg" id="porridgeAmount" name="amount"
+                               min="1" max="500" value="100" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="porridgeFood" class="form-label">{{ _('porridge.food_optional') }}</label>
+                        <input type="text" class="form-control" id="porridgeFood" name="food"
+                               placeholder="z.B. Karotte, Apfel…" maxlength="100">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2249,6 +2319,12 @@
                         </button>
                     </div>
                     <div class="col-6 col-md-4">
+                        <button type="button" class="btn btn-bottle w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#porridgeModal" data-bs-dismiss="modal">
+                            <i class="bi bi-egg-fried" style="font-size: 2rem;"></i>
+                            <small class="mt-2">{{ _('porridge.title') }}</small>
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4">
                         <button type="button" class="btn btn-bottle w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#bottleModal" data-bs-dismiss="modal">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" style="width: 32px; height: 32px;">
                                 <path d="M288.209,331.768c-13.486,0-25.843-2.991-37.793-5.891c-11.956-2.888-24.313-5.885-37.688-5.885
@@ -2335,6 +2411,15 @@
 <!-- Modal für Geburtsdatum -->
 
 <script>
+    // Audio-Player Collapse Chevron
+    const audioCollapse = document.getElementById('audioPlayerCollapse');
+    const audioChevron = document.getElementById('audioChevron');
+    if (audioCollapse && audioChevron) {
+        audioCollapse.addEventListener('show.bs.collapse', () => audioChevron.style.transform = 'rotate(180deg)');
+        audioCollapse.addEventListener('hide.bs.collapse', () => audioChevron.style.transform = 'rotate(0deg)');
+        audioChevron.style.transition = 'transform 0.2s ease';
+    }
+
     // Audio-Player Funktionalität
     document.addEventListener('DOMContentLoaded', function() {
         // Übersetzungen für JavaScript
