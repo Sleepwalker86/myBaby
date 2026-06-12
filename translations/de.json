@@ -58,6 +58,12 @@
     "give": "Flasche geben",
     "amount_ml": "Menge (ml)"
   },
+  "porridge": {
+    "title": "Brei",
+    "give": "Brei geben",
+    "amount_g": "Menge (g)",
+    "food_optional": "Nahrung (optional)"
+  },
   "diaper": {
     "wet": "Windel (nass)",
     "solid": "Windel (groß)",
@@ -240,6 +246,8 @@
       "diaper_both_recorded": "Windel (beides) erfasst",
       "temperature_recorded": "Temperatur ({value}°C) erfasst",
       "medicine_recorded": "Medizin ({name}, {dose}) erfasst",
+      "porridge_recorded": "Brei ({amount} g) erfasst",
+      "porridge_updated": "Brei-Eintrag aktualisiert",
       "illness_recorded": "Erkrankung erfasst",
       "sleep_updated": "Schlaf-Eintrag aktualisiert",
       "feeding_updated": "Still-Eintrag aktualisiert",
@@ -254,6 +262,7 @@
       "diaper_deleted": "Windel-Eintrag gelöscht",
       "temperature_deleted": "Temperatur-Eintrag gelöscht",
       "medicine_deleted": "Medizin-Eintrag gelöscht",
+      "porridge_deleted": "Brei-Eintrag gelöscht",
       "illness_deleted": "Erkrankungs-Eintrag gelöscht",
       "night_waking_deleted": "Nächtliches Aufwachen gelöscht"
     },

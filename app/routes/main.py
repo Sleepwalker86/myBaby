@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from app.models.models import (
-    Sleep, Feeding, Bottle, Diaper, get_all_entries_today, BabyInfo, NightWaking, Illness
+    Sleep, Feeding, Bottle, Porridge, Diaper, get_all_entries_today, BabyInfo, NightWaking, Illness
 )
 from app.models.database import get_db
 from app.i18n import _
@@ -41,6 +41,13 @@ def translate_entry_display(entry):
     elif category == 'bottle':
         amount = entry.get('amount', 0)
         return _('bottle.title') + f" ({amount} ml)"
+    elif category == 'porridge':
+        amount = entry.get('amount', 0)
+        food = entry.get('food', '')
+        label = _('porridge.title') + f" ({amount} g)"
+        if food:
+            label += f' – {food}'
+        return label
     elif category == 'diaper':
         diaper_type = entry.get('type', '')
         if diaper_type == 'nass':
@@ -59,14 +66,6 @@ def translate_entry_display(entry):
     
     # Fallback: Original display verwenden
     return entry.get('display', '')
-
-def get_baby_name():
-    """Hilfsfunktion zum Abrufen des Baby-Namens"""
-    return BabyInfo.get_name()
-
-tz_berlin = pytz.timezone('Europe/Berlin')
-
-bp = Blueprint('main', __name__)
 
 @bp.app_template_filter('format_datetime_de')
 def format_datetime_de(value):

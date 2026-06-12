@@ -1,5 +1,5 @@
 from flask import Blueprint, request, redirect, url_for, flash
-from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine, NightWaking
+from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine, NightWaking, Porridge
 from app.form_datetime import normalize_form_datetime
 
 bp = Blueprint('edit', __name__, url_prefix='/edit')
@@ -224,6 +224,37 @@ def delete_night_waking(waking_id):
     try:
         NightWaking.delete(waking_id)
         flash('Nächtliches Aufwachen gelöscht', 'success')
+    except Exception as e:
+        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/porridge/<int:porridge_id>', methods=['POST'])
+def edit_porridge(porridge_id):
+    """Bearbeitet einen Brei-Eintrag"""
+    try:
+        amount = int(request.form.get('amount', 0))
+        if amount <= 0 or amount > 2000:
+            raise ValueError()
+    except (ValueError, TypeError):
+        flash('Ungültige Menge', 'error')
+        return redirect(url_for('main.index'))
+
+    food = request.form.get('food', '').strip() or None
+    timestamp_raw = request.form.get('timestamp', '')
+    from app.form_datetime import normalize_form_datetime
+    timestamp = normalize_form_datetime(timestamp_raw) if timestamp_raw.strip() else None
+    Porridge.update(porridge_id, timestamp, amount, food)
+    flash('Brei-Eintrag aktualisiert', 'success')
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/porridge/<int:porridge_id>/delete', methods=['POST'])
+def delete_porridge(porridge_id):
+    """Löscht einen Brei-Eintrag"""
+    try:
+        Porridge.delete(porridge_id)
+        flash('Brei-Eintrag gelöscht', 'success')
     except Exception as e:
         flash(f'Fehler beim Löschen: {str(e)}', 'error')
     return redirect(url_for('main.index'))
