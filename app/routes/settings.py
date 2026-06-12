@@ -7,8 +7,12 @@ import csv
 import io
 import json
 import requests
+import time
 
 bp = Blueprint('settings', __name__, url_prefix='/settings')
+
+_version_cache = {'data': None, 'ts': 0}
+_VERSION_CACHE_TTL = 3600  # 1 Stunde
 
 def get_current_version():
     """Liest die aktuelle Version aus der VERSION-Datei"""
@@ -126,7 +130,7 @@ def export_csv():
     # Brei
     for r in db.execute('SELECT * FROM porridge ORDER BY timestamp').fetchall():
         writer.writerow(['porridge', r['id'], r['timestamp'], '', '',
-                         '', r['amount_g'], _g(r, 'food'), '', '', '', '', '', '', _g(r, 'notes')])
+                         '', r['amount'], _g(r, 'food'), '', '', '', '', '', '', _g(r, 'notes')])
 
     # Gewicht
     for r in db.execute('SELECT * FROM weight ORDER BY timestamp').fetchall():
@@ -186,6 +190,8 @@ def export_backup():
 @bp.route('/check-version')
 def check_version():
     """Prüft ob eine neuere Version auf Docker Hub verfügbar ist"""
+    if _version_cache['data'] and (time.time() - _version_cache['ts']) < _VERSION_CACHE_TTL:
+        return jsonify(_version_cache['data'])
     try:
         current_version = get_current_version()
         docker_user = "sleepwalker86"
@@ -210,20 +216,28 @@ def check_version():
                 'current_version': current_version
             })
         
-        # Sortiere Versionen (einfache String-Sortierung sollte für semantische Versionen funktionieren)
-        # Für bessere Sortierung könnte man eine semantische Version-Bibliothek verwenden
-        version_tags.sort(reverse=True)
+        def parse_version(v):
+            try:
+                return tuple(int(x) for x in v.lstrip('v').split('.'))
+            except ValueError:
+                return (0,)
+
+        version_tags.sort(key=parse_version, reverse=True)
         latest_version = version_tags[0]
+
+        current_tuple = parse_version(current_version)
+        latest_tuple = parse_version(latest_version)
+        is_update_available = latest_tuple > current_tuple
         
-        # Vergleiche Versionen (einfacher String-Vergleich)
-        is_update_available = latest_version != current_version
-        
-        return jsonify({
+        result = {
             'success': True,
             'current_version': current_version,
             'latest_version': latest_version,
             'update_available': is_update_available
-        })
+        }
+        _version_cache['data'] = result
+        _version_cache['ts'] = time.time()
+        return jsonify(result)
         
     except requests.RequestException as e:
         return jsonify({

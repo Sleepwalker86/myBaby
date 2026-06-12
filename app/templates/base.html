@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MyBaby{% if baby_name %} - {{ baby_name }}{% endif %}</title>
     <meta name="lang" content="{{ current_language }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Theme sofort setzen, bevor der Rest geladen wird (verhindert Flash) -->
     <script>
         (function() {
@@ -482,6 +483,22 @@
         })();
     </script>
     <script src="{{ url_for('static', filename='form-datetime-tz.js') }}" defer></script>
+    <script>
+        // CSRF-Token automatisch in alle Forms injizieren
+        (function() {
+            const token = document.querySelector('meta[name="csrf-token"]');
+            if (!token) return;
+            document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function(form) {
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token.content;
+                    form.appendChild(input);
+                }
+            });
+        })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

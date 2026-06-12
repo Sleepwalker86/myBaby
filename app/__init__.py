@@ -1,13 +1,17 @@
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 from app.models.database import init_db, close_db
 from app.models.models import BabyInfo
 from app.i18n import _, get_language
+
+csrf = CSRFProtect()
 
 def create_app():
     """Erstellt und konfiguriert die Flask-App"""
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
     app.config['DATABASE'] = '/data/baby_tracking.db'
+    csrf.init_app(app)
     
     # Datenbank initialisieren
     with app.app_context():

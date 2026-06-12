@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.1) — leave empty to use "latest"'
+        required: false
+        default: ''
 
 jobs:
   build-and-push:
@@ -22,12 +27,15 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract version from tag
+      - name: Extract version
         id: version
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+            V="${{ github.event.inputs.version }}"
+            [[ "$V" =~ ^v ]] || V="v$V"
+            echo "version=$V" >> $GITHUB_OUTPUT
           else
             echo "version=latest" >> $GITHUB_OUTPUT
           fi

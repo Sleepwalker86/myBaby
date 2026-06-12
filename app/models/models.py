@@ -1738,7 +1738,7 @@ def get_all_entries_date_range(start_date, end_date):
     # Erkrankungen im Bereich
     illness_rows = db.execute(
         '''SELECT id, start_time as timestamp, end_time, type, symptoms, notes
-           FROM illness 
+           FROM illness
            WHERE start_time >= ? AND start_time <= ?''',
         (range_start_str, range_end_str)
     ).fetchall()
@@ -1753,7 +1753,39 @@ def get_all_entries_date_range(start_date, end_date):
             'notes': row['notes'],
             'display': 'Erkrankung'
         })
-    
+
+    # Gewicht im Bereich
+    weight_rows = db.execute(
+        '''SELECT id, timestamp, weight_kg, notes
+           FROM weight WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in weight_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'weight',
+            'timestamp': row['timestamp'],
+            'weight_kg': row['weight_kg'],
+            'notes': row['notes'],
+            'display': f"Gewicht ({row['weight_kg']} kg)"
+        })
+
+    # Größe im Bereich
+    height_rows = db.execute(
+        '''SELECT id, timestamp, height_cm, notes
+           FROM height WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in height_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'height',
+            'timestamp': row['timestamp'],
+            'height_cm': row['height_cm'],
+            'notes': row['notes'],
+            'display': f"Größe ({row['height_cm']} cm)"
+        })
+
     return entries
 
 def get_latest_activities(limit=3):
@@ -1912,9 +1944,10 @@ class BabyInfo:
                 (name, datetime.now(tz_berlin).isoformat(), existing['id'])
             )
         else:
+            default_birth = (date.today() - timedelta(days=180)).isoformat()
             db.execute(
-                'INSERT INTO baby_info (name) VALUES (?)',
-                (name,)
+                'INSERT INTO baby_info (name, birth_date) VALUES (?, ?)',
+                (name, default_birth)
             )
         db.commit()
     
@@ -2251,10 +2284,10 @@ class BabyInfo:
         # 1. Anzahl noch nicht erreicht UND
         #    (Verbleibende Tagschlafdauer > 0.5 Stunden ODER Zeit bis Nachtschlaf zu lang)
         # ODER
-        # 2. Zeit bis zum Nachtschlaf ist zu lang (auch wenn Tagschlaf-Zeit erreicht)
+        # 2. Zeit bis zum Nachtschlaf ist zu lang UND max_naps noch nicht erreicht
         should_suggest_nap = (
             (completed_naps < target_naps) and (remaining_day_sleep > 0.5)
-        ) or time_until_night_sleep_too_long
+        ) or (time_until_night_sleep_too_long and completed_naps < max_naps)
         
         if should_suggest_nap:
             # Berechne nächste empfohlene Zeit basierend auf letztem Aufwachen

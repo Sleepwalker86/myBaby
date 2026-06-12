@@ -243,6 +243,9 @@ def edit_porridge(porridge_id):
     food = request.form.get('food', '').strip() or None
     timestamp_raw = request.form.get('timestamp', '')
     timestamp = normalize_form_datetime(timestamp_raw) if timestamp_raw.strip() else None
+    if not timestamp:
+        flash('Zeitstempel ist erforderlich', 'error')
+        return redirect(url_for('main.index'))
     Porridge.update(porridge_id, timestamp, amount, food)
     flash('Brei-Eintrag aktualisiert', 'success')
     return redirect(url_for('main.index'))

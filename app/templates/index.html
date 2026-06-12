@@ -410,11 +410,33 @@
                 path6.setAttribute('fill', iconColorValue);
                 iconSvg.appendChild(path6);
                 iconGroup.appendChild(iconSvg);
+            } else if (category === 'weight') {
+                const foreignObject = document.createElementNS(ns, 'foreignObject');
+                foreignObject.setAttribute('x', '-12');
+                foreignObject.setAttribute('y', '-12');
+                foreignObject.setAttribute('width', '24');
+                foreignObject.setAttribute('height', '24');
+                const iconHtml = document.createElement('div');
+                iconHtml.style.cssText = `width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: ${iconColorValue};`;
+                iconHtml.innerHTML = '<i class="bi bi-graph-up"></i>';
+                foreignObject.appendChild(iconHtml);
+                iconGroup.appendChild(foreignObject);
+            } else if (category === 'height') {
+                const foreignObject = document.createElementNS(ns, 'foreignObject');
+                foreignObject.setAttribute('x', '-12');
+                foreignObject.setAttribute('y', '-12');
+                foreignObject.setAttribute('width', '24');
+                foreignObject.setAttribute('height', '24');
+                const iconHtml = document.createElement('div');
+                iconHtml.style.cssText = `width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: ${iconColorValue};`;
+                iconHtml.innerHTML = '<i class="bi bi-rulers"></i>';
+                foreignObject.appendChild(iconHtml);
+                iconGroup.appendChild(foreignObject);
             }
-            
+
             return iconGroup;
         }
-        
+
         // Icon-Mapping mit Farben
         const iconMap = {
             'feeding': { color: 'var(--color-pink)' },
@@ -424,7 +446,9 @@
             'temperature': { color: 'var(--color-pink)' },
             'medicine': { color: 'var(--color-pink)' },
             'night_waking': { color: '#dc3545' },
-            'illness': { color: 'var(--color-purple)' }
+            'illness': { color: 'var(--color-purple)' },
+            'weight': { color: 'var(--color-teal-medium)' },
+            'height': { color: 'var(--color-teal-medium)' }
         };
         
         // Finde Einschlafen- und Aufwachen-Zeit für Kalibrierung
@@ -2569,6 +2593,19 @@
                         <button type="button" class="btn btn-medicine w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#medicineModal" data-bs-dismiss="modal">
                             <i class="bi bi-capsule" style="font-size: 2rem;"></i>
                             <small class="mt-2">{{ _('medicine.title') }}</small>
+                        </button>
+                    </div>
+                    <!-- Gewicht & Größe -->
+                    <div class="col-6 col-md-4">
+                        <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#weightModal" data-bs-dismiss="modal">
+                            <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
+                            <small class="mt-2">{{ _('weight.title') }}</small>
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#heightModal" data-bs-dismiss="modal">
+                            <i class="bi bi-rulers" style="font-size: 2rem;"></i>
+                            <small class="mt-2">{{ _('height.title') }}</small>
                         </button>
                     </div>
                 </div>
