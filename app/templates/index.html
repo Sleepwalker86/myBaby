@@ -1532,7 +1532,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="weightTimestamp" class="form-label">{{ _('common.time') }}</label>
-                        <input type="datetime-local" class="form-control" id="weightTimestamp" name="timestamp">
+                        <input type="date" class="form-control" id="weightTimestamp" name="timestamp"
+                               value="{{ now_date }}">
                     </div>
                     <div class="mb-3">
                         <label for="weightNotes" class="form-label">{{ _('weight.notes_optional') }}</label>

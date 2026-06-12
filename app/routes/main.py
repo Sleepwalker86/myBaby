@@ -449,7 +449,8 @@ def index():
                          night_sleep_suggestion=night_sleep_suggestion,
                          baby_age_months=baby_age_months,
                          baby_name=baby_name,
-                         sleep_meta=sleep_meta)
+                         sleep_meta=sleep_meta,
+                         now_date=datetime.now(tz_berlin).date().isoformat())
 
 @bp.route('/api/audio-files')
 def get_audio_files():
