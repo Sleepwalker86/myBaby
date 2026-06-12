@@ -26,7 +26,8 @@ def create():
     notes = request.form.get('notes', '').strip() or None
     timestamp_raw = request.form.get('timestamp', '')
     if timestamp_raw and len(timestamp_raw) == 10:  # nur Datum (YYYY-MM-DD)
-        timestamp = timestamp_raw + 'T12:00:00'
+        now = get_local_now()
+        timestamp = timestamp_raw + now.strftime('T%H:%M:%S')
     else:
         timestamp = normalize_form_datetime(timestamp_raw) or get_local_now().isoformat()
     Weight.create(timestamp, weight_kg, notes)
@@ -54,7 +55,8 @@ def update(weight_id):
     notes = request.form.get('notes', '').strip() or None
     timestamp_raw = request.form.get('timestamp', '')
     if timestamp_raw and len(timestamp_raw) == 10:  # nur Datum (YYYY-MM-DD)
-        timestamp = timestamp_raw + 'T12:00:00'
+        now = get_local_now()
+        timestamp = timestamp_raw + now.strftime('T%H:%M:%S')
     else:
         timestamp = normalize_form_datetime(timestamp_raw) or get_local_now().isoformat()
     Weight.update(weight_id, timestamp, weight_kg, notes)
