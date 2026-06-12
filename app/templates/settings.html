@@ -89,8 +89,8 @@
 
 <!-- Untere Reihe: Version & Schlaf-Einstellungen -->
 <div class="row mt-4">
-    <!-- Version Card - volle Breite auf kleinen Displays, schmal auf größeren -->
-    <div class="col-12 col-md-6 col-lg-4 mb-4 mb-md-0">
+    <!-- Version Card -->
+    <div class="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.version') }}</h5>
@@ -108,8 +108,32 @@
         </div>
     </div>
     
+    <!-- Export & Backup -->
+    <div class="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
+        <div class="card card-modern h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-download me-2"></i>{{ _('settings.export_title') }}
+                </h5>
+                <div class="mb-3">
+                    <p class="text-muted small mb-2">{{ _('settings.export_csv_desc') }}</p>
+                    <a href="{{ url_for('settings.export_csv') }}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-filetype-csv me-2"></i>{{ _('settings.export_csv') }}
+                    </a>
+                </div>
+                <hr>
+                <div class="mb-0">
+                    <p class="text-muted small mb-2">{{ _('settings.export_backup_desc') }}</p>
+                    <a href="{{ url_for('settings.export_backup') }}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-archive me-2"></i>{{ _('settings.export_backup') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Schlaf-Einstellungen -->
-    <div class="col-12 col-md-6 col-lg-8">
+    <div class="col-12 col-md-12 col-lg-6">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.sleep_meta_title') }}</h5>

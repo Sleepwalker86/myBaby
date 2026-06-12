@@ -206,7 +206,8 @@
     "section_care": "Care & Health",
     "section_sleep": "Sleep Charts",
     "section_temperature": "Temperature",
-    "swipe_hint": "Swipe for more charts"
+    "swipe_hint": "Swipe for more charts",
+    "sleep_wake_times": "Wake & Sleep Times"
   },
   "settings": {
     "title": "Settings",
@@ -241,7 +242,12 @@
     "sleep_quality_default": "Default selection for sleep quality",
     "sleep_location_label": "Sleep location",
     "sleep_location_help": "One option per line, e.g. 'in own bed', 'in parents' bed', 'in arms', 'in baby hammock'.",
-    "sleep_location_default": "Default selection for sleep location"
+    "sleep_location_default": "Default selection for sleep location",
+    "export_title": "Export & Backup",
+    "export_csv": "Export CSV",
+    "export_csv_desc": "Download all entries as a CSV file (Excel-compatible)",
+    "export_backup": "Create Backup",
+    "export_backup_desc": "Download a full data backup as JSON"
   },
   "messages": {
     "success": {

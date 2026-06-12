@@ -206,7 +206,8 @@
     "section_care": "Pflege & Gesundheit",
     "section_sleep": "Schlaf-Charts",
     "section_temperature": "Temperatur",
-    "swipe_hint": "Wischen für weitere Charts"
+    "swipe_hint": "Wischen für weitere Charts",
+    "sleep_wake_times": "Aufwach- & Einschlafzeiten"
   },
   "settings": {
     "title": "Einstellungen",
@@ -241,7 +242,12 @@
     "sleep_quality_default": "Standard-Auswahl für Einschlaf-Qualität",
     "sleep_location_label": "Einschlaf-Ort",
     "sleep_location_help": "Eine Option pro Zeile, z.B. 'im eigenen Bett', 'im Elternbett', 'auf dem Arm', 'in der Federwiege'.",
-    "sleep_location_default": "Standard-Auswahl für Einschlaf-Ort"
+    "sleep_location_default": "Standard-Auswahl für Einschlaf-Ort",
+    "export_title": "Export & Backup",
+    "export_csv": "CSV exportieren",
+    "export_csv_desc": "Alle Einträge als CSV-Datei herunterladen (Excel-kompatibel)",
+    "export_backup": "Backup erstellen",
+    "export_backup_desc": "Vollständiges Daten-Backup als JSON herunterladen"
   },
   "messages": {
     "success": {

@@ -1,7 +1,11 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
 from app.models.models import BabyInfo
-from datetime import date
+from app.models.database import get_db
+from datetime import date, datetime
 import os
+import csv
+import io
+import json
 import requests
 
 bp = Blueprint('settings', __name__, url_prefix='/settings')
@@ -71,6 +75,107 @@ def update_sleep_meta():
     
     flash('Schlaf-Einstellungen gespeichert', 'success')
     return redirect(url_for('settings.settings'))
+
+@bp.route('/export/csv')
+def export_csv():
+    """Exportiert alle Einträge als CSV"""
+    db = get_db()
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(['category', 'id', 'timestamp', 'end_time', 'type', 'amount_ml',
+                     'amount_g', 'food', 'side', 'value', 'name', 'dose',
+                     'weight_kg', 'height_cm', 'notes'])
+
+    # Schlaf
+    for r in db.execute('SELECT * FROM sleep ORDER BY start_time').fetchall():
+        writer.writerow(['sleep', r['id'], r['start_time'], r['end_time'], r['type'],
+                         '', '', '', '', '', '', '', '', '', r.get('sleep_comment', '')])
+
+    # Stillen
+    for r in db.execute('SELECT * FROM feeding ORDER BY start_time').fetchall():
+        writer.writerow(['feeding', r['id'], r['start_time'], r['end_time'], '',
+                         '', '', '', r['side'], '', '', '', '', '', ''])
+
+    # Flasche
+    for r in db.execute('SELECT * FROM bottle ORDER BY timestamp').fetchall():
+        writer.writerow(['bottle', r['id'], r['timestamp'], '', '',
+                         r['amount_ml'], '', '', '', '', '', '', '', '', r.get('notes', '')])
+
+    # Windel
+    for r in db.execute('SELECT * FROM diaper ORDER BY timestamp').fetchall():
+        writer.writerow(['diaper', r['id'], r['timestamp'], '', r['type'],
+                         '', '', '', '', '', '', '', '', '', ''])
+
+    # Temperatur
+    for r in db.execute('SELECT * FROM temperature ORDER BY timestamp').fetchall():
+        writer.writerow(['temperature', r['id'], r['timestamp'], '', '',
+                         '', '', '', '', r['value'], '', '', '', '', ''])
+
+    # Medizin
+    for r in db.execute('SELECT * FROM medicine ORDER BY timestamp').fetchall():
+        writer.writerow(['medicine', r['id'], r['timestamp'], '', '',
+                         '', '', '', '', '', r['name'], r['dose'], '', '', ''])
+
+    # Brei
+    for r in db.execute('SELECT * FROM porridge ORDER BY timestamp').fetchall():
+        writer.writerow(['porridge', r['id'], r['timestamp'], '', '',
+                         '', r['amount_g'], r.get('food', ''), '', '', '', '', '', '', r.get('notes', '')])
+
+    # Gewicht
+    for r in db.execute('SELECT * FROM weight ORDER BY timestamp').fetchall():
+        writer.writerow(['weight', r['id'], r['timestamp'], '', '',
+                         '', '', '', '', '', '', '', r['weight_kg'], '', r.get('notes', '')])
+
+    # Größe
+    for r in db.execute('SELECT * FROM height ORDER BY timestamp').fetchall():
+        writer.writerow(['height', r['id'], r['timestamp'], '', '',
+                         '', '', '', '', '', '', '', '', r['height_cm'], r.get('notes', '')])
+
+    # Erkrankungen
+    for r in db.execute('SELECT * FROM illness ORDER BY start_time').fetchall():
+        writer.writerow(['illness', r['id'], r['start_time'], r.get('end_time', ''), r.get('type', ''),
+                         '', '', '', '', '', '', '', '', '', r.get('notes', '')])
+
+    filename = f"mybaby_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        '﻿' + output.getvalue(),  # BOM für Excel-Kompatibilität
+        mimetype='text/csv; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
+
+
+@bp.route('/export/backup')
+def export_backup():
+    """Erstellt ein vollständiges JSON-Backup aller Daten"""
+    db = get_db()
+
+    def rows_to_list(rows):
+        return [dict(r) for r in rows]
+
+    backup = {
+        'exported_at': datetime.now().isoformat(),
+        'version': get_current_version(),
+        'baby_info': rows_to_list(db.execute('SELECT * FROM baby_info').fetchall()),
+        'sleep': rows_to_list(db.execute('SELECT * FROM sleep ORDER BY start_time').fetchall()),
+        'feeding': rows_to_list(db.execute('SELECT * FROM feeding ORDER BY start_time').fetchall()),
+        'bottle': rows_to_list(db.execute('SELECT * FROM bottle ORDER BY timestamp').fetchall()),
+        'diaper': rows_to_list(db.execute('SELECT * FROM diaper ORDER BY timestamp').fetchall()),
+        'temperature': rows_to_list(db.execute('SELECT * FROM temperature ORDER BY timestamp').fetchall()),
+        'medicine': rows_to_list(db.execute('SELECT * FROM medicine ORDER BY timestamp').fetchall()),
+        'porridge': rows_to_list(db.execute('SELECT * FROM porridge ORDER BY timestamp').fetchall()),
+        'weight': rows_to_list(db.execute('SELECT * FROM weight ORDER BY timestamp').fetchall()),
+        'height': rows_to_list(db.execute('SELECT * FROM height ORDER BY timestamp').fetchall()),
+        'illness': rows_to_list(db.execute('SELECT * FROM illness ORDER BY start_time').fetchall()),
+    }
+
+    filename = f"mybaby_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    return Response(
+        json.dumps(backup, ensure_ascii=False, indent=2),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
+
 
 @bp.route('/check-version')
 def check_version():

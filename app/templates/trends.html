@@ -296,22 +296,12 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 mb-3">
                             <div class="card card-modern h-100">
                                 <div class="card-body">
-                                    <h5 class="card-title mb-3">{{ _('trends.wake_times') }}</h5>
+                                    <h5 class="card-title mb-3">{{ _('trends.sleep_wake_times') }}</h5>
                                     <div class="trends-chart-wrap trends-chart-wrap--compact">
-                                        <canvas id="wakeTimesChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-12 mb-3">
-                            <div class="card card-modern h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-3">{{ _('trends.sleep_times') }}</h5>
-                                    <div class="trends-chart-wrap trends-chart-wrap--compact">
-                                        <canvas id="sleepTimesChart"></canvas>
+                                        <canvas id="sleepWakeTimesChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -626,86 +616,50 @@
         document.getElementById('sleepDistributionChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
     }
     
-    // Aufwachzeiten Histogramm
+    // Aufwach- & Einschlafzeiten kombiniert
     const wakeTimes = {{ stats.wake_times|tojson }};
-    const wakeTimeBins = Array(24).fill(0);
-    if (wakeTimes.length > 0) {
-        wakeTimes.forEach(time => {
-            const hour = Math.floor(time);
-            if (hour >= 0 && hour < 24) {
-                wakeTimeBins[hour]++;
-            }
-        });
-    }
-    
-    if (wakeTimes.length > 0) {
-    registerTrendsChart(new Chart(document.getElementById('wakeTimesChart'), {
-        type: 'bar',
-        data: {
-            labels: hourLabels,
-            datasets: [{
-                label: '{{ _('trends.count') }}',
-                data: wakeTimeBins,
-                backgroundColor: 'rgba(3, 166, 136, 0.6)',
-                borderColor: 'rgb(3, 166, 136)',
-                borderWidth: 1,
-                maxBarThickness: isMobileTrends ? 14 : 24
-            }]
-        },
-        options: {
-            ...trendsBaseOptions(),
-            scales: {
-                x: {
-                    ticks: trendsAxisTicks(isMobileTrends ? 6 : 12)
-                },
-                y: trendsValueAxis(false)
-            }
-        }
-    }));
-    } else {
-        document.getElementById('wakeTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
-    }
-    
-    // Einschlafzeiten Chart
     const sleepTimes = {{ stats.sleep_times|tojson }};
+    const wakeTimeBins = Array(24).fill(0);
     const sleepTimeBins = Array(24).fill(0);
-    if (sleepTimes.length > 0) {
-        sleepTimes.forEach(time => {
-            const hour = Math.floor(time);
-            if (hour >= 0 && hour < 24) {
-                sleepTimeBins[hour]++;
-            }
-        });
-    }
-    
-    if (sleepTimes.length > 0) {
-    registerTrendsChart(new Chart(document.getElementById('sleepTimesChart'), {
+    wakeTimes.forEach(t => { const h = Math.floor(t); if (h >= 0 && h < 24) wakeTimeBins[h]++; });
+    sleepTimes.forEach(t => { const h = Math.floor(t); if (h >= 0 && h < 24) sleepTimeBins[h]++; });
+
+    if (wakeTimes.length > 0 || sleepTimes.length > 0) {
+    registerTrendsChart(new Chart(document.getElementById('sleepWakeTimesChart'), {
         type: 'bar',
         data: {
             labels: hourLabels,
-            datasets: [{
-                label: '{{ _('trends.count') }}',
-                data: sleepTimeBins,
-                backgroundColor: 'rgba(242, 102, 139, 0.6)',
-                borderColor: 'rgb(242, 102, 139)',
-                borderWidth: 1,
-                maxBarThickness: isMobileTrends ? 14 : 24
-            }]
+            datasets: [
+                {
+                    label: '{{ _('trends.wake_times') }}',
+                    data: wakeTimeBins,
+                    backgroundColor: 'rgba(3, 166, 136, 0.6)',
+                    borderColor: 'rgb(3, 166, 136)',
+                    borderWidth: 1,
+                    maxBarThickness: isMobileTrends ? 10 : 18
+                },
+                {
+                    label: '{{ _('trends.sleep_times') }}',
+                    data: sleepTimeBins,
+                    backgroundColor: 'rgba(242, 102, 139, 0.6)',
+                    borderColor: 'rgb(242, 102, 139)',
+                    borderWidth: 1,
+                    maxBarThickness: isMobileTrends ? 10 : 18
+                }
+            ]
         },
         options: {
             ...trendsBaseOptions(),
             scales: {
-                x: {
-                    ticks: trendsAxisTicks(isMobileTrends ? 6 : 12)
-                },
+                x: { ticks: trendsAxisTicks(isMobileTrends ? 6 : 12) },
                 y: trendsValueAxis(false)
             }
         }
     }));
     } else {
-        document.getElementById('sleepTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
+        document.getElementById('sleepWakeTimesChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">{{ _('trends.no_data') }}</p>';
     }
-    
+
     // Temperaturverlauf Chart
     {% if temp_stats.count > 0 %}
     const allTemps = {{ temp_stats.all_temps|tojson }};

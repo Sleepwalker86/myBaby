@@ -206,7 +206,8 @@
       "section_care": "Cuidado y salud",
       "section_sleep": "Gráficos de sueño",
       "section_temperature": "Temperatura",
-      "swipe_hint": "Desliza para más gráficos"
+      "swipe_hint": "Desliza para más gráficos",
+      "sleep_wake_times": "Horas de despertar y dormir"
     },
     "settings": {
       "title": "Configuración",
@@ -241,7 +242,12 @@
       "sleep_quality_default": "Selección predeterminada para la calidad del sueño",
       "sleep_location_label": "Lugar al dormirse",
       "sleep_location_help": "Una opción por línea, p. ej. 'en su propia cama', 'en la cama de los padres', 'en brazos', 'en la cuna colgante'.",
-      "sleep_location_default": "Selección predeterminada para el lugar de sueño"
+      "sleep_location_default": "Selección predeterminada para el lugar de sueño",
+      "export_title": "Exportar y Copia de seguridad",
+      "export_csv": "Exportar CSV",
+      "export_csv_desc": "Descargar todos los registros como archivo CSV (compatible con Excel)",
+      "export_backup": "Crear copia de seguridad",
+      "export_backup_desc": "Descargar una copia de seguridad completa en formato JSON"
     },
     "messages": {
       "success": {
