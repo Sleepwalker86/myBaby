@@ -16,8 +16,11 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Stillen & Flasche**: Tracke Stillzeiten (links/rechts) mit optionaler Endzeit und Flaschenmengen
 - **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
+- **Brei-Tracking**: Dokumentiere Breigaben mit Menge (g) und optionaler Nahrungsangabe
+- **Gewichtstracking**: Erfasse das Gewicht deines Babys und verfolge die Wachstumskurve im Trends-Bereich
+- **Erkrankungen**: Dokumentiere Krankheitsphasen mit Typ, Symptomen und Notizen
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
-- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken sowie eine Übersicht zur Einschlaf-Qualität und zum Einschlaf-Ort (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
+- **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken, Temperaturverlauf sowie die Gewichts-Wachstumskurve (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
 
@@ -108,9 +111,12 @@ Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
 - **Nächtliches Aufwachen**: Dokumentiere Wachphasen in der Nacht (wird automatisch vom Nachtschlaf abgezogen)
 - **Stillen**: Wähle links oder rechts. Optional kannst du eine Endzeit eintragen, um die Stilldauer zu dokumentieren.
 - **Flasche**: Gib die Menge in ml ein
+- **Brei**: Erfasse Breigaben mit Menge und optionaler Nahrungsangabe
+- **Gewicht**: Trage das aktuelle Gewicht ein – wird in der Wachstumskurve angezeigt
 - **Windel**: Wähle nass, groß oder beides
 - **Temperatur**: Trage die gemessene Temperatur ein
 - **Medizin**: Erfasse Medikamentenname und Dosis
+- **Erkrankung**: Dokumentiere Krankheitsphasen mit Start, Ende, Typ und Symptomen
 
 ### 3. Dashboard verstehen
 
