@@ -82,7 +82,8 @@
   "diaper": {
     "wet": "Diaper (wet)",
     "solid": "Diaper (solid)",
-    "both": "Diaper (both)"
+    "both": "Diaper (both)",
+    "title": "Diaper"
   },
   "temperature": {
     "title": "Temperature",

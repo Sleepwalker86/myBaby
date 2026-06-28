@@ -82,7 +82,8 @@
   "diaper": {
     "wet": "Pañal (mojado)",
     "solid": "Pañal (sucio)",
-    "both": "Pañal (ambos)"
+    "both": "Pañal (ambos)",
+    "title": "Pañal"
   },
   "temperature": {
     "title": "Temperatura",
