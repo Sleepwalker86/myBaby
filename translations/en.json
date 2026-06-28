@@ -247,7 +247,18 @@
     "export_csv": "Export CSV",
     "export_csv_desc": "Download all entries as a CSV file (Excel-compatible)",
     "export_backup": "Create Backup",
-    "export_backup_desc": "Download a full data backup as JSON"
+    "export_backup_desc": "Download a full data backup as JSON",
+    "restore_title": "Restore Backup",
+    "restore_desc": "Upload a JSON backup and restore all data",
+    "restore_warning": "Warning: All current data will be permanently overwritten!",
+    "restore_confirm_label": "Yes, overwrite all current data",
+    "restore_btn": "Restore",
+    "restore_success": "Backup successfully restored",
+    "restore_error_no_file": "No file selected",
+    "restore_error_no_confirm": "Please confirm the restore",
+    "restore_error_invalid_json": "Invalid JSON file",
+    "restore_error_invalid_format": "Invalid backup format",
+    "restore_error_db": "Database error during restore"
   },
   "messages": {
     "success": {
@@ -325,4 +336,3 @@
     "timer_display": "Timer: {minutes}:{seconds}"
   }
 }
-

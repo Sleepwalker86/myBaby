@@ -247,7 +247,18 @@
     "export_csv": "CSV exportieren",
     "export_csv_desc": "Alle Einträge als CSV-Datei herunterladen (Excel-kompatibel)",
     "export_backup": "Backup erstellen",
-    "export_backup_desc": "Vollständiges Daten-Backup als JSON herunterladen"
+    "export_backup_desc": "Vollständiges Daten-Backup als JSON herunterladen",
+    "restore_title": "Backup wiederherstellen",
+    "restore_desc": "JSON-Backup hochladen und alle Daten wiederherstellen",
+    "restore_warning": "Achtung: Alle aktuellen Daten werden unwiderruflich überschrieben!",
+    "restore_confirm_label": "Ja, alle aktuellen Daten überschreiben",
+    "restore_btn": "Wiederherstellen",
+    "restore_success": "Backup erfolgreich wiederhergestellt",
+    "restore_error_no_file": "Keine Datei ausgewählt",
+    "restore_error_no_confirm": "Bitte bestätige die Wiederherstellung",
+    "restore_error_invalid_json": "Ungültige JSON-Datei",
+    "restore_error_invalid_format": "Ungültiges Backup-Format",
+    "restore_error_db": "Datenbankfehler bei der Wiederherstellung"
   },
   "messages": {
     "success": {
@@ -325,4 +336,3 @@
     "timer_display": "Timer: {minutes}:{seconds}"
   }
 }
-
