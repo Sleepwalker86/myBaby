@@ -9,22 +9,22 @@
     </div>
 </div>
 
-<div class="row">
-    <!-- Linke Spalte: Baby-Info -->
-    <div class="col-12 col-md-6 mb-4 mb-md-0">
+<!-- Obere Reihe: Baby-Info + Darstellung -->
+<div class="row g-4 mb-4">
+    <!-- Baby-Info -->
+    <div class="col-12 col-md-6">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.baby_info') }}</h5>
                 <form method="POST" action="{{ url_for('settings.update_settings') }}">
                     <div class="mb-3">
                         <label for="name" class="form-label">{{ _('settings.name') }}</label>
-                        <input type="text" class="form-control" id="name" name="name" 
+                        <input type="text" class="form-control" id="name" name="name"
                                value="{{ baby_name or '' }}" placeholder="{{ _('settings.name_placeholder') }}">
                     </div>
-                    
                     <div class="mb-3">
                         <label for="birth_date" class="form-label">{{ _('settings.birth_date') }}</label>
-                        <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                        <input type="date" class="form-control" id="birth_date" name="birth_date"
                                value="{{ baby_birth_date.isoformat() if baby_birth_date else '' }}">
                         {% if baby_age_months is not none %}
                         <small class="form-text text-muted">
@@ -32,7 +32,6 @@
                         </small>
                         {% endif %}
                     </div>
-                    
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> {{ _('common.save') }}
                     </button>
@@ -40,9 +39,9 @@
             </div>
         </div>
     </div>
-    
-    <!-- Rechte Spalte: Display -->
-    <div class="col-12 col-md-6 mb-4 mb-md-0">
+
+    <!-- Darstellung -->
+    <div class="col-12 col-md-6">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.display') }}</h5>
@@ -57,9 +56,9 @@
                     </div>
                     <input class="form-check-input" type="checkbox" id="darkModeToggle" role="switch" style="width: 3em; height: 1.5em; cursor: pointer;">
                 </div>
-                
+
                 <hr>
-                
+
                 <div class="mb-3">
                     <label class="form-label">
                         <strong>{{ _('settings.language') }}</strong>
@@ -68,15 +67,15 @@
                         {{ _('settings.language_desc') }}
                     </small>
                     <div class="btn-group w-100" role="group">
-                        <a href="{{ url_for('i18n.set_lang', lang='de') }}" 
+                        <a href="{{ url_for('i18n.set_lang', lang='de') }}"
                            class="btn {{ 'btn-primary' if current_language == 'de' else 'btn-outline-primary' }}">
                             <i class="bi bi-translate"></i> {{ _('settings.german') }}
                         </a>
-                        <a href="{{ url_for('i18n.set_lang', lang='en') }}" 
+                        <a href="{{ url_for('i18n.set_lang', lang='en') }}"
                            class="btn {{ 'btn-primary' if current_language == 'en' else 'btn-outline-primary' }}">
                             <i class="bi bi-translate"></i> {{ _('settings.english') }}
                         </a>
-                        <a href="{{ url_for('i18n.set_lang', lang='es') }}" 
+                        <a href="{{ url_for('i18n.set_lang', lang='es') }}"
                            class="btn {{ 'btn-primary' if current_language == 'es' else 'btn-outline-primary' }}">
                             <i class="bi bi-translate"></i> {{ _('settings.spanish') }}
                         </a>
@@ -87,16 +86,16 @@
     </div>
 </div>
 
-<!-- Untere Reihe: Version & Schlaf-Einstellungen -->
-<div class="row mt-4">
-    <!-- Version Card -->
-    <div class="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
+<!-- Untere Reihe: Version + Export/Backup/Restore + Schlaf-Einstellungen -->
+<div class="row g-4">
+    <!-- Version -->
+    <div class="col-12 col-md-6 col-lg-3">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.version') }}</h5>
                 <div class="mb-3">
                     <p class="mb-2">
-                        <strong>{{ _('settings.current_version') }}:</strong> 
+                        <strong>{{ _('settings.current_version') }}:</strong>
                         <span id="currentVersionDisplay">{{ current_version }}</span>
                     </p>
                     <button id="checkVersionBtn" class="btn btn-outline-primary">
@@ -107,54 +106,53 @@
             </div>
         </div>
     </div>
-    
-    <!-- Export & Backup -->
-    <div class="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
+
+    <!-- Export & Backup + Wiederherstellen (zusammen in einer Card) -->
+    <div class="col-12 col-md-6 col-lg-3">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">
-                    <i class="bi bi-download me-2"></i>{{ _('settings.export_title') }}
+                    <i class="bi bi-archive me-2"></i>{{ _('settings.export_title') }}
                 </h5>
-                <div class="mb-3">
-                    <p class="text-muted small mb-2">{{ _('settings.export_csv_desc') }}</p>
-                    <a href="{{ url_for('settings.export_csv') }}" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-filetype-csv me-2"></i>{{ _('settings.export_csv') }}
-                    </a>
-                </div>
-                <hr>
-                <div class="mb-0">
-                    <p class="text-muted small mb-2">{{ _('settings.export_backup_desc') }}</p>
-                    <a href="{{ url_for('settings.export_backup') }}" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-archive me-2"></i>{{ _('settings.export_backup') }}
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Backup wiederherstellen -->
-    <div class="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
-        <div class="card card-modern h-100 border-warning">
-            <div class="card-body">
-                <h5 class="card-title mb-4">
-                    <i class="bi bi-upload me-2"></i>{{ _('settings.restore_title') }}
-                </h5>
-                <p class="text-muted small mb-3">{{ _('settings.restore_desc') }}</p>
-                <form method="POST" action="{{ url_for('settings.restore_backup') }}" enctype="multipart/form-data" id="restoreForm">
-                    <div class="mb-3">
+                <!-- CSV Export -->
+                <div class="mb-2">
+                    <p class="text-muted small mb-2">{{ _('settings.export_csv_desc') }}</p>
+                    <a href="{{ url_for('settings.export_csv') }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-filetype-csv me-1"></i>{{ _('settings.export_csv') }}
+                    </a>
+                </div>
+
+                <!-- JSON Backup -->
+                <div class="mb-3">
+                    <p class="text-muted small mb-2">{{ _('settings.export_backup_desc') }}</p>
+                    <a href="{{ url_for('settings.export_backup') }}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-download me-1"></i>{{ _('settings.export_backup') }}
+                    </a>
+                </div>
+
+                <hr>
+
+                <!-- Backup Wiederherstellen -->
+                <h6 class="mb-3">
+                    <i class="bi bi-upload me-1"></i>{{ _('settings.restore_title') }}
+                </h6>
+                <form method="POST" action="{{ url_for('settings.restore_backup') }}" enctype="multipart/form-data">
+                    <div class="mb-2">
                         <input type="file" class="form-control form-control-sm" id="backup_file" name="backup_file" accept=".json" required>
                     </div>
-                    <div class="alert alert-warning p-2 mb-3" style="font-size: 0.8rem;">
+                    <div class="alert alert-warning p-2 mb-2" style="font-size: 0.75rem;">
                         <i class="bi bi-exclamation-triangle me-1"></i>{{ _('settings.restore_warning') }}
                     </div>
-                    <div class="form-check mb-3">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" id="confirm_restore" name="confirm_restore" value="1" required>
                         <label class="form-check-label small" for="confirm_restore">
                             {{ _('settings.restore_confirm_label') }}
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-warning w-100" onclick="return confirm('{{ _('settings.restore_warning') }}')">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i>{{ _('settings.restore_btn') }}
+                    <button type="submit" class="btn btn-warning btn-sm w-100"
+                            onclick="return confirm('{{ _('settings.restore_warning') }}')">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>{{ _('settings.restore_btn') }}
                     </button>
                 </form>
             </div>
@@ -162,7 +160,7 @@
     </div>
 
     <!-- Schlaf-Einstellungen -->
-    <div class="col-12 col-md-12 col-lg-6">
+    <div class="col-12 col-lg-6">
         <div class="card card-modern h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">{{ _('settings.sleep_meta_title') }}</h5>
@@ -179,7 +177,7 @@
                                       name="sleep_quality_options"
                                       class="form-control"
                                       rows="4">{% for q in sleep_meta.qualities %}{{ q }}{% if not loop.last %}&#10;{% endif %}{% endfor %}</textarea>
-                            
+
                             <label for="default_sleep_quality" class="form-label mt-3">
                                 <strong>{{ _('settings.sleep_quality_default') }}</strong>
                             </label>
@@ -189,7 +187,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
+
                         <div class="col-12 col-lg-6 mb-3">
                             <label for="sleep_location_options" class="form-label">
                                 <strong>{{ _('settings.sleep_location_label') }}</strong>
@@ -201,7 +199,7 @@
                                       name="sleep_location_options"
                                       class="form-control"
                                       rows="4">{% for l in sleep_meta.locations %}{{ l }}{% if not loop.last %}&#10;{% endif %}{% endfor %}</textarea>
-                            
+
                             <label for="default_sleep_location" class="form-label mt-3">
                                 <strong>{{ _('settings.sleep_location_default') }}</strong>
                             </label>
@@ -212,7 +210,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> {{ _('common.save') }}
                     </button>
@@ -225,44 +223,32 @@
 
 {% block scripts %}
 <script>
-    // Dark Mode Toggle für Settings-Seite
-    // Nur "change" nutzen: bei Checkbox feuern sowohl click als auch change — doppeltes
-    // toggleTheme() würde das Theme sofort wieder zurücksetzen (Schalter wirkte tot).
     (function() {
         const darkModeToggle = document.getElementById('darkModeToggle');
         const html = document.documentElement;
-        
-        if (!darkModeToggle) {
-            return;
-        }
-        
+
+        if (!darkModeToggle) return;
+
         function applyTheme(theme) {
             const t = theme === 'dark' ? 'dark' : 'light';
             html.setAttribute('data-theme', t);
             localStorage.setItem('theme', t);
             darkModeToggle.checked = (t === 'dark');
         }
-        
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            applyTheme(savedTheme);
-        }
-        
+
         darkModeToggle.addEventListener('change', function() {
             applyTheme(darkModeToggle.checked ? 'dark' : 'light');
         });
-        
-        loadTheme();
+
+        applyTheme(localStorage.getItem('theme') || 'light');
     })();
-    
-    // Versionsprüfung
+
     (function() {
         const checkVersionBtn = document.getElementById('checkVersionBtn');
         const versionCheckResult = document.getElementById('versionCheckResult');
-        
+
         if (!checkVersionBtn) return;
-        
-        // Übersetzungen für JavaScript
+
         const translations = {
             checking: {{ _('settings.checking') | tojson }},
             update_available: {{ _('settings.update_available') | tojson }},
@@ -273,44 +259,30 @@
             check_failed: {{ _('settings.check_failed') | tojson }},
             unknown_error: {{ _('settings.unknown_error') | tojson }}
         };
-        
+
         checkVersionBtn.addEventListener('click', function() {
             const btn = this;
             const originalText = btn.innerHTML;
-            
-            // Button deaktivieren und Loading-Status anzeigen
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${translations.checking}`;
-            
-            // Versionsprüfung durchführen
+
             fetch('{{ url_for("settings.check_version") }}')
                 .then(response => response.json())
                 .then(data => {
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                     versionCheckResult.style.display = 'block';
-                    
                     if (data.success) {
                         if (data.update_available) {
                             versionCheckResult.className = 'mt-3 alert alert-warning';
-                            versionCheckResult.innerHTML = `
-                                <strong>${translations.update_available}</strong><br>
-                                ${translations.latest_version}: <strong>${data.latest_version}</strong><br>
-                                <small class="text-muted">${translations.current_version}: ${data.current_version}</small>
-                            `;
+                            versionCheckResult.innerHTML = `<strong>${translations.update_available}</strong><br>${translations.latest_version}: <strong>${data.latest_version}</strong><br><small class="text-muted">${translations.current_version}: ${data.current_version}</small>`;
                         } else {
                             versionCheckResult.className = 'mt-3 alert alert-success';
-                            versionCheckResult.innerHTML = `
-                                <strong>${translations.up_to_date}</strong><br>
-                                <small class="text-muted">${translations.running_latest}: ${data.current_version}</small>
-                            `;
+                            versionCheckResult.innerHTML = `<strong>${translations.up_to_date}</strong><br><small class="text-muted">${translations.running_latest}: ${data.current_version}</small>`;
                         }
                     } else {
                         versionCheckResult.className = 'mt-3 alert alert-danger';
-                        versionCheckResult.innerHTML = `
-                            <strong>${translations.check_failed}</strong><br>
-                            <small>${data.message || translations.unknown_error}</small>
-                        `;
+                        versionCheckResult.innerHTML = `<strong>${translations.check_failed}</strong><br><small>${data.message || translations.unknown_error}</small>`;
                     }
                 })
                 .catch(error => {
@@ -318,13 +290,9 @@
                     btn.innerHTML = originalText;
                     versionCheckResult.style.display = 'block';
                     versionCheckResult.className = 'mt-3 alert alert-danger';
-                    versionCheckResult.innerHTML = `
-                        <strong>${translations.check_failed}</strong><br>
-                        <small>${error.message || translations.unknown_error}</small>
-                    `;
+                    versionCheckResult.innerHTML = `<strong>${translations.check_failed}</strong><br><small>${error.message || translations.unknown_error}</small>`;
                 });
         });
     })();
 </script>
 {% endblock %}
-
