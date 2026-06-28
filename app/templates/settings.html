@@ -132,6 +132,35 @@
         </div>
     </div>
 
+    <!-- Backup wiederherstellen -->
+    <div class="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
+        <div class="card card-modern h-100 border-warning">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-upload me-2"></i>{{ _('settings.restore_title') }}
+                </h5>
+                <p class="text-muted small mb-3">{{ _('settings.restore_desc') }}</p>
+                <form method="POST" action="{{ url_for('settings.restore_backup') }}" enctype="multipart/form-data" id="restoreForm">
+                    <div class="mb-3">
+                        <input type="file" class="form-control form-control-sm" id="backup_file" name="backup_file" accept=".json" required>
+                    </div>
+                    <div class="alert alert-warning p-2 mb-3" style="font-size: 0.8rem;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>{{ _('settings.restore_warning') }}
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirm_restore" name="confirm_restore" value="1" required>
+                        <label class="form-check-label small" for="confirm_restore">
+                            {{ _('settings.restore_confirm_label') }}
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100" onclick="return confirm('{{ _('settings.restore_warning') }}')">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>{{ _('settings.restore_btn') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Schlaf-Einstellungen -->
     <div class="col-12 col-md-12 col-lg-6">
         <div class="card card-modern h-100">

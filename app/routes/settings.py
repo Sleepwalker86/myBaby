@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
 from app.models.models import BabyInfo
 from app.models.database import get_db
+from app.i18n import _
 from datetime import date, datetime
 import os
 import csv
@@ -177,6 +178,7 @@ def export_backup():
         'weight': rows_to_list(db.execute('SELECT * FROM weight ORDER BY timestamp').fetchall()),
         'height': rows_to_list(db.execute('SELECT * FROM height ORDER BY timestamp').fetchall()),
         'illness': rows_to_list(db.execute('SELECT * FROM illness ORDER BY start_time').fetchall()),
+        'night_waking': rows_to_list(db.execute('SELECT * FROM night_waking ORDER BY start_time').fetchall()),
     }
 
     filename = f"mybaby_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -185,6 +187,66 @@ def export_backup():
         mimetype='application/json',
         headers={'Content-Disposition': f'attachment; filename="{filename}"'}
     )
+
+
+def _restore_table(db, table_name, rows):
+    """Löscht Tabelle und füllt sie mit Backup-Daten. Nur vorhandene Spalten werden eingefügt."""
+    db.execute(f'DELETE FROM {table_name}')
+    if not rows:
+        return
+    existing_cols = {row[1] for row in db.execute(f'PRAGMA table_info({table_name})').fetchall()}
+    for row in rows:
+        filtered = {k: v for k, v in row.items() if k in existing_cols}
+        if not filtered:
+            continue
+        cols = ', '.join(f'"{c}"' for c in filtered.keys())
+        placeholders = ', '.join(['?' for _ in filtered])
+        db.execute(f'INSERT INTO {table_name} ({cols}) VALUES ({placeholders})', list(filtered.values()))
+
+
+BACKUP_TABLES = ['sleep', 'feeding', 'bottle', 'diaper', 'temperature', 'medicine',
+                 'porridge', 'weight', 'height', 'illness', 'night_waking', 'baby_info']
+
+
+@bp.route('/restore', methods=['POST'])
+def restore_backup():
+    """Stellt alle Daten aus einem JSON-Backup wieder her"""
+    if 'backup_file' not in request.files or request.files['backup_file'].filename == '':
+        flash(_('settings.restore_error_no_file'), 'error')
+        return redirect(url_for('settings.settings'))
+
+    if not request.form.get('confirm_restore'):
+        flash(_('settings.restore_error_no_confirm'), 'error')
+        return redirect(url_for('settings.settings'))
+
+    file = request.files['backup_file']
+    if not file.filename.lower().endswith('.json'):
+        flash(_('settings.restore_error_invalid_format'), 'error')
+        return redirect(url_for('settings.settings'))
+
+    try:
+        content = file.read(10 * 1024 * 1024)  # max 10 MB
+        backup = json.loads(content.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+        flash(_('settings.restore_error_invalid_json'), 'error')
+        return redirect(url_for('settings.settings'))
+
+    if not isinstance(backup, dict) or 'exported_at' not in backup:
+        flash(_('settings.restore_error_invalid_format'), 'error')
+        return redirect(url_for('settings.settings'))
+
+    db = get_db()
+    try:
+        for table in BACKUP_TABLES:
+            _restore_table(db, table, backup.get(table, []))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        flash(f"{_('settings.restore_error_db')}: {e}", 'error')
+        return redirect(url_for('settings.settings'))
+
+    flash(_('settings.restore_success'), 'success')
+    return redirect(url_for('settings.settings'))
 
 
 @bp.route('/check-version')
