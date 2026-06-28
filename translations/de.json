@@ -82,7 +82,8 @@
   "diaper": {
     "wet": "Windel (nass)",
     "solid": "Windel (groß)",
-    "both": "Windel (beides)"
+    "both": "Windel (beides)",
+    "title": "Windel"
   },
   "temperature": {
     "title": "Temperatur",
