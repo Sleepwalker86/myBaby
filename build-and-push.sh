@@ -10,10 +10,14 @@ set -e
 DOCKER_USER="sleepwalker86"
 IMAGE_NAME="mybaby"
 
-# Version aus Argument oder Standard verwenden
+# Version aus Argument oder VERSION-Datei verwenden
 if [ -z "$1" ]; then
-    VERSION="v1.0.0"
-    echo "⚠️  Keine Version angegeben, verwende Standard: ${VERSION}"
+    VERSION=$(cat "$(dirname "$0")/VERSION" 2>/dev/null)
+    if [ -z "$VERSION" ]; then
+        echo "❌ Keine Version angegeben und keine VERSION-Datei gefunden."
+        exit 1
+    fi
+    echo "📋 Version aus VERSION-Datei: ${VERSION}"
 else
     VERSION="$1"
     # Entferne 'v' Präfix falls vorhanden und füge es wieder hinzu für Konsistenz
