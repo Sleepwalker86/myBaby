@@ -775,25 +775,25 @@
         <div class="col-4 mb-3">
             <!-- Schlaf -->
             {% if active_sleep %}
-            <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2 client-tz-submit" data-inject-client-now="end_time">
-                <button type="submit" class="btn btn-sleep btn-large w-100">
+            <form id="endSleepFormDirect" method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2 client-tz-submit" data-inject-client-now="end_time">
+                <button type="button" class="btn btn-sleep btn-large w-100 sleep-action-btn" data-form-id="endSleepFormDirect" data-modal="#endSleepModal">
                     <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
                     <small>{{ _('sleep.end_sleep') }}</small>
                 </button>
             </form>
             {% endif %}
             <!-- Buttons zum Starten eines neuen Schlafs sind immer sichtbar (auch für nachträgliche Einträge) -->
-            <button type="button" class="btn btn-nap btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startNapModal">
+            <button type="button" class="btn btn-nap btn-large w-100 mb-2 sleep-action-btn" data-action-url="{{ url_for('sleep.start_nap') }}" data-action-field="start_time" data-modal="#startNapModal">
                 <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('sleep.nap') }}</small>
             </button>
-            <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startNightSleepModal">
+            <button type="button" class="btn btn-sleep btn-large w-100 mb-2 sleep-action-btn" data-action-url="{{ url_for('sleep.start_night_sleep') }}" data-action-field="start_time" data-modal="#startNightSleepModal">
                 <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('sleep.night_sleep') }}</small>
             </button>
             <!-- Nächtliches Aufwachen -->
             {% if active_night_waking %}
-            <button type="button" class="btn btn-warning btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#endNightWakingModal">
+            <button type="button" class="btn btn-warning btn-large w-100 mb-2 sleep-action-btn" data-action-url="{{ url_for('sleep.end_night_waking') }}" data-action-field="end_time" data-modal="#endNightWakingModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; color: var(--color-warning);">
                     <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                     <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
@@ -805,7 +805,7 @@
                 <small>{{ _('sleep.end_night_waking') }}</small>
             </button>
             {% endif %}
-            <button type="button" class="btn btn-danger btn-large w-100" data-bs-toggle="modal" data-bs-target="#startNightWakingModal">
+            <button type="button" class="btn btn-danger btn-large w-100 sleep-action-btn" data-action-url="{{ url_for('sleep.start_night_waking') }}" data-action-field="start_time" data-modal="#startNightWakingModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; color: var(--color-warning);">
                     <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                     <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
@@ -877,33 +877,33 @@
         <!-- Spalte 3 -->
         <div class="col-4 mb-3">
             <!-- Windel -->
-            <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
-                <input type="hidden" name="type" value="nass">
-                <button type="submit" class="btn btn-diaper btn-large w-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
-                        <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
-                    </svg><br>
-                    <small>{{ _('diaper.wet') }}</small>
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
-                <input type="hidden" name="type" value="groß">
-                <button type="submit" class="btn btn-diaper btn-large w-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
-                        <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
-                    </svg><br>
-                    <small>{{ _('diaper.solid') }}</small>
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('diaper.create') }}" class="mb-2">
-                <input type="hidden" name="type" value="beides">
-                <button type="submit" class="btn btn-diaper btn-large w-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
-                        <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
-                    </svg><br>
-                    <small>{{ _('diaper.both') }}</small>
-                </button>
-            </form>
+            <button type="button" class="btn btn-diaper btn-large w-100 mb-2 diaper-action-btn"
+                data-form-id="diaperFormNass"
+                data-diaper-type="nass"
+                data-modal="#diaperTimeModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                    <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
+                </svg><br>
+                <small>{{ _('diaper.wet') }}</small>
+            </button>
+            <button type="button" class="btn btn-diaper btn-large w-100 mb-2 diaper-action-btn"
+                data-form-id="diaperFormGross"
+                data-diaper-type="groß"
+                data-modal="#diaperTimeModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                    <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
+                </svg><br>
+                <small>{{ _('diaper.solid') }}</small>
+            </button>
+            <button type="button" class="btn btn-diaper btn-large w-100 mb-2 diaper-action-btn"
+                data-form-id="diaperFormBeides"
+                data-diaper-type="beides"
+                data-modal="#diaperTimeModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
+                    <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
+                </svg><br>
+                <small>{{ _('diaper.both') }}</small>
+            </button>
             <!-- Temperatur -->
             <button type="button" class="btn btn-temperature btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#temperatureModal">
                 <i class="bi bi-thermometer-half" style="font-size: 1.5rem;"></i><br>
@@ -1591,12 +1591,23 @@
                 <h5 class="modal-title">{{ _('bottle.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('bottle.create') }}">
+            <form method="POST" action="{{ url_for('bottle.create') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="amount" class="form-label">{{ _('bottle.amount_ml') }}</label>
-                        <input type="number" class="form-control form-control-lg" id="amount" name="amount" 
+                        <input type="number" class="form-control form-control-lg" id="amount" name="amount"
                                min="1" max="500" value="100" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bottle_timestamp" class="form-label">{{ _('common.time') }}</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="bottle_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="bottle_timestamp" name="timestamp" required>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="bottle_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1616,7 +1627,7 @@
                 <h5 class="modal-title">{{ _('porridge.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('porridge.create') }}">
+            <form method="POST" action="{{ url_for('porridge.create') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="porridgeAmount" class="form-label">{{ _('porridge.amount_g') }}</label>
@@ -1627,6 +1638,17 @@
                         <label for="porridgeFood" class="form-label">{{ _('porridge.food_optional') }}</label>
                         <input type="text" class="form-control" id="porridgeFood" name="food"
                                placeholder="z.B. Karotte, Apfel…" maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="porridge_timestamp" class="form-label">{{ _('common.time') }}</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="porridge_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="porridge_timestamp" name="timestamp" required>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="porridge_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1739,17 +1761,28 @@
                 <h5 class="modal-title">{{ _('medicine.title') }} {{ _('common.record') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('medicine.create') }}">
+            <form method="POST" action="{{ url_for('medicine.create') }}" class="client-tz-submit">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="name" class="form-label">{{ _('medicine.name') }}</label>
-                        <input type="text" class="form-control form-control-lg" id="name" name="name" 
+                        <input type="text" class="form-control form-control-lg" id="name" name="name"
                                required autofocus>
                     </div>
                     <div class="mb-3">
                         <label for="dose" class="form-label">{{ _('medicine.dose') }}</label>
-                        <input type="text" class="form-control form-control-lg" id="dose" name="dose" 
+                        <input type="text" class="form-control form-control-lg" id="dose" name="dose"
                                placeholder="{{ _('medicine.dose_placeholder') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="medicine_timestamp" class="form-label">{{ _('common.time') }}</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="medicine_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="medicine_timestamp" name="timestamp" required>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="medicine_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1972,6 +2005,82 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
                     <button type="submit" class="btn btn-primary">{{ _('sleep.end_night_waking') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if active_sleep %}
+<!-- Schlaf Beenden Modal (Zeitauswahl per Langer Druck) -->
+<div class="modal fade" id="endSleepModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('sleep.end_sleep') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="client-tz-submit">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="end_sleep_modal_time" class="form-label">{{ _('common.end_time') }}</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="end_sleep_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="end_sleep_modal_time" name="end_time" required>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="end_sleep_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('sleep.end_sleep') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Versteckte Formulare für direkten Windel-Submit (Short Press) -->
+<form id="diaperFormNass" method="POST" action="{{ url_for('diaper.create') }}" class="client-tz-submit d-none" data-inject-client-now="timestamp">
+    <input type="hidden" name="type" value="nass">
+</form>
+<form id="diaperFormGross" method="POST" action="{{ url_for('diaper.create') }}" class="client-tz-submit d-none" data-inject-client-now="timestamp">
+    <input type="hidden" name="type" value="groß">
+</form>
+<form id="diaperFormBeides" method="POST" action="{{ url_for('diaper.create') }}" class="client-tz-submit d-none" data-inject-client-now="timestamp">
+    <input type="hidden" name="type" value="beides">
+</form>
+
+<!-- Windel Zeitpunkt Modal (Long Press) -->
+<div class="modal fade" id="diaperTimeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('diaper.title') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('diaper.create') }}" class="client-tz-submit">
+                <div class="modal-body">
+                    <input type="hidden" name="type" id="diaperModalType">
+                    <div class="mb-3">
+                        <label for="diaper_timestamp" class="form-label">{{ _('common.time') }}</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary" id="diaper_minus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">-</button>
+                            <div class="flex-grow-1 text-center">
+                                <input type="datetime-local" class="form-control form-control-lg text-center" id="diaper_timestamp" name="timestamp" required>
+                                <small class="text-muted">{{ _('common.adjust_minutes') }}</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="diaper_plus_minute" style="width: 50px; height: 50px; font-size: 1.5rem;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-diaper">{{ _('common.record') }}</button>
                 </div>
             </form>
         </div>
@@ -2414,6 +2523,218 @@
         }
     });
 
+    // Hilfsfunktion: datetime-local auf aktuelle Zeit setzen
+    function setDatetimeLocalNow(inputId) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById(inputId).value =
+            `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+    function adjustDatetimeLocal(inputId, deltaMinutes) {
+        const inp = document.getElementById(inputId);
+        const d = new Date(inp.value);
+        d.setMinutes(d.getMinutes() + deltaMinutes);
+        const pad = n => String(n).padStart(2, '0');
+        inp.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // Flasche Modal Zeit
+    document.getElementById('bottleModal').addEventListener('show.bs.modal', () => setDatetimeLocalNow('bottle_timestamp'));
+    document.getElementById('bottle_plus_minute').addEventListener('click', () => adjustDatetimeLocal('bottle_timestamp', 1));
+    document.getElementById('bottle_minus_minute').addEventListener('click', () => adjustDatetimeLocal('bottle_timestamp', -1));
+
+    // Brei Modal Zeit
+    document.getElementById('porridgeModal').addEventListener('show.bs.modal', () => setDatetimeLocalNow('porridge_timestamp'));
+    document.getElementById('porridge_plus_minute').addEventListener('click', () => adjustDatetimeLocal('porridge_timestamp', 1));
+    document.getElementById('porridge_minus_minute').addEventListener('click', () => adjustDatetimeLocal('porridge_timestamp', -1));
+
+    // Medizin Modal Zeit
+    document.getElementById('medicineModal').addEventListener('show.bs.modal', () => setDatetimeLocalNow('medicine_timestamp'));
+    document.getElementById('medicine_plus_minute').addEventListener('click', () => adjustDatetimeLocal('medicine_timestamp', 1));
+    document.getElementById('medicine_minus_minute').addEventListener('click', () => adjustDatetimeLocal('medicine_timestamp', -1));
+
+    // Windel Modal Zeit
+    document.getElementById('diaperTimeModal').addEventListener('show.bs.modal', () => setDatetimeLocalNow('diaper_timestamp'));
+    document.getElementById('diaper_plus_minute').addEventListener('click', () => adjustDatetimeLocal('diaper_timestamp', 1));
+    document.getElementById('diaper_minus_minute').addEventListener('click', () => adjustDatetimeLocal('diaper_timestamp', -1));
+
+    // Long-Press für Windel-Buttons
+    (function() {
+        const LONG_PRESS_MS = 500;
+
+        function setupDiaperLongPress(btn) {
+            let timer = null;
+            let didLongPress = false;
+            const modalId = btn.dataset.modal;
+            const formId = btn.dataset.formId;
+            const diaperType = btn.dataset.diaperType;
+            const parentModalId = btn.dataset.parentModal;
+
+            function onLongPress() {
+                didLongPress = true;
+                document.getElementById('diaperModalType').value = diaperType;
+                const targetEl = document.querySelector(modalId);
+                if (parentModalId) {
+                    const parentEl = document.querySelector(parentModalId);
+                    bootstrap.Modal.getOrCreateInstance(parentEl).hide();
+                    parentEl.addEventListener('hidden.bs.modal', function openTarget() {
+                        parentEl.removeEventListener('hidden.bs.modal', openTarget);
+                        bootstrap.Modal.getOrCreateInstance(targetEl).show();
+                    });
+                } else {
+                    bootstrap.Modal.getOrCreateInstance(targetEl).show();
+                }
+            }
+
+            function onShortPress() {
+                if (parentModalId) {
+                    bootstrap.Modal.getOrCreateInstance(document.querySelector(parentModalId)).hide();
+                }
+                document.getElementById(formId).requestSubmit();
+            }
+
+            function start() { didLongPress = false; timer = setTimeout(onLongPress, LONG_PRESS_MS); }
+            function end() { clearTimeout(timer); timer = null; if (!didLongPress) onShortPress(); didLongPress = false; }
+            function cancel() { clearTimeout(timer); timer = null; didLongPress = false; }
+
+            btn.addEventListener('touchstart', start, { passive: true });
+            btn.addEventListener('touchend', end);
+            btn.addEventListener('touchcancel', cancel);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', cancel);
+            btn.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        document.querySelectorAll('.diaper-action-btn').forEach(setupDiaperLongPress);
+    })();
+
+    // Initialisiere Zeit für Schlaf-Beenden Modal
+    (function() {
+        const endSleepModal = document.getElementById('endSleepModal');
+        if (endSleepModal) {
+            endSleepModal.addEventListener('show.bs.modal', function() {
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                document.getElementById('end_sleep_modal_time').value =
+                    `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            });
+            document.getElementById('end_sleep_plus_minute').addEventListener('click', function() {
+                const inp = document.getElementById('end_sleep_modal_time');
+                const d = new Date(inp.value); d.setMinutes(d.getMinutes() + 1);
+                const pad = n => String(n).padStart(2, '0');
+                inp.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            });
+            document.getElementById('end_sleep_minus_minute').addEventListener('click', function() {
+                const inp = document.getElementById('end_sleep_modal_time');
+                const d = new Date(inp.value); d.setMinutes(d.getMinutes() - 1);
+                const pad = n => String(n).padStart(2, '0');
+                inp.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            });
+        }
+    })();
+
+    // Long-Press Handler für Schlaf-Buttons
+    (function() {
+        const LONG_PRESS_MS = 500;
+
+        function getCsrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        function submitNow(url, fieldName) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            form.style.display = 'none';
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrf_token';
+            csrf.value = getCsrfToken();
+            form.appendChild(csrf);
+            const timeInput = document.createElement('input');
+            timeInput.type = 'hidden';
+            timeInput.name = fieldName;
+            timeInput.value = new Date().toISOString();
+            form.appendChild(timeInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function dismissParentModal(parentModalId) {
+            if (!parentModalId) return;
+            const el = document.querySelector(parentModalId);
+            if (el) bootstrap.Modal.getOrCreateInstance(el).hide();
+        }
+
+        function setupLongPress(btn) {
+            let timer = null;
+            let didLongPress = false;
+            const modalId = btn.dataset.modal;
+            const actionUrl = btn.dataset.actionUrl;
+            const actionField = btn.dataset.actionField;
+            const formId = btn.dataset.formId;
+            const parentModalId = btn.dataset.parentModal;
+
+            function onLongPress() {
+                didLongPress = true;
+                dismissParentModal(parentModalId);
+                if (modalId) {
+                    const targetEl = document.querySelector(modalId);
+                    if (parentModalId) {
+                        // Warte bis Parent-Modal geschlossen ist, dann öffne Target-Modal
+                        const parentEl = document.querySelector(parentModalId);
+                        parentEl.addEventListener('hidden.bs.modal', function openTarget() {
+                            parentEl.removeEventListener('hidden.bs.modal', openTarget);
+                            bootstrap.Modal.getOrCreateInstance(targetEl).show();
+                        });
+                    } else {
+                        bootstrap.Modal.getOrCreateInstance(targetEl).show();
+                    }
+                }
+            }
+
+            function onShortPress() {
+                dismissParentModal(parentModalId);
+                if (formId) {
+                    const form = document.getElementById(formId);
+                    if (form) form.requestSubmit();
+                } else if (actionUrl && actionField) {
+                    submitNow(actionUrl, actionField);
+                }
+            }
+
+            function start() {
+                didLongPress = false;
+                timer = setTimeout(onLongPress, LONG_PRESS_MS);
+            }
+
+            function end() {
+                clearTimeout(timer);
+                timer = null;
+                if (!didLongPress) onShortPress();
+                didLongPress = false;
+            }
+
+            function cancel() {
+                clearTimeout(timer);
+                timer = null;
+                didLongPress = false;
+            }
+
+            btn.addEventListener('touchstart', start, { passive: true });
+            btn.addEventListener('touchend', end);
+            btn.addEventListener('touchcancel', cancel);
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', cancel);
+            btn.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        document.querySelectorAll('.sleep-action-btn').forEach(setupLongPress);
+    })();
+
     // Auto-Refresh: Seite alle 60 Sekunden neu laden, aber nicht wenn Audio läuft
     function checkAndReload() {
         const audioPlayer = document.getElementById('audioPlayer');
@@ -2444,28 +2765,28 @@
                     <!-- Schlaf -->
                     <div class="col-6 col-md-4">
                         {% if active_sleep %}
-                        <form method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="h-100 client-tz-submit" data-inject-client-now="end_time">
-                            <button type="submit" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+                        <form id="endSleepFormModal" method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="h-100 client-tz-submit" data-inject-client-now="end_time">
+                            <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center sleep-action-btn" style="min-height: 100px;" data-form-id="endSleepFormModal" data-modal="#endSleepModal" data-parent-modal="#quickEntryModal">
                                 <i class="bi bi-moon" style="font-size: 2rem;"></i>
                                 <small class="mt-2">{{ _('sleep.end_sleep') }}</small>
                             </button>
                         </form>
                         {% else %}
-                        <button type="button" class="btn btn-nap w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNapModal" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-nap w-100 h-100 d-flex flex-column align-items-center justify-content-center sleep-action-btn" style="min-height: 100px;" data-action-url="{{ url_for('sleep.start_nap') }}" data-action-field="start_time" data-modal="#startNapModal" data-parent-modal="#quickEntryModal">
                             <i class="bi bi-moon" style="font-size: 2rem;"></i>
                             <small class="mt-2">{{ _('sleep.nap') }}</small>
                         </button>
                         {% endif %}
                     </div>
                     <div class="col-6 col-md-4">
-                        <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNightSleepModal" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-sleep w-100 h-100 d-flex flex-column align-items-center justify-content-center sleep-action-btn" style="min-height: 100px;" data-action-url="{{ url_for('sleep.start_night_sleep') }}" data-action-field="start_time" data-modal="#startNightSleepModal" data-parent-modal="#quickEntryModal">
                             <i class="bi bi-moon-stars" style="font-size: 2rem;"></i>
                             <small class="mt-2">{{ _('sleep.night_sleep') }}</small>
                         </button>
                     </div>
                     {% if active_night_waking %}
                     <div class="col-6 col-md-4">
-                        <button type="button" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#endNightWakingModal" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center sleep-action-btn" style="min-height: 100px;" data-action-url="{{ url_for('sleep.end_night_waking') }}" data-action-field="end_time" data-modal="#endNightWakingModal" data-parent-modal="#quickEntryModal">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; color: var(--color-warning);">
                                 <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                                 <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
@@ -2479,7 +2800,7 @@
                     </div>
                     {% else %}
                     <div class="col-6 col-md-4">
-                        <button type="button" class="btn btn-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;" data-bs-toggle="modal" data-bs-target="#startNightWakingModal" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center sleep-action-btn" style="min-height: 100px;" data-action-url="{{ url_for('sleep.start_night_waking') }}" data-action-field="start_time" data-modal="#startNightWakingModal" data-parent-modal="#quickEntryModal">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; color: var(--color-warning);">
                                 <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                                 <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
@@ -2549,37 +2870,40 @@
                     
                     <!-- Windel -->
                     <div class="col-6 col-md-4">
-                        <form method="POST" action="{{ url_for('diaper.create') }}" class="h-100">
-                            <input type="hidden" name="type" value="nass">
-                            <button type="submit" class="btn btn-diaper w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
-                                    <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
-                                </svg>
-                                <small class="mt-2">{{ _('diaper.wet') }}</small>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-diaper w-100 h-100 d-flex flex-column align-items-center justify-content-center diaper-action-btn" style="min-height: 100px;"
+                            data-form-id="diaperFormNass"
+                            data-diaper-type="nass"
+                            data-modal="#diaperTimeModal"
+                            data-parent-modal="#quickEntryModal">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
+                                <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
+                            </svg>
+                            <small class="mt-2">{{ _('diaper.wet') }}</small>
+                        </button>
                     </div>
                     <div class="col-6 col-md-4">
-                        <form method="POST" action="{{ url_for('diaper.create') }}" class="h-100">
-                            <input type="hidden" name="type" value="groß">
-                            <button type="submit" class="btn btn-diaper w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
-                                    <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
-                                </svg>
-                                <small class="mt-2">{{ _('diaper.solid') }}</small>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-diaper w-100 h-100 d-flex flex-column align-items-center justify-content-center diaper-action-btn" style="min-height: 100px;"
+                            data-form-id="diaperFormGross"
+                            data-diaper-type="groß"
+                            data-modal="#diaperTimeModal"
+                            data-parent-modal="#quickEntryModal">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
+                                <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
+                            </svg>
+                            <small class="mt-2">{{ _('diaper.solid') }}</small>
+                        </button>
                     </div>
                     <div class="col-6 col-md-4">
-                        <form method="POST" action="{{ url_for('diaper.create') }}" class="h-100">
-                            <input type="hidden" name="type" value="beides">
-                            <button type="submit" class="btn btn-diaper w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
-                                    <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
-                                </svg>
-                                <small class="mt-2">{{ _('diaper.both') }}</small>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-diaper w-100 h-100 d-flex flex-column align-items-center justify-content-center diaper-action-btn" style="min-height: 100px;"
+                            data-form-id="diaperFormBeides"
+                            data-diaper-type="beides"
+                            data-modal="#diaperTimeModal"
+                            data-parent-modal="#quickEntryModal">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px;">
+                                <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
+                            </svg>
+                            <small class="mt-2">{{ _('diaper.both') }}</small>
+                        </button>
                     </div>
                     
                     <!-- Temperatur & Medizin -->
