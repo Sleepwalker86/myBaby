@@ -2060,7 +2060,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">{{ _('diaper.title') }}</h5>
+                <h5 class="modal-title">{{ _('diaper.title') }} – <span id="diaperModalTypeLabel"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('diaper.create') }}" class="client-tz-submit">
@@ -2561,6 +2561,11 @@
     // Long-Press für Windel-Buttons
     (function() {
         const LONG_PRESS_MS = 500;
+        const diaperLabels = {
+            'nass': {{ _('diaper.wet') | tojson }},
+            'groß': {{ _('diaper.solid') | tojson }},
+            'beides': {{ _('diaper.both') | tojson }},
+        };
 
         function setupDiaperLongPress(btn) {
             let timer = null;
@@ -2573,6 +2578,7 @@
             function onLongPress() {
                 didLongPress = true;
                 document.getElementById('diaperModalType').value = diaperType;
+                document.getElementById('diaperModalTypeLabel').textContent = diaperLabels[diaperType] || diaperType;
                 const targetEl = document.querySelector(modalId);
                 if (parentModalId) {
                     const parentEl = document.querySelector(parentModalId);
