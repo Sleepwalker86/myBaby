@@ -23,7 +23,7 @@ def create():
         return redirect(url_for('main.index'))
 
     food = request.form.get('food', '').strip() or None
-    timestamp = get_local_now().isoformat()
+    timestamp = normalize_form_datetime(request.form.get('timestamp', '')) or get_local_now().isoformat()
     Porridge.create(timestamp, amount, food)
     msg = _('messages.success.porridge_recorded').format(amount=amount)
     if food:

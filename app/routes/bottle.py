@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Bottle
+from app.form_datetime import normalize_form_datetime
 from datetime import datetime
 import pytz
 
@@ -21,8 +22,8 @@ def create():
     except (ValueError, TypeError):
         flash('Ungültige Menge', 'error')
         return redirect(url_for('main.index'))
-    
-    timestamp = get_local_now().isoformat()
+
+    timestamp = normalize_form_datetime(request.form.get('timestamp', '')) or get_local_now().isoformat()
     Bottle.create(timestamp, amount)
     flash(f'Flasche ({amount} ml) erfasst', 'success')
     return redirect(url_for('main.index'))
