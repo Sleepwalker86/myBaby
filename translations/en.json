@@ -259,7 +259,10 @@
     "restore_error_no_confirm": "Please confirm the restore",
     "restore_error_invalid_json": "Invalid JSON file",
     "restore_error_invalid_format": "Invalid backup format",
-    "restore_error_db": "Database error during restore"
+    "restore_error_db": "Database error during restore",
+    "audio_player": "Audio Player",
+    "audio_player_desc": "Show audio player on the home screen",
+    "saved": "Settings saved"
   },
   "messages": {
     "success": {

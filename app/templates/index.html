@@ -7,14 +7,14 @@
         <div class="col-12">
             <div class="card card-modern">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-1">
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <div style="min-width: 0; flex: 1;">
+                            <h5 class="mb-1 text-truncate">
                                 <i class="bi bi-moon-stars"></i> {{ _('status.sleep_status') }}
                             </h5>
-                            <p class="mb-0 text-muted">{{ _('status.sleep_duration_today') }}: <strong>{{ sleep_duration }}</strong></p>
+                            <p class="mb-0 text-muted text-truncate">{{ _('status.sleep_duration_today') }}: <strong>{{ sleep_duration }}</strong></p>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
                             <span class="status-badge {{ 'sleeping' if active_sleep else 'awake' }}">
                                 {{ sleep_status }}
                             </span>
@@ -40,7 +40,7 @@
                             <i class="bi bi-sun" style="font-size: 2.5rem; color: var(--color-teal-light);"></i>
                         {% endif %}
                     </div>
-                    <div class="fw-bold mb-1">
+                    <div class="fw-bold mb-1 text-truncate">
                         {% if active_sleep %}
                             {% if baby_name %}{{ baby_name }} {{ _('status.sleeps_since') }}{% else %}{{ _('status.sleeps_since')|capitalize }}{% endif %}
                         {% else %}
@@ -67,7 +67,7 @@
                             </g>
                         </svg>
                     </div>
-                    <div class="fw-bold mb-1">{{ _('status.last_feeding') }}</div>
+                    <div class="fw-bold mb-1 text-truncate">{{ _('status.last_feeding') }}</div>
                     <div class="text-muted small">{{ feeding_ago }}</div>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                             <path d="M55,15a1,1,0,0,0-1-1H10a1,1,0,0,0-1,1V31a22.76,22.76,0,0,0,.26,3.42h0v0c.07.46.16.92.25,1.37,0,.15.07.29.1.44.07.3.15.6.23.89s.1.37.16.54.16.52.25.77c.14.41.29.8.45,1.19,0,.12.09.24.14.36.13.3.26.59.4.88,0,.06,0,.11.08.16A22.91,22.91,0,0,0,21.8,51.61l.45.22.69.31.87.35.32.13h0a23,23,0,0,0,15.68,0h0l.33-.14.86-.34.69-.31.45-.22A23,23,0,0,0,52.68,41.07l.09-.19.39-.86.15-.39c.16-.38.3-.76.44-1.16s.17-.51.25-.77.11-.37.16-.55.15-.59.22-.88.08-.3.11-.45c.09-.45.18-.91.25-1.36v0h0A22.76,22.76,0,0,0,55,31ZM52.59,35.1c0,.11-.05.23-.07.34-.13.58-.27,1.15-.44,1.71,0,0,0,.08,0,.12a17,17,0,0,1-.68,1.85.69.69,0,0,1,0,.1A21.06,21.06,0,0,1,40.23,50.31l-.1,0-.27.1a10.36,10.36,0,0,1-1.86-6,10.49,10.49,0,0,1,14.63-9.65C52.61,34.93,52.61,35,52.59,35.1ZM48.5,32A12.37,12.37,0,0,0,43,33.29V22H53v9c0,.61,0,1.21-.09,1.81A12.27,12.27,0,0,0,48.5,32ZM53,20H43V16H53ZM24.14,50.46l-.26-.1-.12,0a21.1,21.1,0,0,1-11.08-11.1l0-.08A18,18,0,0,1,12,37.27s0-.08,0-.11c-.17-.56-.31-1.14-.44-1.72,0-.11-.05-.23-.07-.34s0-.17,0-.25A10.49,10.49,0,0,1,24.14,50.46ZM15.5,32a12.27,12.27,0,0,0-4.41.81C11,32.21,11,31.61,11,31V22h9V32.85A12.46,12.46,0,0,0,15.5,32ZM20,16v4H11V16Zm6.08,35.14A12.46,12.46,0,0,0,22,33.84V16H41V34a1.06,1.06,0,0,0,.11.44,12.45,12.45,0,0,0-3.19,16.7,20.81,20.81,0,0,1-11.84,0Z" fill="currentColor"/>
                         </svg>
                     </div>
-                    <div class="fw-bold mb-1">{{ _('status.last_diaper') }}</div>
+                    <div class="fw-bold mb-1 text-truncate">{{ _('status.last_diaper') }}</div>
                     <div class="text-muted small">{{ diaper_ago }}</div>
                 </div>
             </div>
@@ -928,6 +928,7 @@
     </div>
 
     <!-- Audio-Player -->
+    {% if show_audio_player %}
     <div class="row mb-4">
         <div class="col-12">
             <div class="card card-modern">
@@ -992,6 +993,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Einträge -->
     <div class="row mb-4">
@@ -2612,7 +2614,9 @@
             btn.addEventListener('contextmenu', e => e.preventDefault());
         }
 
-        document.querySelectorAll('.diaper-action-btn').forEach(setupDiaperLongPress);
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.diaper-action-btn').forEach(setupDiaperLongPress);
+        });
     })();
 
     // Initialisiere Zeit für Schlaf-Beenden Modal
@@ -2738,7 +2742,9 @@
             btn.addEventListener('contextmenu', e => e.preventDefault());
         }
 
-        document.querySelectorAll('.sleep-action-btn').forEach(setupLongPress);
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.sleep-action-btn').forEach(setupLongPress);
+        });
     })();
 
     // Auto-Refresh: Seite alle 60 Sekunden neu laden, aber nicht wenn Audio läuft

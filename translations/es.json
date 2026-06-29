@@ -259,7 +259,10 @@
     "restore_error_no_confirm": "Por favor confirma la restauración",
     "restore_error_invalid_json": "Archivo JSON inválido",
     "restore_error_invalid_format": "Formato de copia de seguridad inválido",
-    "restore_error_db": "Error de base de datos durante la restauración"
+    "restore_error_db": "Error de base de datos durante la restauración",
+    "audio_player": "Reproductor de audio",
+    "audio_player_desc": "Mostrar reproductor de audio en la pantalla de inicio",
+    "saved": "Configuración guardada"
   },
   "messages": {
     "success": {

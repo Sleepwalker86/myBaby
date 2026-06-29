@@ -259,7 +259,10 @@
     "restore_error_no_confirm": "Bitte bestätige die Wiederherstellung",
     "restore_error_invalid_json": "Ungültige JSON-Datei",
     "restore_error_invalid_format": "Ungültiges Backup-Format",
-    "restore_error_db": "Datenbankfehler bei der Wiederherstellung"
+    "restore_error_db": "Datenbankfehler bei der Wiederherstellung",
+    "audio_player": "Audio-Player",
+    "audio_player_desc": "Audio-Player auf der Startseite anzeigen",
+    "saved": "Einstellungen gespeichert"
   },
   "messages": {
     "success": {

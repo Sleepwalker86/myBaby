@@ -2110,7 +2110,37 @@ class BabyInfo:
             )
         
         db.commit()
-    
+
+    @staticmethod
+    def get_show_audio_player():
+        """Gibt zurück, ob der Audio-Player auf der Startseite angezeigt werden soll (Standard: True)"""
+        db = get_db()
+        row = db.execute('SELECT show_audio_player FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        if row is None:
+            return True
+        val = row['show_audio_player']
+        if val is None:
+            return True
+        return bool(val)
+
+    @staticmethod
+    def set_show_audio_player(show: bool):
+        """Setzt, ob der Audio-Player auf der Startseite angezeigt werden soll"""
+        db = get_db()
+        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        now_str = datetime.now(tz_berlin).isoformat()
+        if existing:
+            db.execute(
+                'UPDATE baby_info SET show_audio_player = ?, updated_at = ? WHERE id = ?',
+                (1 if show else 0, now_str, existing['id'])
+            )
+        else:
+            db.execute(
+                'INSERT INTO baby_info (name, birth_date, show_audio_player, updated_at) VALUES (?, ?, ?, ?)',
+                ('', (date.today() - timedelta(days=180)).isoformat(), 1 if show else 0, now_str)
+            )
+        db.commit()
+
     @staticmethod
     def get_sleep_recommendations():
         """Gibt die empfohlenen Schlafzeiten basierend auf dem Alter zurück (nach Irina Kaiser / babyschlaffee.de)"""

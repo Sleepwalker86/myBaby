@@ -433,7 +433,8 @@ def index():
     
     # Baby-Name für persönlichere Anzeige
     baby_name = BabyInfo.get_name()
-    
+    show_audio_player = BabyInfo.get_show_audio_player()
+
     return render_template('index.html',
                          sleep_status=sleep_status,
                          sleep_duration=sleep_duration,
@@ -456,6 +457,7 @@ def index():
                          baby_age_months=baby_age_months,
                          baby_name=baby_name,
                          sleep_meta=sleep_meta,
+                         show_audio_player=show_audio_player,
                          now_date=datetime.now(tz_berlin).date().isoformat())
 
 @bp.route('/api/audio-files')

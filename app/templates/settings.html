@@ -59,6 +59,27 @@
 
                 <hr>
 
+                <form method="POST" action="{{ url_for('settings.update_audio_player') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <label class="form-check-label" for="audioPlayerToggle" style="cursor: pointer;">
+                                <strong>{{ _('settings.audio_player') }}</strong>
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                {{ _('settings.audio_player_desc') }}
+                            </small>
+                        </div>
+                        <input class="form-check-input" type="checkbox" id="audioPlayerToggle" role="switch"
+                               style="width: 3em; height: 1.5em; cursor: pointer;"
+                               {{ 'checked' if show_audio_player else '' }}
+                               onchange="this.form.querySelector('[name=show_audio_player]').value = this.checked ? '1' : '0'; this.form.submit();">
+                        <input type="hidden" name="show_audio_player" value="{{ '1' if show_audio_player else '0' }}">
+                    </div>
+                </form>
+
+                <hr>
+
                 <div class="mb-3">
                     <label class="form-label">
                         <strong>{{ _('settings.language') }}</strong>

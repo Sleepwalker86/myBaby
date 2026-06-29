@@ -33,7 +33,8 @@ def settings():
     baby_age_months = BabyInfo.get_age_months() if baby_birth_date else None
     current_version = get_current_version()
     sleep_meta = BabyInfo.get_sleep_meta_settings()
-    
+    show_audio_player = BabyInfo.get_show_audio_player()
+
     return render_template(
         'settings.html',
         baby_name=baby_name,
@@ -41,6 +42,7 @@ def settings():
         baby_age_months=baby_age_months,
         current_version=current_version,
         sleep_meta=sleep_meta,
+        show_audio_player=show_audio_player,
     )
 
 @bp.route('/update', methods=['POST'])
@@ -62,6 +64,15 @@ def update_settings():
     BabyInfo.set_baby_info(name=name if name else None, birth_date=birth_date)
     
     flash('Einstellungen gespeichert', 'success')
+    return redirect(url_for('settings.settings'))
+
+
+@bp.route('/audio-player', methods=['POST'])
+def update_audio_player():
+    """Aktualisiert die Audio-Player Sichtbarkeitseinstellung"""
+    show = request.form.get('show_audio_player') == '1'
+    BabyInfo.set_show_audio_player(show)
+    flash(_('settings.saved'), 'success')
     return redirect(url_for('settings.settings'))
 
 
