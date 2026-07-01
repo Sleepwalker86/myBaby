@@ -2747,15 +2747,15 @@
         });
     })();
 
-    // Auto-Refresh: Seite alle 60 Sekunden neu laden, aber nicht wenn Audio läuft
+    // Auto-Refresh: Seite alle 60 Sekunden neu laden, aber nicht wenn Audio läuft oder ein Modal geöffnet ist
     function checkAndReload() {
         const audioPlayer = document.getElementById('audioPlayer');
-        // Prüfe ob Audio läuft - wenn ja, überspringe den Refresh
-        if (audioPlayer && !audioPlayer.paused) {
-            // Audio läuft - setze Timer neu für nächsten Versuch
+        const isAudioPlaying = audioPlayer && !audioPlayer.paused;
+        const isModalOpen = document.body.classList.contains('modal-open');
+
+        if (isAudioPlaying || isModalOpen) {
             setTimeout(checkAndReload, 60000);
         } else {
-            // Kein Audio läuft - Seite neu laden
             window.location.reload();
         }
     }
