@@ -399,7 +399,7 @@
         </div>
         {% endif %}
 
-        {% if weight_entries or height_entries %}
+        {% if weight_entries or height_entries or head_entries %}
         <!-- Gewicht & Größe / Wachstumskurve -->
         <div class="accordion-item card-modern mb-3 border-0">
             <h2 class="accordion-header">
@@ -431,6 +431,16 @@
                                 <div class="col-6 col-md-3">
                                     <small class="text-muted">{{ _('trends.min') }} / {{ _('trends.max') }} cm</small>
                                     <div class="fw-bold">{{ height_entries | map(attribute='height_cm') | min }} / {{ height_entries | map(attribute='height_cm') | max }}</div>
+                                </div>
+                                {% endif %}
+                                {% if head_entries %}
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted">{{ _('head.latest') }}</small>
+                                    <div class="fw-bold fs-5">{{ head_entries[-1].head_circumference_cm }} cm</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted">{{ _('trends.min') }} / {{ _('trends.max') }} cm</small>
+                                    <div class="fw-bold">{{ head_entries | map(attribute='head_circumference_cm') | min }} / {{ head_entries | map(attribute='head_circumference_cm') | max }}</div>
                                 </div>
                                 {% endif %}
                             </div>
@@ -733,19 +743,22 @@
     }
     {% endif %}
 
-    // Wachstumskurve (Gewicht & Größe kombiniert)
-    {% if weight_entries or height_entries %}
+    // Wachstumskurve (Gewicht, Größe & Kopfumfang kombiniert)
+    {% if weight_entries or height_entries or head_entries %}
     {
         const weightData = {{ weight_entries | tojson }};
         const heightData = {{ height_entries | tojson }};
+        const headData = {{ head_entries | tojson }};
 
         weightData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         heightData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        headData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         // Gemeinsame Labels aus allen Datenpunkten
         const allTimestamps = [
             ...weightData.map(w => w.timestamp),
-            ...heightData.map(h => h.timestamp)
+            ...heightData.map(h => h.timestamp),
+            ...headData.map(h => h.timestamp)
         ];
         allTimestamps.sort();
         const uniqueLabels = [...new Set(allTimestamps.map(ts => {
@@ -791,6 +804,25 @@
                 yAxisID: 'y1'
             });
         }
+        if (headData.length > 0) {
+            const headLabels = headData.map(h => {
+                const dt = new Date(h.timestamp);
+                return dt.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'});
+            });
+            datasets.push({
+                label: '{{ _('head.head_circumference_cm') }}',
+                data: headLabels.map((lbl, i) => ({x: lbl, y: headData[i].head_circumference_cm})),
+                borderColor: 'rgb(237, 137, 54)',
+                backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                borderDash: [6, 4],
+                tension: 0.4,
+                fill: false,
+                borderWidth: isMobileTrends ? 2.5 : 2,
+                pointRadius: isMobileTrends ? 5 : 4,
+                pointHoverRadius: isMobileTrends ? 7 : 6,
+                yAxisID: 'y1'
+            });
+        }
 
         if (datasets.length > 0) {
             const scales = {
@@ -806,8 +838,12 @@
                     max: Math.max(...wVals) + 0.5
                 };
             }
-            if (heightData.length > 0) {
-                const hVals = heightData.map(h => h.height_cm);
+            if (heightData.length > 0 || headData.length > 0) {
+                // Größe und Kopfumfang teilen sich dieselbe cm-Achse (y1)
+                const hVals = [
+                    ...heightData.map(h => h.height_cm),
+                    ...headData.map(h => h.head_circumference_cm)
+                ];
                 scales.y1 = {
                     ...trendsValueAxis(false),
                     position: 'right',

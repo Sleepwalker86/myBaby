@@ -36,7 +36,7 @@ def create_app():
         }
     
     # Routes registrieren
-    from app.routes import main, sleep, feeding, bottle, porridge, diaper, temperature, medicine, illness, edit, trends, entries, settings, i18n, weight, height
+    from app.routes import main, sleep, feeding, bottle, porridge, diaper, temperature, medicine, illness, edit, trends, entries, settings, i18n, weight, height, head
     app.register_blueprint(main.bp)
     app.register_blueprint(sleep.bp)
     app.register_blueprint(feeding.bp)
@@ -53,6 +53,7 @@ def create_app():
     app.register_blueprint(i18n.bp)
     app.register_blueprint(weight.bp)
     app.register_blueprint(height.bp)
+    app.register_blueprint(head.bp)
     
     return app
 

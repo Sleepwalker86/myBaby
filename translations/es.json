@@ -73,6 +73,13 @@
     "notes_optional": "Notas (opcional)",
     "latest": "Última talla"
   },
+  "head": {
+    "title": "Perímetro craneal",
+    "record": "Registrar perímetro craneal",
+    "head_circumference_cm": "Perímetro craneal (cm)",
+    "notes_optional": "Notas (opcional)",
+    "latest": "Último perímetro craneal"
+  },
   "porridge": {
     "title": "Papilla",
     "give": "Dar papilla",
@@ -290,6 +297,9 @@
       "height_recorded": "{height} cm registrado",
       "height_updated": "Registro de talla actualizado",
       "height_deleted": "Registro de talla eliminado",
+      "head_recorded": "{head_circumference} cm registrado",
+      "head_updated": "Registro de perímetro craneal actualizado",
+      "head_deleted": "Registro de perímetro craneal eliminado",
       "illness_recorded": "Enfermedad registrada",
       "illness_updated": "Enfermedad actualizada",
       "sleep_updated": "Registro de sueño actualizado",

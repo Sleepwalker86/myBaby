@@ -16,6 +16,7 @@ Eine einfache, lokale Web-App zum Tracking von Baby-Aktivitäten wie Schlaf, Sti
 - **Stillen & Flasche**: Tracke Stillzeiten (links/rechts) mit optionaler Endzeit und Flaschenmengen
 - **Windel-Tracking**: Dokumentiere Windelwechsel (nass/groß/beides)
 - **Temperatur & Medizin**: Erfasse Fieberwerte und Medikamentengaben
+- **Wachstumstracking**: Gewicht, Größe und Kopfumfang in einer kombinierten Wachstumskurve
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
 - **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
