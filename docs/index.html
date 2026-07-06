@@ -33,6 +33,7 @@
     nav {
       position: sticky; top: 0; z-index: 100;
       background: rgba(15,15,26,0.85);
+      -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 0 2rem;
@@ -111,7 +112,6 @@
       overflow-x: auto;
       padding: 1rem 2rem 2rem;
       scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
     .screenshots-scroll::-webkit-scrollbar { display: none; }
@@ -187,6 +187,12 @@
     }
     code { color: #a8d8a8; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     .comment { color: #5566aa; }
+    .install-footnote {
+      text-align: center; color: var(--text-muted);
+      margin-top: 1.5rem; font-size: 0.9rem;
+    }
+    .install-footnote a { color: var(--primary); }
+    .footer-links { margin-top: 0.5rem; }
 
     /* PRIVACY */
     .privacy-section {
@@ -230,7 +236,7 @@
     <a href="#screenshots">Screenshots</a>
     <a href="#install">Installation</a>
   </div>
-  <a class="nav-cta" href="https://github.com/sleepwalker86/myBaby" target="_blank">GitHub →</a>
+  <a class="nav-cta" href="https://github.com/sleepwalker86/myBaby" target="_blank" rel="noopener">GitHub →</a>
 </nav>
 
 <!-- HERO -->
@@ -240,7 +246,7 @@
   <p>Schlaf, Stillen, Windeln, Brei, Gewicht, Temperatur – alles an einem Ort. Lokal, sicher, ohne Cloud.</p>
   <div class="hero-buttons">
     <a class="btn-primary" href="#install">Jetzt installieren</a>
-    <a class="btn-secondary" href="https://github.com/sleepwalker86/myBaby" target="_blank">⭐ GitHub</a>
+    <a class="btn-secondary" href="https://github.com/sleepwalker86/myBaby" target="_blank" rel="noopener">⭐ GitHub</a>
   </div>
 </section>
 
@@ -374,8 +380,8 @@ docker-compose up -d
 docker-compose down</code></pre>
   </div>
 
-  <p style="text-align:center; color: var(--text-muted); margin-top: 1.5rem; font-size: 0.9rem;">
-    Mehr Details im <a href="https://github.com/sleepwalker86/myBaby" style="color: var(--primary);">GitHub Repository</a>
+  <p class="install-footnote">
+    Mehr Details im <a href="https://github.com/sleepwalker86/myBaby">GitHub Repository</a>
   </p>
 </section>
 
@@ -395,9 +401,9 @@ docker-compose down</code></pre>
 <!-- FOOTER -->
 <footer>
   <p>myBaby – Open Source Baby-Tracking App</p>
-  <p style="margin-top: 0.5rem;">
-    <a href="https://github.com/sleepwalker86/myBaby" target="_blank">GitHub</a> ·
-    <a href="https://hub.docker.com/r/sleepwalker86/mybaby" target="_blank">Docker Hub</a>
+  <p class="footer-links">
+    <a href="https://github.com/sleepwalker86/myBaby" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://hub.docker.com/r/sleepwalker86/mybaby" target="_blank" rel="noopener">Docker Hub</a>
   </p>
 </footer>
 
