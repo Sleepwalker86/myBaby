@@ -2569,9 +2569,13 @@
             'beides': {{ _('diaper.both') | tojson }},
         };
 
+        const MOVE_THRESHOLD_PX = 10;
+
         function setupDiaperLongPress(btn) {
             let timer = null;
             let didLongPress = false;
+            let startX = 0, startY = 0;
+            let scrolled = false;
             const modalId = btn.dataset.modal;
             const formId = btn.dataset.formId;
             const diaperType = btn.dataset.diaperType;
@@ -2601,11 +2605,30 @@
                 document.getElementById(formId).requestSubmit();
             }
 
-            function start() { didLongPress = false; timer = setTimeout(onLongPress, LONG_PRESS_MS); }
-            function end() { clearTimeout(timer); timer = null; if (!didLongPress) onShortPress(); didLongPress = false; }
-            function cancel() { clearTimeout(timer); timer = null; didLongPress = false; }
+            function start(e) {
+                didLongPress = false;
+                scrolled = false;
+                if (e.touches && e.touches.length) {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }
+                timer = setTimeout(onLongPress, LONG_PRESS_MS);
+            }
+            function move(e) {
+                if (!e.touches || !e.touches.length) return;
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD_PX) {
+                    scrolled = true;
+                    clearTimeout(timer);
+                    timer = null;
+                }
+            }
+            function end() { clearTimeout(timer); timer = null; if (!didLongPress && !scrolled) onShortPress(); didLongPress = false; scrolled = false; }
+            function cancel() { clearTimeout(timer); timer = null; didLongPress = false; scrolled = false; }
 
             btn.addEventListener('touchstart', start, { passive: true });
+            btn.addEventListener('touchmove', move, { passive: true });
             btn.addEventListener('touchend', end);
             btn.addEventListener('touchcancel', cancel);
             btn.addEventListener('mousedown', start);
@@ -2678,9 +2701,13 @@
             if (el) bootstrap.Modal.getOrCreateInstance(el).hide();
         }
 
+        const MOVE_THRESHOLD_PX = 10;
+
         function setupLongPress(btn) {
             let timer = null;
             let didLongPress = false;
+            let startX = 0, startY = 0;
+            let scrolled = false;
             const modalId = btn.dataset.modal;
             const actionUrl = btn.dataset.actionUrl;
             const actionField = btn.dataset.actionField;
@@ -2715,25 +2742,44 @@
                 }
             }
 
-            function start() {
+            function start(e) {
                 didLongPress = false;
+                scrolled = false;
+                if (e.touches && e.touches.length) {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }
                 timer = setTimeout(onLongPress, LONG_PRESS_MS);
+            }
+
+            function move(e) {
+                if (!e.touches || !e.touches.length) return;
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+                if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD_PX) {
+                    scrolled = true;
+                    clearTimeout(timer);
+                    timer = null;
+                }
             }
 
             function end() {
                 clearTimeout(timer);
                 timer = null;
-                if (!didLongPress) onShortPress();
+                if (!didLongPress && !scrolled) onShortPress();
                 didLongPress = false;
+                scrolled = false;
             }
 
             function cancel() {
                 clearTimeout(timer);
                 timer = null;
                 didLongPress = false;
+                scrolled = false;
             }
 
             btn.addEventListener('touchstart', start, { passive: true });
+            btn.addEventListener('touchmove', move, { passive: true });
             btn.addEventListener('touchend', end);
             btn.addEventListener('touchcancel', cancel);
             btn.addEventListener('mousedown', start);
