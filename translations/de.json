@@ -77,6 +77,13 @@
     "percentile_range": "WHO P3–P97 (Größe)",
     "percentile_median": "WHO P50 (Größe)"
   },
+  "head": {
+    "title": "Kopfumfang",
+    "record": "Kopfumfang erfassen",
+    "head_circumference_cm": "Kopfumfang (cm)",
+    "notes_optional": "Notizen (optional)",
+    "latest": "Letzter Kopfumfang"
+  },
   "porridge": {
     "title": "Brei",
     "give": "Brei geben",
@@ -299,6 +306,9 @@
       "height_recorded": "{height} cm erfasst",
       "height_updated": "Größeneintrag aktualisiert",
       "height_deleted": "Größeneintrag gelöscht",
+      "head_recorded": "{head_circumference} cm erfasst",
+      "head_updated": "Kopfumfang-Eintrag aktualisiert",
+      "head_deleted": "Kopfumfang-Eintrag gelöscht",
       "illness_recorded": "Erkrankung erfasst",
       "illness_updated": "Erkrankung aktualisiert",
       "sleep_updated": "Schlaf-Eintrag aktualisiert",

@@ -1245,6 +1245,65 @@ class Height:
         db.commit()
 
 
+class HeadCircumference:
+    """Kopfumfang-Tracking"""
+
+    @staticmethod
+    def create(timestamp, head_circumference_cm, notes=None):
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO head_circumference (timestamp, head_circumference_cm, notes) VALUES (?, ?, ?)',
+            (timestamp, head_circumference_cm, notes)
+        )
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def get_all():
+        db = get_db()
+        rows = db.execute('SELECT * FROM head_circumference ORDER BY timestamp ASC').fetchall()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def get_by_id(head_circumference_id):
+        db = get_db()
+        row = db.execute('SELECT * FROM head_circumference WHERE id = ?', (head_circumference_id,)).fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def get_latest():
+        db = get_db()
+        row = db.execute('SELECT * FROM head_circumference ORDER BY timestamp DESC LIMIT 1').fetchone()
+        return dict(row) if row else None
+
+    @staticmethod
+    def update(head_circumference_id, timestamp, head_circumference_cm, notes=None):
+        db = get_db()
+        db.execute(
+            'UPDATE head_circumference SET timestamp = ?, head_circumference_cm = ?, notes = ? WHERE id = ?',
+            (timestamp, head_circumference_cm, notes, head_circumference_id)
+        )
+        db.commit()
+
+    @staticmethod
+    def delete(head_circumference_id):
+        db = get_db()
+        db.execute('DELETE FROM head_circumference WHERE id = ?', (head_circumference_id,))
+        db.commit()
+
+    @staticmethod
+    def get_in_range(start_date, end_date):
+        db = get_db()
+        from datetime import datetime as _dt
+        start_str = _dt.combine(start_date, _dt.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
+        end_str = _dt.combine(end_date, _dt.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
+        rows = db.execute(
+            'SELECT * FROM head_circumference WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
+            (start_str, end_str)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
 def get_all_entries_today(selected_date=None):
     """Gibt alle Einträge eines bestimmten Tages chronologisch zurück"""
     db = get_db()
@@ -1554,6 +1613,23 @@ def get_all_entries_today(selected_date=None):
             'display': f"Größe ({row['height_cm']} cm)"
         })
 
+    # Kopfumfang
+    head_circumference_rows = db.execute(
+        '''SELECT id, timestamp, head_circumference_cm, notes
+           FROM head_circumference
+           WHERE timestamp >= ? AND timestamp <= ?''',
+        (day_start_str, day_end_str)
+    ).fetchall()
+    for row in head_circumference_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'head_circumference',
+            'timestamp': row['timestamp'],
+            'head_circumference_cm': row['head_circumference_cm'],
+            'notes': row['notes'],
+            'display': f"Kopfumfang ({row['head_circumference_cm']} cm)"
+        })
+
     # Sortiere nach Zeitstempel
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
     return entries
@@ -1784,6 +1860,22 @@ def get_all_entries_date_range(start_date, end_date):
             'height_cm': row['height_cm'],
             'notes': row['notes'],
             'display': f"Größe ({row['height_cm']} cm)"
+        })
+
+    # Kopfumfang im Bereich
+    head_circumference_rows = db.execute(
+        '''SELECT id, timestamp, head_circumference_cm, notes
+           FROM head_circumference WHERE timestamp >= ? AND timestamp <= ?''',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    for row in head_circumference_rows:
+        entries.append({
+            'id': row['id'],
+            'category': 'head_circumference',
+            'timestamp': row['timestamp'],
+            'head_circumference_cm': row['head_circumference_cm'],
+            'notes': row['notes'],
+            'display': f"Kopfumfang ({row['head_circumference_cm']} cm)"
         })
 
     return entries

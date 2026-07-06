@@ -61,6 +61,9 @@ def translate_entry_display(entry):
     elif category == 'height':
         height_cm = entry.get('height_cm', 0)
         return _('height.title') + f" ({height_cm} cm)"
+    elif category == 'head_circumference':
+        head_circumference_cm = entry.get('head_circumference_cm', 0)
+        return _('head.title') + f" ({head_circumference_cm} cm)"
 
     # Fallback: Original display verwenden
     return entry.get('display', '')

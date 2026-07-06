@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness, Weight, Height, BabyInfo
+from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness, Weight, Height, HeadCircumference, BabyInfo
 from app.models.growth_reference import get_weight_percentiles, get_height_percentiles
 from datetime import datetime, date, timedelta
 
@@ -66,9 +66,10 @@ def trends():
     # Erkrankungs-Statistiken holen
     illness_stats = Illness.get_illness_statistics(start_date, end_date)
 
-    # Gewichts- und Größen-Daten holen (alle, nicht nur im Zeitraum – für Wachstumskurve)
+    # Gewichts-, Größen- und Kopfumfang-Daten holen (alle, nicht nur im Zeitraum – für Wachstumskurve)
     weight_entries = Weight.get_all()
     height_entries = Height.get_all()
+    head_entries = HeadCircumference.get_all()
 
     # WHO-Perzentilen ergänzen, sofern Geschlecht und Geburtsdatum gesetzt sind.
     # Ohne Geschlecht bleibt das Chart exakt wie bisher (keine Bänder, kein Fehler).
@@ -85,6 +86,7 @@ def trends():
                          illness_stats=illness_stats,
                          weight_entries=weight_entries,
                          height_entries=height_entries,
+                         head_entries=head_entries,
                          start_date=start_date,
                          end_date=end_date)
 
