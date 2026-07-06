@@ -73,6 +73,13 @@
     "notes_optional": "Notes (optional)",
     "latest": "Latest height"
   },
+  "head": {
+    "title": "Head circumference",
+    "record": "Record head circumference",
+    "head_circumference_cm": "Head circumference (cm)",
+    "notes_optional": "Notes (optional)",
+    "latest": "Latest head circumference"
+  },
   "porridge": {
     "title": "Porridge",
     "give": "Give Porridge",
@@ -290,6 +297,9 @@
       "height_recorded": "{height} cm recorded",
       "height_updated": "Height entry updated",
       "height_deleted": "Height entry deleted",
+      "head_recorded": "{head_circumference} cm recorded",
+      "head_updated": "Head circumference entry updated",
+      "head_deleted": "Head circumference entry deleted",
       "illness_recorded": "Illness recorded",
       "illness_updated": "Illness updated",
       "sleep_updated": "Sleep entry updated",

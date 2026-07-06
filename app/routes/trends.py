@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness, Weight, Height
+from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness, Weight, Height, HeadCircumference
 from datetime import datetime, date, timedelta
 
 bp = Blueprint('trends', __name__, url_prefix='/trends')
@@ -44,9 +44,10 @@ def trends():
     # Erkrankungs-Statistiken holen
     illness_stats = Illness.get_illness_statistics(start_date, end_date)
 
-    # Gewichts- und Größen-Daten holen (alle, nicht nur im Zeitraum – für Wachstumskurve)
+    # Gewichts-, Größen- und Kopfumfang-Daten holen (alle, nicht nur im Zeitraum – für Wachstumskurve)
     weight_entries = Weight.get_all()
     height_entries = Height.get_all()
+    head_entries = HeadCircumference.get_all()
 
     return render_template('trends.html',
                          stats=stats,
@@ -56,6 +57,7 @@ def trends():
                          illness_stats=illness_stats,
                          weight_entries=weight_entries,
                          height_entries=height_entries,
+                         head_entries=head_entries,
                          start_date=start_date,
                          end_date=end_date)
 
