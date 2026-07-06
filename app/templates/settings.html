@@ -32,6 +32,15 @@
                         </small>
                         {% endif %}
                     </div>
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">{{ _('settings.gender') }}</label>
+                        <select class="form-select" id="gender" name="gender">
+                            <option value="" {% if not baby_gender %}selected{% endif %}>{{ _('settings.gender_unspecified') }}</option>
+                            <option value="m" {% if baby_gender == 'm' %}selected{% endif %}>{{ _('settings.gender_boy') }}</option>
+                            <option value="f" {% if baby_gender == 'f' %}selected{% endif %}>{{ _('settings.gender_girl') }}</option>
+                        </select>
+                        <small class="form-text text-muted">{{ _('settings.gender_hint') }}</small>
+                    </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> {{ _('common.save') }}
                     </button>

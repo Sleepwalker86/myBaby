@@ -64,14 +64,18 @@
     "weight_kg": "Gewicht (kg)",
     "notes_optional": "Notizen (optional)",
     "growth_chart": "Wachstum",
-    "latest": "Letztes Gewicht"
+    "latest": "Letztes Gewicht",
+    "percentile_range": "WHO P3–P97 (Gewicht)",
+    "percentile_median": "WHO P50 (Gewicht)"
   },
   "height": {
     "title": "Größe",
     "record": "Größe erfassen",
     "height_cm": "Größe (cm)",
     "notes_optional": "Notizen (optional)",
-    "latest": "Letzte Größe"
+    "latest": "Letzte Größe",
+    "percentile_range": "WHO P3–P97 (Größe)",
+    "percentile_median": "WHO P50 (Größe)"
   },
   "porridge": {
     "title": "Brei",
@@ -216,6 +220,11 @@
     "name": "Name",
     "name_placeholder": "Name des Kindes",
     "birth_date": "Geburtsdatum",
+    "gender": "Geschlecht",
+    "gender_unspecified": "– keine Angabe –",
+    "gender_boy": "Junge",
+    "gender_girl": "Mädchen",
+    "gender_hint": "Voraussetzung für die WHO-Perzentilkurven in den Trends (Gewicht/Größe)",
     "age": "Alter",
     "month": "Monat",
     "months": "Monate",
