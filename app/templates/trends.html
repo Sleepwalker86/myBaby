@@ -773,6 +773,39 @@
                 const dt = new Date(w.timestamp);
                 return dt.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'});
             });
+            // WHO-Perzentilband: nur vorhanden, wenn Geschlecht in den Einstellungen gesetzt ist
+            // (siehe app/routes/trends.py, _attach_percentiles). Zuerst gepusht, damit es
+            // im Chart hinter der eigenen Kurve liegt.
+            if (weightData[0].p3 !== undefined) {
+                datasets.push({
+                    label: '{{ _('weight.percentile_range') }}',
+                    data: weightLabels.map((lbl, i) => ({x: lbl, y: weightData[i].p97})),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(99, 179, 237, 0.08)',
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y'
+                });
+                datasets.push({
+                    label: '{{ _('weight.percentile_range') }}',
+                    data: weightLabels.map((lbl, i) => ({x: lbl, y: weightData[i].p3})),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(99, 179, 237, 0.08)',
+                    pointRadius: 0,
+                    fill: '-1',
+                    yAxisID: 'y'
+                });
+                datasets.push({
+                    label: '{{ _('weight.percentile_median') }}',
+                    data: weightLabels.map((lbl, i) => ({x: lbl, y: weightData[i].p50})),
+                    borderColor: 'rgba(99, 179, 237, 0.45)',
+                    borderDash: [3, 3],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y'
+                });
+            }
             datasets.push({
                 label: '{{ _('weight.weight_kg') }}',
                 data: weightLabels.map((lbl, i) => ({x: lbl, y: weightData[i].weight_kg})),
@@ -791,6 +824,36 @@
                 const dt = new Date(h.timestamp);
                 return dt.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric'});
             });
+            if (heightData[0].p3 !== undefined) {
+                datasets.push({
+                    label: '{{ _('height.percentile_range') }}',
+                    data: heightLabels.map((lbl, i) => ({x: lbl, y: heightData[i].p97})),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(104, 211, 145, 0.1)',
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y1'
+                });
+                datasets.push({
+                    label: '{{ _('height.percentile_range') }}',
+                    data: heightLabels.map((lbl, i) => ({x: lbl, y: heightData[i].p3})),
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(104, 211, 145, 0.1)',
+                    pointRadius: 0,
+                    fill: '-1',
+                    yAxisID: 'y1'
+                });
+                datasets.push({
+                    label: '{{ _('height.percentile_median') }}',
+                    data: heightLabels.map((lbl, i) => ({x: lbl, y: heightData[i].p50})),
+                    borderColor: 'rgba(104, 211, 145, 0.5)',
+                    borderDash: [3, 3],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y1'
+                });
+            }
             datasets.push({
                 label: '{{ _('height.height_cm') }}',
                 data: heightLabels.map((lbl, i) => ({x: lbl, y: heightData[i].height_cm})),
@@ -830,6 +893,9 @@
             };
             if (weightData.length > 0) {
                 const wVals = weightData.map(w => w.weight_kg);
+                if (weightData[0].p3 !== undefined) {
+                    wVals.push(...weightData.map(w => w.p3), ...weightData.map(w => w.p97));
+                }
                 scales.y = {
                     ...trendsValueAxis(false),
                     position: 'left',
@@ -844,6 +910,9 @@
                     ...heightData.map(h => h.height_cm),
                     ...headData.map(h => h.head_circumference_cm)
                 ];
+                if (heightData.length > 0 && heightData[0].p3 !== undefined) {
+                    hVals.push(...heightData.map(h => h.p3), ...heightData.map(h => h.p97));
+                }
                 scales.y1 = {
                     ...trendsValueAxis(false),
                     position: 'right',

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
-from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness, Weight, Height, HeadCircumference
+from app.models.models import Sleep, Temperature, Diaper, Feeding, Illness, Weight, Height, HeadCircumference, BabyInfo
+from app.models.growth_reference import get_weight_percentiles, get_height_percentiles
 from datetime import datetime, date, timedelta
 
 bp = Blueprint('trends', __name__, url_prefix='/trends')
@@ -11,6 +12,27 @@ def format_time(hours):
     h = int(hours)
     m = int((hours - h) * 60)
     return f"{h:02d}:{m:02d}"
+
+def _age_months_at(birth_date, timestamp_str):
+    """Berechnet das Alter in Monaten (als Fließkommazahl) an einem gegebenen Zeitpunkt."""
+    try:
+        entry_date = date.fromisoformat(str(timestamp_str)[:10])
+    except ValueError:
+        return None
+    delta_days = (entry_date - birth_date).days
+    return max(0.0, delta_days / 30.4375)
+
+def _attach_percentiles(entries, gender, birth_date, percentile_fn):
+    """Ergänzt jeden Eintrag um p3/p15/p50/p85/p97, passend zum Alter am jeweiligen
+    Zeitpunkt. Rein additiv - ohne gesetztes Geschlecht bleiben die Einträge unverändert."""
+    if not gender or not birth_date:
+        return entries
+    for entry in entries:
+        age_months = _age_months_at(birth_date, entry.get('timestamp'))
+        percentiles = percentile_fn(gender, age_months) if age_months is not None else None
+        if percentiles:
+            entry.update(percentiles)
+    return entries
 
 @bp.route('/')
 def trends():
@@ -48,6 +70,13 @@ def trends():
     weight_entries = Weight.get_all()
     height_entries = Height.get_all()
     head_entries = HeadCircumference.get_all()
+
+    # WHO-Perzentilen ergänzen, sofern Geschlecht und Geburtsdatum gesetzt sind.
+    # Ohne Geschlecht bleibt das Chart exakt wie bisher (keine Bänder, kein Fehler).
+    gender = BabyInfo.get_gender()
+    birth_date = BabyInfo.get_birth_date()
+    weight_entries = _attach_percentiles(weight_entries, gender, birth_date, get_weight_percentiles)
+    height_entries = _attach_percentiles(height_entries, gender, birth_date, get_height_percentiles)
 
     return render_template('trends.html',
                          stats=stats,

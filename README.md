@@ -20,6 +20,7 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Gewichtstracking**: Erfasse das Gewicht deines Babys und verfolge die Wachstumskurve im Trends-Bereich
 - **Größentracking**: Erfasse die Körpergröße deines Babys; Trends zeigt Gewicht und Größe kombiniert in einem Chart mit zwei Y-Achsen
 - **Kopfumfang-Tracking**: Erfasse den Kopfumfang deines Babys – neben Gewicht und Größe die dritte Standardmessung bei den U-Untersuchungen; wird als zusätzliche Linie in der Wachstumskurve angezeigt
+- **WHO-Perzentilkurven**: Sobald das Geschlecht in den Einstellungen gesetzt ist, zeigt die Wachstumskurve zusätzlich die WHO-Referenzbereiche (P3–P97) für Gewicht und Größe als Orientierung – keine medizinische Bewertung, sondern ein visueller Vergleich
 - **Erkrankungen**: Dokumentiere Krankheitsphasen mit Typ, Symptomen und Notizen
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
 - **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken, Temperaturverlauf sowie die kombinierte Wachstumskurve für Gewicht, Größe & Kopfumfang (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
@@ -101,6 +102,7 @@ docker-compose down
 Gehe zu **Einstellungen** und trage ein:
 - **Name des Babys** (optional, macht die App persönlicher)
 - **Geburtsdatum** (wichtig für die Schlaf-Vorschläge)
+- **Geschlecht** (optional; wird für die WHO-Perzentilkurven in den Trends benötigt – ohne Angabe funktioniert die App unverändert, nur ohne die Perzentilbänder)
 - **Sprache**: Wähle zwischen Deutsch, Englisch oder Spanisch
 - **Dark Mode**: Aktiviere für schonende Nutzung in der Nacht
 

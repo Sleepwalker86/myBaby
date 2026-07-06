@@ -64,14 +64,18 @@
     "weight_kg": "Weight (kg)",
     "notes_optional": "Notes (optional)",
     "growth_chart": "Growth",
-    "latest": "Latest weight"
+    "latest": "Latest weight",
+    "percentile_range": "WHO P3–P97 (weight)",
+    "percentile_median": "WHO P50 (weight)"
   },
   "height": {
     "title": "Height",
     "record": "Record height",
     "height_cm": "Height (cm)",
     "notes_optional": "Notes (optional)",
-    "latest": "Latest height"
+    "latest": "Latest height",
+    "percentile_range": "WHO P3–P97 (height)",
+    "percentile_median": "WHO P50 (height)"
   },
   "head": {
     "title": "Head circumference",
@@ -223,6 +227,11 @@
     "name": "Name",
     "name_placeholder": "Child's name",
     "birth_date": "Birth Date",
+    "gender": "Sex",
+    "gender_unspecified": "– not specified –",
+    "gender_boy": "Boy",
+    "gender_girl": "Girl",
+    "gender_hint": "Required for the WHO percentile curves in Trends (weight/height)",
     "age": "Age",
     "month": "Month",
     "months": "Months",

@@ -64,14 +64,18 @@
     "weight_kg": "Peso (kg)",
     "notes_optional": "Notas (opcional)",
     "growth_chart": "Crecimiento",
-    "latest": "Último peso"
+    "latest": "Último peso",
+    "percentile_range": "OMS P3–P97 (peso)",
+    "percentile_median": "OMS P50 (peso)"
   },
   "height": {
     "title": "Talla",
     "record": "Registrar talla",
     "height_cm": "Talla (cm)",
     "notes_optional": "Notas (opcional)",
-    "latest": "Última talla"
+    "latest": "Última talla",
+    "percentile_range": "OMS P3–P97 (talla)",
+    "percentile_median": "OMS P50 (talla)"
   },
   "head": {
     "title": "Perímetro craneal",
@@ -223,6 +227,11 @@
     "name": "Nombre",
     "name_placeholder": "Nombre del niño",
     "birth_date": "Fecha de nacimiento",
+    "gender": "Sexo",
+    "gender_unspecified": "– sin especificar –",
+    "gender_boy": "Niño",
+    "gender_girl": "Niña",
+    "gender_hint": "Necesario para las curvas de percentiles de la OMS en Tendencias (peso/talla)",
     "age": "Edad",
     "month": "Mes",
     "months": "Meses",

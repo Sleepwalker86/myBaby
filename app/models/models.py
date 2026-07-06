@@ -2005,7 +2005,17 @@ class BabyInfo:
         if row and row['name']:
             return row['name']
         return None
-    
+
+    @staticmethod
+    def get_gender():
+        """Holt das Geschlecht des Babys ('m'/'f') oder None, falls nicht gesetzt.
+        Voraussetzung für die WHO-Perzentilkurven, da diese je nach Geschlecht abweichen."""
+        db = get_db()
+        row = db.execute('SELECT gender FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        if row and row['gender'] in ('m', 'f'):
+            return row['gender']
+        return None
+
     @staticmethod
     def set_birth_date(birth_date):
         """Setzt das Geburtsdatum des Babys"""
@@ -2044,24 +2054,28 @@ class BabyInfo:
         db.commit()
     
     @staticmethod
-    def set_baby_info(name=None, birth_date=None):
-        """Setzt Name und/oder Geburtsdatum des Babys"""
+    def set_baby_info(name=None, birth_date=None, gender=None):
+        """Setzt Name, Geburtsdatum und/oder Geschlecht des Babys.
+        gender darf 'm', 'f' oder '' (= zurücksetzen auf NULL) sein."""
         db = get_db()
         existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
         updates = []
         values = []
-        
+
         if name is not None:
             updates.append('name = ?')
             values.append(name)
         if birth_date is not None:
             updates.append('birth_date = ?')
             values.append(birth_date.isoformat())
-        
+        if gender is not None:
+            updates.append('gender = ?')
+            values.append(gender if gender in ('m', 'f') else None)
+
         if updates:
             updates.append('updated_at = ?')
             values.append(datetime.now(tz_berlin).isoformat())
-            
+
             if existing:
                 values.append(existing['id'])
                 db.execute(
@@ -2074,9 +2088,10 @@ class BabyInfo:
                     name = ''
                 if birth_date is None:
                     birth_date = date.today() - timedelta(days=180)  # Standard: 6 Monate
+                gender_value = gender if gender in ('m', 'f') else None
                 db.execute(
-                    'INSERT INTO baby_info (name, birth_date, updated_at) VALUES (?, ?, ?)',
-                    (name, birth_date.isoformat(), datetime.now(tz_berlin).isoformat())
+                    'INSERT INTO baby_info (name, birth_date, gender, updated_at) VALUES (?, ?, ?, ?)',
+                    (name, birth_date.isoformat(), gender_value, datetime.now(tz_berlin).isoformat())
                 )
             db.commit()
     

@@ -31,6 +31,7 @@ def settings():
     baby_name = BabyInfo.get_name()
     baby_birth_date = BabyInfo.get_birth_date()
     baby_age_months = BabyInfo.get_age_months() if baby_birth_date else None
+    baby_gender = BabyInfo.get_gender()
     current_version = get_current_version()
     sleep_meta = BabyInfo.get_sleep_meta_settings()
     show_audio_player = BabyInfo.get_show_audio_player()
@@ -40,6 +41,7 @@ def settings():
         baby_name=baby_name,
         baby_birth_date=baby_birth_date,
         baby_age_months=baby_age_months,
+        baby_gender=baby_gender,
         current_version=current_version,
         sleep_meta=sleep_meta,
         show_audio_player=show_audio_player,
@@ -50,7 +52,8 @@ def update_settings():
     """Aktualisiert die Einstellungen"""
     name = request.form.get('name', '').strip()
     birth_date_str = request.form.get('birth_date', '').strip()
-    
+    gender = request.form.get('gender', '').strip()
+
     # Validiere und setze Geburtsdatum
     birth_date = None
     if birth_date_str:
@@ -59,10 +62,13 @@ def update_settings():
         except ValueError:
             flash('Ungültiges Datumsformat', 'error')
             return redirect(url_for('settings.settings'))
-    
-    # Setze Name und/oder Geburtsdatum
-    BabyInfo.set_baby_info(name=name if name else None, birth_date=birth_date)
-    
+
+    if gender not in ('m', 'f'):
+        gender = ''  # zurücksetzen auf "nicht angegeben"
+
+    # Setze Name, Geburtsdatum und/oder Geschlecht
+    BabyInfo.set_baby_info(name=name if name else None, birth_date=birth_date, gender=gender)
+
     flash('Einstellungen gespeichert', 'success')
     return redirect(url_for('settings.settings'))
 
