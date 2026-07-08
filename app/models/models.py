@@ -659,14 +659,60 @@ class NightWaking:
     def get_wakings_for_night_sleep(night_sleep_start, night_sleep_end):
         """Gibt alle nächtlichen Aufwachen für einen bestimmten Nachtschlaf zurück"""
         db = get_db()
+
+        # Issue #46: night_sleep_start/-end tragen ein Zeitzonen-Offset (+01:00/+02:00),
+        # das sich zwischen Sommer- und Winterzeit ändert. Ein lexikografischer Vergleich
+        # zweier offset-behafteter Strings ist rund um eine Zeitumstellung nicht mehr
+        # verlässlich sortierbar (ein Aufwachen kurz nach der Umstellung kann trotz
+        # späterem tatsächlichem Zeitpunkt "kleiner" erscheinen als der Nachtschlaf-Start).
+        # Deshalb wird per SQL nur grosszügig mit Sicherheitsmarge vorgefiltert und die
+        # exakte Prüfung danach zeitzonen-bewusst mit echten datetime-Objekten gemacht.
+        try:
+            sleep_start = datetime.fromisoformat(str(night_sleep_start).replace('Z', '+00:00'))
+            if sleep_start.tzinfo is None:
+                sleep_start = tz_berlin.localize(sleep_start.replace(tzinfo=None))
+            sleep_end = datetime.fromisoformat(str(night_sleep_end).replace('Z', '+00:00'))
+            if sleep_end.tzinfo is None:
+                sleep_end = tz_berlin.localize(sleep_end.replace(tzinfo=None))
+        except (ValueError, AttributeError):
+            sleep_start = sleep_end = None
+
+        if sleep_start is not None:
+            margin = timedelta(hours=2)
+            query_start = (sleep_start - margin).strftime('%Y-%m-%dT%H:%M:%S')
+            query_end = (sleep_end + margin).strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            query_start, query_end = night_sleep_start, night_sleep_end
+
         rows = db.execute(
-            '''SELECT * FROM night_waking 
+            '''SELECT * FROM night_waking
                WHERE start_time >= ? AND start_time <= ?
                AND (end_time IS NULL OR (end_time >= ? AND end_time <= ?))
                ORDER BY start_time''',
-            (night_sleep_start, night_sleep_end, night_sleep_start, night_sleep_end)
+            (query_start, query_end, query_start, query_end)
         ).fetchall()
-        return [dict(row) for row in rows]
+
+        if sleep_start is None:
+            return [dict(row) for row in rows]
+
+        result = []
+        for row in rows:
+            try:
+                start_time = datetime.fromisoformat(str(row['start_time']).replace('Z', '+00:00'))
+                if start_time.tzinfo is None:
+                    start_time = tz_berlin.localize(start_time.replace(tzinfo=None))
+                if not (sleep_start <= start_time <= sleep_end):
+                    continue
+                if row['end_time']:
+                    end_time = datetime.fromisoformat(str(row['end_time']).replace('Z', '+00:00'))
+                    if end_time.tzinfo is None:
+                        end_time = tz_berlin.localize(end_time.replace(tzinfo=None))
+                    if not (sleep_start <= end_time <= sleep_end):
+                        continue
+            except (ValueError, AttributeError):
+                continue
+            result.append(dict(row))
+        return result
     
     @staticmethod
     def get_total_waking_duration(night_sleep_start, night_sleep_end):

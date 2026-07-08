@@ -10,7 +10,7 @@ tz_berlin = pytz.timezone('Europe/Berlin')
 def get_local_now():
     """Gibt die aktuelle Zeit in der Berliner Zeitzone zurück"""
     from datetime import datetime
-    return datetime.now(tz_berlin)
+    return datetime.now(tz_berlin).replace(microsecond=0)
 
 
 bp = Blueprint('feeding', __name__, url_prefix='/feeding')
