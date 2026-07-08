@@ -784,7 +784,8 @@
                     backgroundColor: 'rgba(99, 179, 237, 0.08)',
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y'
+                    yAxisID: 'y',
+                    isWhoBand: true
                 });
                 datasets.push({
                     label: '{{ _('weight.percentile_range') }}',
@@ -793,7 +794,8 @@
                     backgroundColor: 'rgba(99, 179, 237, 0.08)',
                     pointRadius: 0,
                     fill: '-1',
-                    yAxisID: 'y'
+                    yAxisID: 'y',
+                    isWhoBand: true
                 });
                 datasets.push({
                     label: '{{ _('weight.percentile_median') }}',
@@ -803,7 +805,8 @@
                     borderWidth: 1,
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y'
+                    yAxisID: 'y',
+                    isWhoBand: true
                 });
             }
             datasets.push({
@@ -832,7 +835,8 @@
                     backgroundColor: 'rgba(104, 211, 145, 0.1)',
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y1'
+                    yAxisID: 'y1',
+                    isWhoBand: true
                 });
                 datasets.push({
                     label: '{{ _('height.percentile_range') }}',
@@ -841,7 +845,8 @@
                     backgroundColor: 'rgba(104, 211, 145, 0.1)',
                     pointRadius: 0,
                     fill: '-1',
-                    yAxisID: 'y1'
+                    yAxisID: 'y1',
+                    isWhoBand: true
                 });
                 datasets.push({
                     label: '{{ _('height.percentile_median') }}',
@@ -851,7 +856,8 @@
                     borderWidth: 1,
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y1'
+                    yAxisID: 'y1',
+                    isWhoBand: true
                 });
             }
             datasets.push({
@@ -928,6 +934,14 @@
                 data: { labels: uniqueLabels, datasets },
                 options: {
                     ...trendsBaseOptions(),
+                    plugins: {
+                        ...trendsBaseOptions().plugins,
+                        tooltip: {
+                            // WHO-Perzentilbänder dienen nur der visuellen Einordnung im Chart;
+                            // ihre Rohwerte im Tooltip aufzulisten macht ihn nur unlesbar.
+                            filter: (context) => !context.dataset.isWhoBand
+                        }
+                    },
                     scales
                 }
             }));

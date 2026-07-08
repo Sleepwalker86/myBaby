@@ -19,6 +19,7 @@ Eine einfache, lokale Web-App zum Tracking von Baby-Aktivitäten wie Schlaf, Sti
 - **Wachstumstracking**: Gewicht, Größe und Kopfumfang in einer kombinierten Wachstumskurve, optional mit WHO-Referenzbereichen (P3–P97) für Gewicht und Größe, sobald das Geschlecht in den Einstellungen gesetzt ist
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
 - **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken
+- **Export & Arztbericht**: Vollständiger CSV-Export, JSON-Backup (inkl. Wiederherstellung) sowie ein PDF-Arztbericht für einen frei wählbaren Zeitraum – kompakte, lesbare Zusammenfassung von Schlaf, Wachstum, Fütterung, Windel, Temperatur, Krankheiten und Medikamenten für die U-Untersuchung
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
 

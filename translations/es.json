@@ -265,6 +265,8 @@
     "export_csv_desc": "Descargar todos los registros como archivo CSV (compatible con Excel)",
     "export_backup": "Crear copia de seguridad",
     "export_backup_desc": "Descargar una copia de seguridad completa en formato JSON",
+    "export_report": "Informe médico (PDF)",
+    "export_report_desc": "Resumen legible de un período como PDF (p. ej. para el chequeo pediátrico)",
     "restore_title": "Restaurar copia de seguridad",
     "restore_desc": "Subir una copia de seguridad JSON y restaurar todos los datos",
     "restore_warning": "¡Atención: Todos los datos actuales serán sobrescritos permanentemente!",
