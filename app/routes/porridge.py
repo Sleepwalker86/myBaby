@@ -9,7 +9,7 @@ import pytz
 tz_berlin = pytz.timezone('Europe/Berlin')
 
 def get_local_now():
-    return datetime.now(tz_berlin)
+    return datetime.now(tz_berlin).replace(microsecond=0)
 
 bp = Blueprint('porridge', __name__, url_prefix='/porridge')
 

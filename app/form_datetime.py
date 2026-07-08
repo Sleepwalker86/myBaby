@@ -24,4 +24,8 @@ def normalize_form_datetime(value):
         dt = TZ_BERLIN.localize(dt)
     else:
         dt = dt.astimezone(TZ_BERLIN)
-    return dt.isoformat()
+    # Issue #46: Mikrosekunden konsequent verwerfen, damit alle gespeicherten
+    # Zeitstempel dieselbe feste Länge haben (sonst wäre ein lexikografischer
+    # Stringvergleich schon durch die reine An-/Abwesenheit der Mikrosekunden
+    # inkonsistent sortierbar, unabhängig von der Zeitumstellung).
+    return dt.replace(microsecond=0).isoformat()
