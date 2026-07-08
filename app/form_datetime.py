@@ -1,9 +1,7 @@
 """Hilfen für Zeiten aus HTML-Formularen (datetime-local vs. ISO mit Offset)."""
 from datetime import datetime
 
-import pytz
-
-TZ_BERLIN = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin as TZ_BERLIN
 
 
 def normalize_form_datetime(value):

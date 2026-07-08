@@ -1,11 +1,9 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Sleep, NightWaking
-import pytz
 
 from app.form_datetime import normalize_form_datetime
 
-# Zeitzone für Deutschland/Berlin
-tz_berlin = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin
 
 
 def get_local_now():

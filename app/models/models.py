@@ -2,10 +2,9 @@
 from app.models.database import get_db
 from datetime import datetime, date, timedelta
 import bisect
-import pytz
 import json
 
-tz_berlin = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin
 
 # Issue #44: Zeitfenster, innerhalb dessen ein inhaltlich identischer Eintrag als
 # Doppel-Submit (statt als bewusst zweiter Eintrag) gewertet wird.

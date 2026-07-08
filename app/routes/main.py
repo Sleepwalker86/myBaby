@@ -5,14 +5,13 @@ from app.models.models import (
 from app.models.database import get_db
 from app.i18n import _
 from datetime import datetime, date, timedelta
-import pytz
 import os
 
 def get_baby_name():
     """Hilfsfunktion zum Abrufen des Baby-Namens"""
     return BabyInfo.get_name()
 
-tz_berlin = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin
 
 bp = Blueprint('main', __name__)
 

@@ -14,5 +14,7 @@ services:
     environment:
       - DATABASE_PATH=/data/baby_tracking.db
       - PORT=8000
+      # Zeitzone für Tagesgrenzen, Statistiken und Zeitstempel-Anzeige (IANA-Name, z. B. Europe/Vienna)
+      - APP_TIMEZONE=Europe/Berlin
     restart: unless-stopped
 
