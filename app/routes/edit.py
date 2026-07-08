@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine, NightWaking, Porridge
 from app.form_datetime import normalize_form_datetime
+from app.form_validation import parse_bounded_number
 
 bp = Blueprint('edit', __name__, url_prefix='/edit')
 
@@ -79,9 +80,9 @@ def edit_bottle(bottle_id):
     try:
         ts_raw = request.form.get('timestamp')
         timestamp = normalize_form_datetime(ts_raw) if ts_raw and str(ts_raw).strip() else None
-        amount = int(request.form.get('amount', 0))
+        amount = parse_bounded_number(request.form.get('amount', 0), max_value=5000, cast=int)
 
-        if not timestamp or amount <= 0:
+        if not timestamp:
             flash('Ungültige Eingabe', 'error')
             return redirect(url_for('main.index'))
 
@@ -141,9 +142,9 @@ def edit_temperature(temp_id):
     try:
         ts_raw = request.form.get('timestamp')
         timestamp = normalize_form_datetime(ts_raw) if ts_raw and str(ts_raw).strip() else None
-        value = float(request.form.get('value', 0))
+        value = parse_bounded_number(request.form.get('value', 0), max_value=42)
 
-        if not timestamp or value <= 0 or value > 42:
+        if not timestamp:
             flash('Ungültige Eingabe', 'error')
             return redirect(url_for('main.index'))
 
@@ -233,10 +234,8 @@ def delete_night_waking(waking_id):
 def edit_porridge(porridge_id):
     """Bearbeitet einen Brei-Eintrag"""
     try:
-        amount = int(request.form.get('amount', 0))
-        if amount <= 0 or amount > 2000:
-            raise ValueError()
-    except (ValueError, TypeError):
+        amount = parse_bounded_number(request.form.get('amount', 0), max_value=2000, cast=int)
+    except ValueError:
         flash('Ungültige Menge', 'error')
         return redirect(url_for('main.index'))
 

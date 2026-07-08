@@ -2,6 +2,7 @@ from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Weight
 from app.i18n import _
 from app.form_datetime import normalize_form_datetime
+from app.form_validation import parse_bounded_number
 from datetime import datetime
 import pytz
 
@@ -16,10 +17,8 @@ bp = Blueprint('weight', __name__, url_prefix='/weight')
 @bp.route('/create', methods=['POST'])
 def create():
     try:
-        weight_kg = float(request.form.get('weight_kg', 0))
-        if weight_kg <= 0 or weight_kg >= 50:
-            raise ValueError()
-    except (ValueError, TypeError):
+        weight_kg = parse_bounded_number(request.form.get('weight_kg', 0), max_value=50)
+    except ValueError:
         flash(_('messages.error.invalid_input'), 'error')
         return redirect(url_for('main.index'))
 
@@ -45,10 +44,8 @@ def delete(weight_id):
 @bp.route('/update/<int:weight_id>', methods=['POST'])
 def update(weight_id):
     try:
-        weight_kg = float(request.form.get('weight_kg', 0))
-        if weight_kg <= 0 or weight_kg >= 50:
-            raise ValueError()
-    except (ValueError, TypeError):
+        weight_kg = parse_bounded_number(request.form.get('weight_kg', 0), max_value=50)
+    except ValueError:
         flash(_('messages.error.invalid_input'), 'error')
         return redirect(url_for('main.index'))
 
