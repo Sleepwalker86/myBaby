@@ -1,7 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Feeding
 
-from app.form_datetime import normalize_form_datetime
+from app.form_datetime import normalize_form_datetime, is_end_before_start
 
 from app.timezone import tz_berlin
 
@@ -33,6 +33,10 @@ def create():
     end_time_str = request.form.get('end_time')
     if end_time_str and str(end_time_str).strip():
         end_time = normalize_form_datetime(end_time_str)
+
+    if is_end_before_start(timestamp, end_time):
+        flash('Endzeit muss nach der Startzeit liegen', 'error')
+        return redirect(url_for('main.index'))
 
     Feeding.create(timestamp, side, end_time)
     flash(f'Stillen ({side}) erfasst', 'success')
