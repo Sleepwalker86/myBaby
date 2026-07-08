@@ -3,144 +3,19 @@ from app.models.models import get_all_entries_today, get_all_entries_date_range,
 from datetime import datetime, date, timedelta
 from app.i18n import get_language, _
 
-from app.timezone import tz_berlin
+from app.timezone import tz_berlin, to_berlin
 
 bp = Blueprint('entries', __name__, url_prefix='/entries')
 
-@bp.app_template_filter('translate_entry_display')
-def translate_entry_display(entry):
-    """Übersetzt die display-Eigenschaft eines Eintrags basierend auf seiner Kategorie"""
-    if not entry:
-        return ""
-    
-    category = entry.get('category', '')
-    
-    if category == 'sleep':
-        sleep_type = entry.get('type', '')
-        if sleep_type == 'night':
-            return _('entries.night_sleep')
-        else:
-            return _('entries.nap')
-    elif category == 'night_waking':
-        return _('entries.night_waking')
-    elif category == 'feeding':
-        side = entry.get('side', '').lower()
-        if side == 'left' or side == 'links':
-            return _('entries.feeding_left')
-        else:
-            return _('entries.feeding_right')
-    elif category == 'bottle':
-        amount = entry.get('amount', 0)
-        return _('bottle.title') + f" ({amount} ml)"
-    elif category == 'porridge':
-        amount = entry.get('amount', 0)
-        food = entry.get('food', '')
-        label = _('porridge.title') + f" ({amount} g)"
-        if food:
-            label += f' – {food}'
-        return label
-    elif category == 'diaper':
-        diaper_type = entry.get('type', '')
-        if diaper_type == 'nass':
-            return _('entries.diaper_wet')
-        elif diaper_type == 'groß':
-            return _('entries.diaper_solid')
-        else:
-            return _('entries.diaper_both')
-    elif category == 'temperature':
-        value = entry.get('value', 0)
-        return _('entries.temperature') + f" ({value}°C)"
-    elif category == 'medicine':
-        name = entry.get('name', '')
-        dose = entry.get('dose', '')
-        return _('entries.medicine') + f" ({name}, {dose})"
-    elif category == 'weight':
-        weight_kg = entry.get('weight_kg', 0)
-        return _('weight.title') + f" ({weight_kg} kg)"
-    elif category == 'height':
-        height_cm = entry.get('height_cm', 0)
-        return _('height.title') + f" ({height_cm} cm)"
-    elif category == 'head_circumference':
-        head_circumference_cm = entry.get('head_circumference_cm', 0)
-        return _('head.title') + f" ({head_circumference_cm} cm)"
 
-    # Fallback: Original display verwenden
-    return entry.get('display', '')
-
-@bp.app_template_filter('format_datetime_de')
-def format_datetime_de(value):
-    """Formatiert einen ISO-Datetime-String ins deutsche Format DD.MM.YYYY HH:MM"""
-    if not value:
-        return ""
+def _get_entry_time(entry):
+    """Hilfsfunktion zum Extrahieren der Zeit für Sortierung"""
+    time_str = entry.get('timestamp') or entry.get('start_time', '2000-01-01T00:00:00')
     try:
-        if isinstance(value, str):
-            dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        else:
-            dt = value
-        
-        # Konvertiere zu Berliner Zeitzone falls nötig
-        if dt.tzinfo is None:
-            # Keine Zeitzone - annehmen dass es bereits lokale Zeit ist
-            dt = tz_berlin.localize(dt.replace(tzinfo=None))
-        elif dt.tzinfo != tz_berlin:
-            # Konvertiere zu Berliner Zeitzone
-            dt = dt.astimezone(tz_berlin)
-        
-        # Entferne Zeitzone für Formatierung
-        dt_local = dt.replace(tzinfo=None)
-        return dt_local.strftime('%d.%m.%Y %H:%M')
+        return to_berlin(time_str)
     except (ValueError, AttributeError):
-        return value
+        return tz_berlin.localize(datetime(2000, 1, 1))
 
-@bp.app_template_filter('calculate_duration')
-def calculate_duration(start_time, end_time):
-    """Berechnet die Dauer zwischen zwei Zeitstempeln und gibt sie als 'Xh Ym' zurück"""
-    if not start_time or not end_time:
-        return ""
-    try:
-        # Parse start_time
-        if isinstance(start_time, str):
-            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-        else:
-            start_dt = start_time
-        
-        # Parse end_time
-        if isinstance(end_time, str):
-            end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-        else:
-            end_dt = end_time
-        
-        # Konvertiere zu Berliner Zeitzone falls nötig
-        if start_dt.tzinfo is None:
-            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-        elif start_dt.tzinfo != tz_berlin:
-            start_dt = start_dt.astimezone(tz_berlin)
-        
-        if end_dt.tzinfo is None:
-            end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
-        elif end_dt.tzinfo != tz_berlin:
-            end_dt = end_dt.astimezone(tz_berlin)
-        
-        # Berechne Differenz
-        duration = end_dt - start_dt
-        total_seconds = int(duration.total_seconds())
-        
-        if total_seconds < 0:
-            return ""
-        
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        
-        if hours > 0 and minutes > 0:
-            return f"{hours}h {minutes}m"
-        elif hours > 0:
-            return f"{hours}h"
-        elif minutes > 0:
-            return f"{minutes}m"
-        else:
-            return "< 1m"
-    except (ValueError, AttributeError, TypeError):
-        return ""
 
 @bp.route('/')
 def entries():
@@ -174,27 +49,7 @@ def entries():
         # Tagesansicht: Hole Einträge für den ausgewählten Tag
         entries = get_all_entries_today(selected_date)
         # Sortiere chronologisch (älteste zuerst)
-        def get_entry_time(entry):
-            """Hilfsfunktion zum Extrahieren der Zeit für Sortierung"""
-            time_str = entry.get('timestamp') or entry.get('start_time', '2000-01-01T00:00:00')
-            try:
-                if isinstance(time_str, str):
-                    dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-                    if dt.tzinfo is None:
-                        dt = tz_berlin.localize(dt.replace(tzinfo=None))
-                    elif dt.tzinfo != tz_berlin:
-                        dt = dt.astimezone(tz_berlin)
-                    return dt
-                elif isinstance(time_str, datetime):
-                    if time_str.tzinfo is None:
-                        return tz_berlin.localize(time_str.replace(tzinfo=None))
-                    elif time_str.tzinfo != tz_berlin:
-                        return time_str.astimezone(tz_berlin)
-                    return time_str
-                return tz_berlin.localize(datetime(2000, 1, 1))
-            except (ValueError, AttributeError):
-                return tz_berlin.localize(datetime(2000, 1, 1))
-        entries.sort(key=get_entry_time)
+        entries.sort(key=_get_entry_time)
         date_display = selected_date.strftime('%d.%m.%Y')
         if selected_date == date.today():
             date_display = _('common.today')
@@ -220,20 +75,8 @@ def entries():
             """Parst einen Timestamp und cached das Ergebnis im Entry"""
             if not ts_str:
                 return None
-            if isinstance(ts_str, datetime):
-                if ts_str.tzinfo is None:
-                    return tz_berlin.localize(ts_str.replace(tzinfo=None))
-                elif ts_str.tzinfo != tz_berlin:
-                    return ts_str.astimezone(tz_berlin)
-                return ts_str
-            
             try:
-                dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
-                if dt.tzinfo is None:
-                    dt = tz_berlin.localize(dt.replace(tzinfo=None))
-                elif dt.tzinfo != tz_berlin:
-                    dt = dt.astimezone(tz_berlin)
-                return dt
+                return to_berlin(ts_str)
             except (ValueError, AttributeError):
                 return None
         
@@ -288,12 +131,7 @@ def entries():
                 try:
                     ts_str = entry.get('timestamp', '')
                     if ts_str:
-                        ts_dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
-                        if ts_dt.tzinfo is None:
-                            ts_dt = tz_berlin.localize(ts_dt.replace(tzinfo=None))
-                        elif ts_dt.tzinfo != tz_berlin:
-                            ts_dt = ts_dt.astimezone(tz_berlin)
-                        entry['day'] = ts_dt.date()
+                        entry['day'] = to_berlin(ts_str).date()
                     else:
                         entry['day'] = date(2000, 1, 1)
                 except (ValueError, AttributeError):
@@ -302,32 +140,10 @@ def entries():
                 # Konvertiere datetime zu date
                 entry['day'] = entry_day.date()
         
-        # Hilfsfunktion zum Extrahieren der Zeit für Sortierung
-        def get_entry_time(entry):
-            """Hilfsfunktion zum Extrahieren der Zeit für Sortierung"""
-            time_str = entry.get('timestamp') or entry.get('start_time', '2000-01-01T00:00:00')
-            try:
-                if isinstance(time_str, str):
-                    dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-                    if dt.tzinfo is None:
-                        dt = tz_berlin.localize(dt.replace(tzinfo=None))
-                    elif dt.tzinfo != tz_berlin:
-                        dt = dt.astimezone(tz_berlin)
-                    return dt
-                elif isinstance(time_str, datetime):
-                    if time_str.tzinfo is None:
-                        return tz_berlin.localize(time_str.replace(tzinfo=None))
-                    elif time_str.tzinfo != tz_berlin:
-                        return time_str.astimezone(tz_berlin)
-                    return time_str
-                return tz_berlin.localize(datetime(2000, 1, 1))
-            except (ValueError, AttributeError):
-                return tz_berlin.localize(datetime(2000, 1, 1))
-        
         # Sortiere zuerst nach Tag, dann nach timestamp
         all_entries.sort(key=lambda x: (
             x.get('day', date(2000, 1, 1)),
-            get_entry_time(x)
+            _get_entry_time(x)
         ))
         
         entries = all_entries
