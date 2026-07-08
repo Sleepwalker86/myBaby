@@ -2,6 +2,7 @@ from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Height
 from app.i18n import _
 from app.form_datetime import normalize_form_datetime
+from app.form_validation import parse_bounded_number
 from datetime import datetime
 import pytz
 
@@ -16,10 +17,8 @@ bp = Blueprint('height', __name__, url_prefix='/height')
 @bp.route('/create', methods=['POST'])
 def create():
     try:
-        height_cm = float(request.form.get('height_cm', 0))
-        if height_cm <= 0 or height_cm >= 200:
-            raise ValueError()
-    except (ValueError, TypeError):
+        height_cm = parse_bounded_number(request.form.get('height_cm', 0), max_value=200)
+    except ValueError:
         flash(_('messages.error.invalid_input'), 'error')
         return redirect(url_for('main.index'))
 
@@ -45,10 +44,8 @@ def delete(height_id):
 @bp.route('/update/<int:height_id>', methods=['POST'])
 def update(height_id):
     try:
-        height_cm = float(request.form.get('height_cm', 0))
-        if height_cm <= 0 or height_cm >= 200:
-            raise ValueError()
-    except (ValueError, TypeError):
+        height_cm = parse_bounded_number(request.form.get('height_cm', 0), max_value=200)
+    except ValueError:
         flash(_('messages.error.invalid_input'), 'error')
         return redirect(url_for('main.index'))
 

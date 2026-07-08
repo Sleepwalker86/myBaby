@@ -2,6 +2,7 @@ from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Porridge
 from app.i18n import _
 from app.form_datetime import normalize_form_datetime
+from app.form_validation import parse_bounded_number
 from datetime import datetime
 import pytz
 
@@ -15,10 +16,8 @@ bp = Blueprint('porridge', __name__, url_prefix='/porridge')
 @bp.route('/create', methods=['POST'])
 def create():
     try:
-        amount = int(request.form.get('amount', 0))
-        if amount <= 0 or amount > 2000:
-            raise ValueError()
-    except (ValueError, TypeError):
+        amount = parse_bounded_number(request.form.get('amount', 0), max_value=2000, cast=int)
+    except ValueError:
         flash(_('messages.error.invalid_amount'), 'error')
         return redirect(url_for('main.index'))
 
@@ -40,10 +39,8 @@ def delete(porridge_id):
 @bp.route('/update/<int:porridge_id>', methods=['POST'])
 def update(porridge_id):
     try:
-        amount = int(request.form.get('amount', 0))
-        if amount <= 0 or amount > 2000:
-            raise ValueError()
-    except (ValueError, TypeError):
+        amount = parse_bounded_number(request.form.get('amount', 0), max_value=2000, cast=int)
+    except ValueError:
         flash(_('messages.error.invalid_amount'), 'error')
         return redirect(url_for('main.index'))
 

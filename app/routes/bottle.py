@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Bottle
 from app.form_datetime import normalize_form_datetime
+from app.form_validation import parse_bounded_number
 from datetime import datetime
 import pytz
 
@@ -16,10 +17,8 @@ bp = Blueprint('bottle', __name__, url_prefix='/bottle')
 def create():
     """Erstellt einen Flaschen-Eintrag"""
     try:
-        amount = int(request.form.get('amount', 0))
-        if amount <= 0:
-            raise ValueError()
-    except (ValueError, TypeError):
+        amount = parse_bounded_number(request.form.get('amount', 0), max_value=5000, cast=int)
+    except ValueError:
         flash('Ungültige Menge', 'error')
         return redirect(url_for('main.index'))
 

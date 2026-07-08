@@ -2,6 +2,7 @@ from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import HeadCircumference
 from app.i18n import _
 from app.form_datetime import normalize_form_datetime
+from app.form_validation import parse_bounded_number
 from datetime import datetime
 import pytz
 
@@ -16,10 +17,8 @@ bp = Blueprint('head', __name__, url_prefix='/head')
 @bp.route('/create', methods=['POST'])
 def create():
     try:
-        head_circumference_cm = float(request.form.get('head_circumference_cm', 0))
-        if head_circumference_cm <= 0 or head_circumference_cm >= 60:
-            raise ValueError()
-    except (ValueError, TypeError):
+        head_circumference_cm = parse_bounded_number(request.form.get('head_circumference_cm', 0), max_value=60)
+    except ValueError:
         flash(_('messages.error.invalid_input'), 'error')
         return redirect(url_for('main.index'))
 
@@ -45,10 +44,8 @@ def delete(head_circumference_id):
 @bp.route('/update/<int:head_circumference_id>', methods=['POST'])
 def update(head_circumference_id):
     try:
-        head_circumference_cm = float(request.form.get('head_circumference_cm', 0))
-        if head_circumference_cm <= 0 or head_circumference_cm >= 60:
-            raise ValueError()
-    except (ValueError, TypeError):
+        head_circumference_cm = parse_bounded_number(request.form.get('head_circumference_cm', 0), max_value=60)
+    except ValueError:
         flash(_('messages.error.invalid_input'), 'error')
         return redirect(url_for('main.index'))
 

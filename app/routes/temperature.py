@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Temperature
+from app.form_validation import parse_bounded_number
 from datetime import datetime
 import pytz
 
@@ -15,10 +16,8 @@ bp = Blueprint('temperature', __name__, url_prefix='/temperature')
 def create():
     """Erstellt einen Temperatur-Eintrag"""
     try:
-        value = float(request.form.get('value', 0))
-        if value <= 0 or value > 42:
-            raise ValueError()
-    except (ValueError, TypeError):
+        value = parse_bounded_number(request.form.get('value', 0), max_value=42)
+    except ValueError:
         flash('Ungültige Temperatur', 'error')
         return redirect(url_for('main.index'))
     
