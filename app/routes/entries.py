@@ -1,10 +1,9 @@
 from flask import Blueprint, render_template, request
 from app.models.models import get_all_entries_today, get_all_entries_date_range, BabyInfo
 from datetime import datetime, date, timedelta
-import pytz
 from app.i18n import get_language, _
 
-tz_berlin = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin
 
 bp = Blueprint('entries', __name__, url_prefix='/entries')
 

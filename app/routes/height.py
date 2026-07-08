@@ -4,9 +4,8 @@ from app.i18n import _
 from app.form_datetime import normalize_form_datetime
 from app.form_validation import parse_bounded_number
 from datetime import datetime
-import pytz
 
-tz_berlin = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin
 
 def get_local_now():
     return datetime.now(tz_berlin).replace(microsecond=0)

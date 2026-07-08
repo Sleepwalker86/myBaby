@@ -2,9 +2,8 @@ from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Medicine
 from app.form_datetime import normalize_form_datetime
 from datetime import datetime
-import pytz
 
-tz_berlin = pytz.timezone('Europe/Berlin')
+from app.timezone import tz_berlin
 
 def get_local_now():
     """Gibt die aktuelle Zeit in der Berliner Zeitzone zurück"""
