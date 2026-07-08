@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
-from app.models.models import BabyInfo
+from app.models.models import BabyInfo, Weight, Height, Sleep, Feeding, Diaper, Temperature
 from app.models.database import get_db
 from app.i18n import _
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 import os
 import csv
 import io
@@ -35,6 +37,8 @@ def settings():
     current_version = get_current_version()
     sleep_meta = BabyInfo.get_sleep_meta_settings()
     show_audio_player = BabyInfo.get_show_audio_player()
+    report_end_date = date.today().isoformat()
+    report_start_date = (date.today() - timedelta(days=30)).isoformat()
 
     return render_template(
         'settings.html',
@@ -44,6 +48,8 @@ def settings():
         baby_gender=baby_gender,
         current_version=current_version,
         sleep_meta=sleep_meta,
+        report_start_date=report_start_date,
+        report_end_date=report_end_date,
         show_audio_player=show_audio_player,
     )
 
@@ -343,3 +349,215 @@ def check_version():
             'message': f'Unerwarteter Fehler: {str(e)}',
             'current_version': get_current_version()
         }), 500
+
+
+def _fmt_date(d):
+    return d.strftime('%d.%m.%Y')
+
+
+def _fmt_ts(ts_str):
+    """Formatiert einen ISO-Zeitstempel-String als 'DD.MM.YYYY HH:MM'"""
+    try:
+        dt = datetime.fromisoformat(str(ts_str).replace('Z', '+00:00'))
+        return dt.strftime('%d.%m.%Y %H:%M')
+    except (ValueError, TypeError):
+        return str(ts_str)
+
+
+def _format_hours_as_time(hours):
+    """Formatiert eine Dezimalstunde (z.B. 7.5) als HH:MM"""
+    if not hours:
+        return '-'
+    h = int(hours)
+    m = int(round((hours - h) * 60))
+    return f"{h:02d}:{m:02d}"
+
+
+def _build_medical_report_pdf(ctx):
+    """Baut den Arztbericht als PDF aus vorbereiteten Statistik-/Rohdaten (rein deutschsprachig,
+    da für den ersten Wurf keine Übersetzung des PDF-Inhalts gefordert ist - nur die UI drumherum)."""
+    pdf = FPDF(format='A4')
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    def line(text, size=11, style=''):
+        pdf.set_font('Helvetica', style, size)
+        pdf.cell(0, 6, text=text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    def section_title(text):
+        pdf.ln(3)
+        pdf.set_font('Helvetica', 'B', 13)
+        pdf.set_fill_color(230, 230, 230)
+        pdf.cell(0, 8, text=text, new_x=XPos.LMARGIN, new_y=YPos.NEXT, fill=True)
+        pdf.ln(1)
+
+    def kv(label, value):
+        line(f"{label}: {value}")
+
+    line('myBaby - Arztbericht', size=18, style='B')
+    line(f"Baby: {ctx['baby_name'] or '-'}")
+    if ctx['baby_age_months'] is not None:
+        line(f"Alter: {ctx['baby_age_months']} Monate")
+    line(f"Zeitraum: {_fmt_date(ctx['start_date'])} - {_fmt_date(ctx['end_date'])}")
+    line(f"Erstellt am: {_fmt_date(date.today())}")
+
+    # Wachstum
+    section_title('Wachstum')
+    weight_entries = ctx['weight_entries']
+    height_entries = ctx['height_entries']
+    if weight_entries:
+        first_w, last_w = weight_entries[0], weight_entries[-1]
+        delta_w = last_w['weight_kg'] - first_w['weight_kg']
+        kv('Gewicht (aktuell)', f"{last_w['weight_kg']:.2f} kg (am {_fmt_ts(last_w['timestamp'])})")
+        kv('Veränderung im Zeitraum', f"{delta_w:+.2f} kg (Start: {first_w['weight_kg']:.2f} kg)")
+    else:
+        kv('Gewicht', 'Keine Daten im Zeitraum')
+    if height_entries:
+        first_h, last_h = height_entries[0], height_entries[-1]
+        delta_h = last_h['height_cm'] - first_h['height_cm']
+        kv('Größe (aktuell)', f"{last_h['height_cm']:.1f} cm (am {_fmt_ts(last_h['timestamp'])})")
+        kv('Veränderung im Zeitraum', f"{delta_h:+.1f} cm (Start: {first_h['height_cm']:.1f} cm)")
+    else:
+        kv('Größe', 'Keine Daten im Zeitraum')
+
+    # Schlaf
+    section_title('Schlaf')
+    s = ctx['sleep_stats']
+    if s['total_days'] > 0:
+        kv('Ø Schlaf pro Tag', f"{s['avg_daily_sleep']} h (über {s['total_days']} Tage)")
+        kv('Nickerchen / Nachtschlaf', f"{s['nap_hours']} h / {s['night_hours']} h")
+        kv('Ø Aufwachzeit', _format_hours_as_time(s['avg_wake_time']) if s['wake_times'] else '-')
+        kv('Ø Einschlafzeit', _format_hours_as_time(s['avg_sleep_time']) if s['sleep_times'] else '-')
+    else:
+        kv('Schlaf', 'Keine Daten im Zeitraum')
+
+    # Fütterung
+    section_title('Fütterung')
+    f = ctx['feeding_stats']
+    kv('Stillmahlzeiten', f"{f['total_count']} gesamt, Ø {f['avg_count']}/Tag")
+    if ctx['bottle_count'] > 0:
+        kv('Flasche', f"{ctx['bottle_count']} Mahlzeiten, {ctx['bottle_total_ml']} ml gesamt, "
+                       f"Ø {ctx['bottle_avg_ml_per_day']} ml/Tag")
+    else:
+        kv('Flasche', 'Keine Einträge im Zeitraum')
+
+    # Windel
+    section_title('Windel')
+    d = ctx['diaper_stats']
+    kv('Gesamt', f"{d['total_count']} (Ø {d['avg_total']}/Tag)")
+    kv('Nass / Groß / Beides', f"{d['nass_count']} / {d['groß_count']} / {d['beides_count']}")
+
+    # Temperatur
+    section_title('Temperatur')
+    t = ctx['temp_stats']
+    if t['count'] > 0:
+        kv('Min / Ø / Max', f"{t['min_temp']} / {t['avg_temp']} / {t['max_temp']} °C")
+        high_temps = [x for x in t['all_temps'] if x['value'] > 38.0]
+        if high_temps:
+            line('Erhöhte Werte (> 38.0 °C):')
+            for x in high_temps:
+                line(f"   {_fmt_ts(x['timestamp'])}: {x['value']} °C")
+        else:
+            kv('Erhöhte Werte (> 38.0 °C)', 'Keine')
+    else:
+        kv('Temperatur', 'Keine Messungen im Zeitraum')
+
+    # Erkrankungsphasen
+    section_title('Erkrankungsphasen')
+    illness_rows = ctx['illness_rows']
+    if illness_rows:
+        for ill in illness_rows:
+            end_txt = _fmt_ts(ill['end_time']) if ill['end_time'] else 'andauernd'
+            line(f"{ill['type']}: {_fmt_ts(ill['start_time'])} - {end_txt}", style='B')
+            if ill.get('symptoms'):
+                pdf.set_font('Helvetica', '', 11)
+                pdf.multi_cell(0, 6, text=f"   Symptome: {ill['symptoms']}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            if ill.get('notes'):
+                pdf.set_font('Helvetica', '', 11)
+                pdf.multi_cell(0, 6, text=f"   Notizen: {ill['notes']}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    else:
+        kv('Erkrankungsphasen', 'Keine im Zeitraum')
+
+    # Medikamente
+    section_title('Medikamente')
+    medicine_rows = ctx['medicine_rows']
+    if medicine_rows:
+        for m in medicine_rows:
+            line(f"{_fmt_ts(m['timestamp'])}: {m['name']} - {m['dose']}")
+    else:
+        kv('Medikamente', 'Keine im Zeitraum')
+
+    return pdf
+
+
+@bp.route('/export/report')
+def export_report():
+    """Erstellt einen für Menschen lesbaren PDF-Arztbericht für einen wählbaren Zeitraum.
+    Ergänzt export_csv/export_backup um eine dritte, zusammenfassende Export-Variante."""
+    end_date_obj = date.today()
+    start_date_obj = end_date_obj - timedelta(days=30)
+
+    start_date_str = request.args.get('start_date', '').strip()
+    end_date_str = request.args.get('end_date', '').strip()
+    if start_date_str:
+        try:
+            start_date_obj = date.fromisoformat(start_date_str)
+        except ValueError:
+            pass
+    if end_date_str:
+        try:
+            end_date_obj = date.fromisoformat(end_date_str)
+        except ValueError:
+            pass
+    if start_date_obj > end_date_obj:
+        start_date_obj, end_date_obj = end_date_obj, start_date_obj
+
+    db = get_db()
+    range_start_str = datetime.combine(start_date_obj, datetime.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
+    range_end_str = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
+
+    illness_rows = [dict(r) for r in db.execute(
+        '''SELECT * FROM illness WHERE start_time <= ? AND (end_time IS NULL OR end_time >= ?)
+           ORDER BY start_time''',
+        (range_end_str, range_start_str)
+    ).fetchall()]
+
+    medicine_rows = [dict(r) for r in db.execute(
+        'SELECT * FROM medicine WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp',
+        (range_start_str, range_end_str)
+    ).fetchall()]
+
+    bottle_rows = db.execute(
+        'SELECT amount FROM bottle WHERE timestamp >= ? AND timestamp <= ?',
+        (range_start_str, range_end_str)
+    ).fetchall()
+    bottle_total_ml = sum(r['amount'] for r in bottle_rows)
+    bottle_count = len(bottle_rows)
+    days_count = (end_date_obj - start_date_obj).days + 1
+    bottle_avg_ml_per_day = round(bottle_total_ml / days_count, 1) if days_count > 0 else 0
+
+    ctx = {
+        'baby_name': BabyInfo.get_name(),
+        'baby_age_months': BabyInfo.get_age_months() if BabyInfo.get_birth_date() else None,
+        'start_date': start_date_obj,
+        'end_date': end_date_obj,
+        'weight_entries': Weight.get_in_range(start_date_obj, end_date_obj),
+        'height_entries': Height.get_in_range(start_date_obj, end_date_obj),
+        'sleep_stats': Sleep.get_sleep_statistics(start_date_obj, end_date_obj),
+        'feeding_stats': Feeding.get_feeding_statistics(start_date_obj, end_date_obj),
+        'diaper_stats': Diaper.get_diaper_statistics(start_date_obj, end_date_obj),
+        'temp_stats': Temperature.get_temperature_statistics(start_date_obj, end_date_obj),
+        'illness_rows': illness_rows,
+        'medicine_rows': medicine_rows,
+        'bottle_count': bottle_count,
+        'bottle_total_ml': bottle_total_ml,
+        'bottle_avg_ml_per_day': bottle_avg_ml_per_day,
+    }
+
+    pdf = _build_medical_report_pdf(ctx)
+    filename = f"mybaby_bericht_{start_date_obj.isoformat()}_{end_date_obj.isoformat()}.pdf"
+    return Response(
+        bytes(pdf.output()),
+        mimetype='application/pdf',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )

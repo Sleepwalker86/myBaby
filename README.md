@@ -186,7 +186,7 @@ Ja, sobald die App gestartet ist, funktioniert sie komplett offline. Nur für de
 Alle Daten werden lokal in einer SQLite-Datenbank gespeichert. Bei Docker-Nutzung im `./data` Verzeichnis.
 
 **Kann ich die Daten exportieren?**
-Die Datenbank-Datei kann direkt kopiert werden. Sie liegt im `./data` Verzeichnis.
+Die Datenbank-Datei kann direkt kopiert werden. Sie liegt im `./data` Verzeichnis. In den Einstellungen gibt es außerdem drei Export-Optionen: ein vollständiger CSV-Export aller Einträge, ein vollständiges JSON-Backup (inkl. Wiederherstellung) sowie ein PDF-Arztbericht für einen frei wählbaren Zeitraum (z.B. letzte 7/30/90 Tage) – eine kompakte, lesbare Zusammenfassung von Schlaf, Wachstum, Fütterung, Windel, Temperatur, Krankheiten und Medikamenten, gedacht zum Zeigen beim Kinderarzt/der Kinderärztin.
 
 **Welche Sprachen werden unterstützt?**
 Die App unterstützt Deutsch (Standard), Englisch und Spanisch. Die Sprache kann in den Einstellungen umgeschaltet werden.

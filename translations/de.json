@@ -265,6 +265,8 @@
     "export_csv_desc": "Alle Einträge als CSV-Datei herunterladen (Excel-kompatibel)",
     "export_backup": "Backup erstellen",
     "export_backup_desc": "Vollständiges Daten-Backup als JSON herunterladen",
+    "export_report": "Arztbericht (PDF)",
+    "export_report_desc": "Lesbare Zusammenfassung für einen Zeitraum als PDF (z.B. für die U-Untersuchung)",
     "restore_title": "Backup wiederherstellen",
     "restore_desc": "JSON-Backup hochladen und alle Daten wiederherstellen",
     "restore_warning": "Achtung: Alle aktuellen Daten werden unwiderruflich überschrieben!",

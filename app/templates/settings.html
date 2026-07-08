@@ -161,6 +161,31 @@
                     </a>
                 </div>
 
+                <!-- PDF-Arztbericht -->
+                <div class="mb-3">
+                    <p class="text-muted small mb-2">{{ _('settings.export_report_desc') }}</p>
+                    <form method="GET" action="{{ url_for('settings.export_report') }}" id="reportExportForm">
+                        <div class="d-flex flex-wrap gap-1 mb-2 report-quick-filter">
+                            <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-report-days="7">{{ _('trends.last_7_days') }}</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-report-days="30">{{ _('trends.last_30_days') }}</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-report-days="90">{{ _('trends.last_90_days') }}</button>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label for="report_start_date" class="form-label small mb-1">{{ _('trends.from') }}</label>
+                                <input type="date" class="form-control form-control-sm" id="report_start_date" name="start_date" value="{{ report_start_date }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="report_end_date" class="form-label small mb-1">{{ _('trends.to') }}</label>
+                                <input type="date" class="form-control form-control-sm" id="report_end_date" name="end_date" value="{{ report_end_date }}" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                            <i class="bi bi-file-earmark-medical me-1"></i>{{ _('settings.export_report') }}
+                        </button>
+                    </form>
+                </div>
+
                 <hr>
 
                 <!-- Backup Wiederherstellen -->
@@ -271,6 +296,30 @@
         });
 
         applyTheme(localStorage.getItem('theme') || 'light');
+    })();
+
+    (function() {
+        const startInput = document.getElementById('report_start_date');
+        const endInput = document.getElementById('report_end_date');
+        if (!startInput || !endInput) return;
+
+        function isoDateLocal(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        document.querySelectorAll('[data-report-days]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const days = parseInt(btn.dataset.reportDays, 10);
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - days);
+                startInput.value = isoDateLocal(start);
+                endInput.value = isoDateLocal(end);
+            });
+        });
     })();
 
     (function() {

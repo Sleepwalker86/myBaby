@@ -3,4 +3,5 @@ Werkzeug==3.0.1
 pytz==2023.3
 requests==2.31.0
 Flask-WTF==1.2.1
+fpdf2==2.8.7
 

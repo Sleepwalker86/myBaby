@@ -265,6 +265,8 @@
     "export_csv_desc": "Download all entries as a CSV file (Excel-compatible)",
     "export_backup": "Create Backup",
     "export_backup_desc": "Download a full data backup as JSON",
+    "export_report": "Doctor's Report (PDF)",
+    "export_report_desc": "Readable summary for a date range as PDF (e.g. for a check-up)",
     "restore_title": "Restore Backup",
     "restore_desc": "Upload a JSON backup and restore all data",
     "restore_warning": "Warning: All current data will be permanently overwritten!",

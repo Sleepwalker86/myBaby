@@ -1244,6 +1244,18 @@ class Height:
         db.execute('DELETE FROM height WHERE id = ?', (height_id,))
         db.commit()
 
+    @staticmethod
+    def get_in_range(start_date, end_date):
+        db = get_db()
+        from datetime import datetime as _dt
+        start_str = _dt.combine(start_date, _dt.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
+        end_str = _dt.combine(end_date, _dt.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
+        rows = db.execute(
+            'SELECT * FROM height WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
+            (start_str, end_str)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
 
 class HeadCircumference:
     """Kopfumfang-Tracking"""
