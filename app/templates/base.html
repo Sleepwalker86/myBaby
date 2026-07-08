@@ -515,6 +515,19 @@
             });
         })();
     </script>
+    <script>
+        // Schutz vor Doppel-Submit (Issue #44): Submit-Button nach dem Absenden kurz
+        // deaktivieren, damit ein Doppel-Tap (z. B. Touch-Delay) nicht zwei Einträge erzeugt.
+        document.addEventListener('submit', function(event) {
+            if (event.defaultPrevented) return;
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            const btn = form.querySelector('button[type="submit"]:not([disabled])');
+            if (!btn) return;
+            btn.disabled = true;
+            setTimeout(function() { btn.disabled = false; }, 2000);
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
