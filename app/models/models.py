@@ -6,23 +6,69 @@ import json
 
 tz_berlin = pytz.timezone('Europe/Berlin')
 
+# Issue #44: Zeitfenster, innerhalb dessen ein inhaltlich identischer Eintrag als
+# Doppel-Submit (statt als bewusst zweiter Eintrag) gewertet wird.
+DEDUP_WINDOW_SECONDS = 5
+
+
+def _parse_ts(value):
+    """Parst einen ISO-Zeitstempel; gibt None statt Exception bei ungültigem Wert."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
+
+
+def _is_recent_duplicate(db, table, timestamp_column, timestamp, match_fields):
+    """Erkennt Doppel-Submits: Prüft, ob der zuletzt in `table` angelegte Eintrag in
+    allen `match_fields` übereinstimmt und sein Zeitstempel höchstens
+    DEDUP_WINDOW_SECONDS vom neuen Zeitstempel entfernt liegt. Solche Wiederholungen
+    entstehen z. B. durch Touch-Delay bei übermüdeten Eltern (Issue #44)."""
+    new_ts = _parse_ts(timestamp)
+    if new_ts is None:
+        return False
+
+    columns = ', '.join([timestamp_column] + list(match_fields.keys()))
+    row = db.execute(
+        f'SELECT {columns} FROM {table} ORDER BY id DESC LIMIT 1'
+    ).fetchone()
+    if row is None:
+        return False
+
+    last_ts = _parse_ts(row[timestamp_column])
+    if last_ts is None or abs((new_ts - last_ts).total_seconds()) > DEDUP_WINDOW_SECONDS:
+        return False
+
+    return all(row[field] == expected for field, expected in match_fields.items())
+
+
 class Sleep:
     """Schlaf-Tracking"""
     @staticmethod
     def create_nap(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
         """Erstellt ein Nickerchen"""
         db = get_db()
+        match_fields = {'type': 'nap', 'end_time': end_time, 'sleep_quality': sleep_quality,
+                         'sleep_location': sleep_location, 'sleep_comment': sleep_comment}
+        if _is_recent_duplicate(db, 'sleep', 'start_time', start_time, match_fields):
+            return None
         cursor = db.execute(
             'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment) VALUES (?, ?, ?, ?, ?, ?)',
             ('nap', start_time, end_time, sleep_quality, sleep_location, sleep_comment)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
     def create_night_sleep(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
         """Erstellt einen Nachtschlaf"""
         db = get_db()
+        match_fields = {'type': 'night', 'end_time': end_time, 'sleep_quality': sleep_quality,
+                         'sleep_location': sleep_location, 'sleep_comment': sleep_comment}
+        if _is_recent_duplicate(db, 'sleep', 'start_time', start_time, match_fields):
+            return None
         cursor = db.execute(
             'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment) VALUES (?, ?, ?, ?, ?, ?)',
             ('night', start_time, end_time, sleep_quality, sleep_location, sleep_comment)
@@ -521,6 +567,8 @@ class NightWaking:
     def create(start_time, end_time=None):
         """Erstellt einen nächtliches Aufwachen-Eintrag"""
         db = get_db()
+        if _is_recent_duplicate(db, 'night_waking', 'start_time', start_time, {'end_time': end_time}):
+            return None
         cursor = db.execute(
             'INSERT INTO night_waking (start_time, end_time) VALUES (?, ?)',
             (start_time, end_time)
@@ -651,6 +699,8 @@ class Feeding:
     def create(timestamp, side, end_time=None):
         """Erstellt einen Still-Eintrag"""
         db = get_db()
+        if _is_recent_duplicate(db, 'feeding', 'timestamp', timestamp, {'side': side, 'end_time': end_time}):
+            return None
         cursor = db.execute(
             'INSERT INTO feeding (timestamp, side, end_time) VALUES (?, ?, ?)',
             (timestamp, side, end_time)
@@ -738,6 +788,8 @@ class Bottle:
     def create(timestamp, amount):
         """Erstellt einen Flaschen-Eintrag"""
         db = get_db()
+        if _is_recent_duplicate(db, 'bottle', 'timestamp', timestamp, {'amount': amount}):
+            return None
         cursor = db.execute(
             'INSERT INTO bottle (timestamp, amount) VALUES (?, ?)',
             (timestamp, amount)
@@ -783,6 +835,8 @@ class Porridge:
     @staticmethod
     def create(timestamp, amount, food=None):
         db = get_db()
+        if _is_recent_duplicate(db, 'porridge', 'timestamp', timestamp, {'amount': amount, 'food': food}):
+            return None
         cursor = db.execute(
             'INSERT INTO porridge (timestamp, amount, food) VALUES (?, ?, ?)',
             (timestamp, amount, food)
@@ -824,6 +878,8 @@ class Diaper:
     def create(timestamp, type):
         """Erstellt einen Windel-Eintrag"""
         db = get_db()
+        if _is_recent_duplicate(db, 'diaper', 'timestamp', timestamp, {'type': type}):
+            return None
         cursor = db.execute(
             'INSERT INTO diaper (timestamp, type) VALUES (?, ?)',
             (timestamp, type)
@@ -930,6 +986,8 @@ class Temperature:
     def create(timestamp, value):
         """Erstellt einen Temperatur-Eintrag"""
         db = get_db()
+        if _is_recent_duplicate(db, 'temperature', 'timestamp', timestamp, {'value': value}):
+            return None
         cursor = db.execute(
             'INSERT INTO temperature (timestamp, value) VALUES (?, ?)',
             (timestamp, value)
@@ -1041,6 +1099,8 @@ class Medicine:
     def create(timestamp, name, dose):
         """Erstellt einen Medizin-Eintrag"""
         db = get_db()
+        if _is_recent_duplicate(db, 'medicine', 'timestamp', timestamp, {'name': name, 'dose': dose}):
+            return None
         cursor = db.execute(
             'INSERT INTO medicine (timestamp, name, dose) VALUES (?, ?, ?)',
             (timestamp, name, dose)
