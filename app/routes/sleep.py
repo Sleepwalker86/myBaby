@@ -30,6 +30,10 @@ bp = Blueprint('sleep', __name__, url_prefix='/sleep')
 @bp.route('/nap/start', methods=['POST'])
 def start_nap():
     """Startet ein Nickerchen"""
+    if Sleep.get_active_sleep_by_type('nap'):
+        flash('Nickerchen läuft bereits', 'warning')
+        return redirect(url_for('main.index'))
+
     timestamp = _effective_timestamp('start_time')
 
     sleep_quality = request.form.get('sleep_quality') or None
@@ -57,6 +61,10 @@ def end_nap():
 @bp.route('/night/start', methods=['POST'])
 def start_night_sleep():
     """Startet den Nachtschlaf"""
+    if Sleep.get_active_sleep_by_type('night'):
+        flash('Nachtschlaf läuft bereits', 'warning')
+        return redirect(url_for('main.index'))
+
     timestamp = _effective_timestamp('start_time')
 
     sleep_quality = request.form.get('sleep_quality') or None
