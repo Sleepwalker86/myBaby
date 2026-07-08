@@ -1,7 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Sleep, NightWaking
 
-from app.form_datetime import normalize_form_datetime
+from app.form_datetime import normalize_form_datetime, is_end_before_start
 
 from app.timezone import tz_berlin
 
@@ -49,6 +49,9 @@ def end_nap():
     active_sleep = Sleep.get_active_sleep_by_type('nap')
     if active_sleep:
         timestamp = _effective_timestamp('end_time')
+        if is_end_before_start(active_sleep['start_time'], timestamp):
+            flash('Endzeit muss nach der Startzeit liegen', 'error')
+            return redirect(url_for('main.index'))
         Sleep.end_sleep(active_sleep['id'], timestamp)
         flash('Nickerchen beendet', 'success')
     else:
@@ -80,6 +83,9 @@ def end_night_sleep():
     active_sleep = Sleep.get_active_sleep_by_type('night')
     if active_sleep:
         timestamp = _effective_timestamp('end_time')
+        if is_end_before_start(active_sleep['start_time'], timestamp):
+            flash('Endzeit muss nach der Startzeit liegen', 'error')
+            return redirect(url_for('main.index'))
         Sleep.end_sleep(active_sleep['id'], timestamp)
         flash('Nachtschlaf beendet', 'success')
     else:
@@ -102,6 +108,9 @@ def end_night_waking():
     active_waking = NightWaking.get_active()
     if active_waking:
         timestamp = _effective_timestamp('end_time')
+        if is_end_before_start(active_waking['start_time'], timestamp):
+            flash('Endzeit muss nach der Startzeit liegen', 'error')
+            return redirect(url_for('main.index'))
         NightWaking.end_waking(active_waking['id'], timestamp)
         flash('Nächtliches Aufwachen beendet', 'success')
     else:

@@ -27,3 +27,17 @@ def normalize_form_datetime(value):
     # Stringvergleich schon durch die reine An-/Abwesenheit der Mikrosekunden
     # inkonsistent sortierbar, unabhängig von der Zeitumstellung).
     return dt.replace(microsecond=0).isoformat()
+
+
+def is_end_before_start(start_time, end_time):
+    """Prüft zeitzonen-bewusst, ob end_time vor oder gleich start_time liegt.
+
+    Vergleicht echte datetime-Objekte statt Strings, damit ein Offset-Wechsel
+    durch die Zeitumstellung (siehe Issue #46) keine falschen Ergebnisse liefert.
+    Erwartet Strings mit Offset, wie sie normalize_form_datetime() liefert.
+    """
+    if not start_time or not end_time:
+        return False
+    start_dt = datetime.fromisoformat(str(start_time).replace('Z', '+00:00'))
+    end_dt = datetime.fromisoformat(str(end_time).replace('Z', '+00:00'))
+    return end_dt <= start_dt

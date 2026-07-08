@@ -1,6 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, flash
 from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine, NightWaking, Porridge
-from app.form_datetime import normalize_form_datetime
+from app.form_datetime import normalize_form_datetime, is_end_before_start
 from app.form_validation import parse_bounded_number
 
 bp = Blueprint('edit', __name__, url_prefix='/edit')
@@ -22,6 +22,10 @@ def edit_sleep(sleep_id):
 
         if not start_time:
             flash('Startzeit ist erforderlich', 'error')
+            return redirect(url_for('main.index'))
+
+        if is_end_before_start(start_time, end_time):
+            flash('Endzeit muss nach der Startzeit liegen', 'error')
             return redirect(url_for('main.index'))
 
         Sleep.update(sleep_id, start_time, end_time, sleep_type, sleep_quality, sleep_location, sleep_comment)
@@ -54,6 +58,10 @@ def edit_feeding(feeding_id):
 
         if not timestamp or side not in ['links', 'rechts']:
             flash('Ungültige Eingabe', 'error')
+            return redirect(url_for('main.index'))
+
+        if is_end_before_start(timestamp, end_time):
+            flash('Endzeit muss nach der Startzeit liegen', 'error')
             return redirect(url_for('main.index'))
 
         Feeding.update(feeding_id, timestamp, side, end_time)
@@ -210,6 +218,10 @@ def edit_night_waking(waking_id):
 
         if not start_time:
             flash('Startzeit ist erforderlich', 'error')
+            return redirect(url_for('main.index'))
+
+        if is_end_before_start(start_time, end_time):
+            flash('Endzeit muss nach der Startzeit liegen', 'error')
             return redirect(url_for('main.index'))
 
         NightWaking.update(waking_id, start_time, end_time)
