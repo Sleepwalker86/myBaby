@@ -11,161 +11,18 @@ def get_baby_name():
     """Hilfsfunktion zum Abrufen des Baby-Namens"""
     return BabyInfo.get_name()
 
-from app.timezone import tz_berlin
+from app.timezone import tz_berlin, to_berlin
 
 bp = Blueprint('main', __name__)
-
-@bp.app_template_filter('translate_entry_display')
-def translate_entry_display(entry):
-    """Übersetzt die display-Eigenschaft eines Eintrags basierend auf seiner Kategorie"""
-    if not entry:
-        return ""
-    
-    category = entry.get('category', '')
-    
-    if category == 'sleep':
-        sleep_type = entry.get('type', '')
-        if sleep_type == 'night':
-            return _('entries.night_sleep')
-        else:
-            return _('entries.nap')
-    elif category == 'night_waking':
-        return _('entries.night_waking')
-    elif category == 'feeding':
-        side = entry.get('side', '').lower()
-        if side == 'left' or side == 'links':
-            return _('entries.feeding_left')
-        else:
-            return _('entries.feeding_right')
-    elif category == 'bottle':
-        amount = entry.get('amount', 0)
-        return _('bottle.title') + f" ({amount} ml)"
-    elif category == 'porridge':
-        amount = entry.get('amount', 0)
-        food = entry.get('food', '')
-        label = _('porridge.title') + f" ({amount} g)"
-        if food:
-            label += f' – {food}'
-        return label
-    elif category == 'diaper':
-        diaper_type = entry.get('type', '')
-        if diaper_type == 'nass':
-            return _('entries.diaper_wet')
-        elif diaper_type == 'groß':
-            return _('entries.diaper_solid')
-        else:
-            return _('entries.diaper_both')
-    elif category == 'temperature':
-        value = entry.get('value', 0)
-        return _('entries.temperature') + f" ({value}°C)"
-    elif category == 'medicine':
-        name = entry.get('name', '')
-        dose = entry.get('dose', '')
-        return _('entries.medicine') + f" ({name}, {dose})"
-    elif category == 'weight':
-        weight_kg = entry.get('weight_kg', 0)
-        return _('weight.title') + f" ({weight_kg} kg)"
-    elif category == 'height':
-        height_cm = entry.get('height_cm', 0)
-        return _('height.title') + f" ({height_cm} cm)"
-
-    # Fallback: Original display verwenden
-    return entry.get('display', '')
-
-@bp.app_template_filter('format_datetime_de')
-def format_datetime_de(value):
-    """Formatiert einen ISO-Datetime-String ins deutsche Format DD.MM.YYYY HH:MM"""
-    if not value:
-        return ""
-    try:
-        if isinstance(value, str):
-            dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        else:
-            dt = value
-        
-        # Konvertiere zu Berliner Zeitzone falls nötig
-        if dt.tzinfo is None:
-            # Keine Zeitzone - annehmen dass es bereits lokale Zeit ist
-            dt = tz_berlin.localize(dt.replace(tzinfo=None))
-        elif dt.tzinfo != tz_berlin:
-            # Konvertiere zu Berliner Zeitzone
-            dt = dt.astimezone(tz_berlin)
-        
-        # Entferne Zeitzone für Formatierung
-        dt_local = dt.replace(tzinfo=None)
-        return dt_local.strftime('%d.%m.%Y %H:%M')
-    except (ValueError, AttributeError):
-        return value
-
-@bp.app_template_filter('calculate_duration')
-def calculate_duration(start_time, end_time):
-    """Berechnet die Dauer zwischen zwei Zeitstempeln und gibt sie als 'Xh Ym' zurück"""
-    if not start_time or not end_time:
-        return ""
-    try:
-        # Parse start_time
-        if isinstance(start_time, str):
-            start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-        else:
-            start_dt = start_time
-        
-        # Parse end_time
-        if isinstance(end_time, str):
-            end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-        else:
-            end_dt = end_time
-        
-        # Konvertiere zu Berliner Zeitzone falls nötig
-        if start_dt.tzinfo is None:
-            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-        elif start_dt.tzinfo != tz_berlin:
-            start_dt = start_dt.astimezone(tz_berlin)
-        
-        if end_dt.tzinfo is None:
-            end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
-        elif end_dt.tzinfo != tz_berlin:
-            end_dt = end_dt.astimezone(tz_berlin)
-        
-        # Berechne Differenz
-        duration = end_dt - start_dt
-        total_seconds = int(duration.total_seconds())
-        
-        if total_seconds < 0:
-            return ""
-        
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        
-        if hours > 0 and minutes > 0:
-            return f"{hours}h {minutes}m"
-        elif hours > 0:
-            return f"{hours}h"
-        elif minutes > 0:
-            return f"{minutes}m"
-        else:
-            return "< 1m"
-    except (ValueError, AttributeError, TypeError):
-        return ""
 
 def format_time_ago(timestamp):
     """Formatiert eine Zeitstempel als 'vor X Stunden/Minuten'"""
     if not timestamp:
         return _('status.never')
-    
+
     try:
-        if isinstance(timestamp, str):
-            ts = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-        else:
-            ts = timestamp
-        
         now = datetime.now(tz_berlin)
-        # Stelle sicher, dass ts auch eine Zeitzone hat
-        if ts.tzinfo is None:
-            # Wenn keine Zeitzone, annehmen dass es bereits lokale Zeit ist
-            ts = tz_berlin.localize(ts.replace(tzinfo=None))
-        elif ts.tzinfo != tz_berlin:
-            # Konvertiere zu Berliner Zeitzone
-            ts = ts.astimezone(tz_berlin)
+        ts = to_berlin(timestamp)
         diff = now - ts
         total_seconds = int(diff.total_seconds())
         
@@ -298,26 +155,9 @@ def index():
             
             try:
                 # Parse Start- und Endzeit
-                if isinstance(start_time_str, str):
-                    start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
-                else:
-                    start_time = start_time_str
-                
-                if isinstance(end_time_str, str):
-                    end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00'))
-                else:
-                    end_time = end_time_str
-                
-                if start_time.tzinfo is None:
-                    start_time = tz_berlin.localize(start_time.replace(tzinfo=None))
-                elif start_time.tzinfo != tz_berlin:
-                    start_time = start_time.astimezone(tz_berlin)
-                
-                if end_time.tzinfo is None:
-                    end_time = tz_berlin.localize(end_time.replace(tzinfo=None))
-                elif end_time.tzinfo != tz_berlin:
-                    end_time = end_time.astimezone(tz_berlin)
-                
+                start_time = to_berlin(start_time_str)
+                end_time = to_berlin(end_time_str)
+
                 # Prüfe ob Start oder Ende am ausgewählten Tag liegt
                 start_date = start_time.date()
                 end_date = end_time.date()
@@ -373,16 +213,8 @@ def index():
                 continue
             
             try:
-                if isinstance(entry_time_str, str):
-                    entry_time = datetime.fromisoformat(entry_time_str.replace('Z', '+00:00'))
-                else:
-                    entry_time = entry_time_str
-                
-                if entry_time.tzinfo is None:
-                    entry_time = tz_berlin.localize(entry_time.replace(tzinfo=None))
-                elif entry_time.tzinfo != tz_berlin:
-                    entry_time = entry_time.astimezone(tz_berlin)
-                
+                entry_time = to_berlin(entry_time_str)
+
                 # Alle Einträge des Tages
                 if entry_time.date() == selected_date:
                     # Berechne Stunden und Minuten

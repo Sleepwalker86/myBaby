@@ -3,6 +3,7 @@ from flask_wtf.csrf import CSRFProtect
 from app.models.database import init_db, close_db
 from app.models.models import BabyInfo
 from app.i18n import _, get_language
+from app.template_filters import register_template_filters
 
 csrf = CSRFProtect()
 
@@ -12,7 +13,10 @@ def create_app():
     app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
     app.config['DATABASE'] = '/data/baby_tracking.db'
     csrf.init_app(app)
-    
+
+    # Gemeinsame Template-Filter einmalig registrieren (Issue #48)
+    register_template_filters(app)
+
     # Datenbank initialisieren
     with app.app_context():
         init_db()
