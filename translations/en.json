@@ -232,6 +232,12 @@
     "gender_boy": "Boy",
     "gender_girl": "Girl",
     "gender_hint": "Required for the WHO percentile curves in Trends (weight/height)",
+    "manage_babies": "Manage children",
+    "manage_babies_desc": "Add further child profiles for siblings or twins. All entries, trends and suggestions always refer to the currently active child (see the switcher at the top of the navigation).",
+    "active_baby": "Currently active",
+    "add_baby": "Add child",
+    "delete_baby_confirm": "Really delete this child profile?",
+    "delete_baby_last_hint": "The last remaining child profile cannot be deleted",
     "age": "Age",
     "month": "Month",
     "months": "Months",
@@ -331,7 +337,10 @@
       "medicine_deleted": "Medicine entry deleted",
       "porridge_deleted": "Porridge entry deleted",
       "illness_deleted": "Illness entry deleted",
-      "night_waking_deleted": "Night waking deleted"
+      "night_waking_deleted": "Night waking deleted",
+      "baby_created": "Child profile created",
+      "baby_updated": "Child profile updated",
+      "baby_deleted": "Child profile deleted"
     },
     "error": {
       "birth_date_required": "Please enter a birth date",
@@ -345,7 +354,9 @@
       "medicine_required": "Medicine name and dose are required",
       "all_fields_required": "All fields are required",
       "update_error": "Error updating entry",
-      "delete_error": "Error deleting entry"
+      "delete_error": "Error deleting entry",
+      "baby_has_data": "A child with existing entries cannot be deleted - please rename it instead",
+      "baby_last_one": "The last remaining child profile cannot be deleted"
     },
     "warning": {
       "no_active_nap": "No active nap found",

@@ -232,6 +232,12 @@
     "gender_boy": "Junge",
     "gender_girl": "Mädchen",
     "gender_hint": "Voraussetzung für die WHO-Perzentilkurven in den Trends (Gewicht/Größe)",
+    "manage_babies": "Kinder verwalten",
+    "manage_babies_desc": "Lege weitere Kind-Profile für Geschwister oder Zwillinge an. Alle Einträge, Trends und Vorschläge beziehen sich immer auf das aktuell aktive Kind (siehe Umschalter oben in der Navigation).",
+    "active_baby": "Aktuell aktiv",
+    "add_baby": "Kind hinzufügen",
+    "delete_baby_confirm": "Dieses Kind-Profil wirklich löschen?",
+    "delete_baby_last_hint": "Das letzte Kind-Profil kann nicht gelöscht werden",
     "age": "Alter",
     "month": "Monat",
     "months": "Monate",
@@ -331,7 +337,10 @@
       "medicine_deleted": "Medizin-Eintrag gelöscht",
       "porridge_deleted": "Brei-Eintrag gelöscht",
       "illness_deleted": "Erkrankungs-Eintrag gelöscht",
-      "night_waking_deleted": "Nächtliches Aufwachen gelöscht"
+      "night_waking_deleted": "Nächtliches Aufwachen gelöscht",
+      "baby_created": "Kind-Profil angelegt",
+      "baby_updated": "Kind-Profil aktualisiert",
+      "baby_deleted": "Kind-Profil gelöscht"
     },
     "error": {
       "birth_date_required": "Bitte ein Geburtsdatum angeben",
@@ -345,7 +354,9 @@
       "medicine_required": "Medikamentenname und Dosis sind erforderlich",
       "all_fields_required": "Alle Felder sind erforderlich",
       "update_error": "Fehler beim Aktualisieren des Eintrags",
-      "delete_error": "Fehler beim Löschen des Eintrags"
+      "delete_error": "Fehler beim Löschen des Eintrags",
+      "baby_has_data": "Ein Kind mit vorhandenen Einträgen kann nicht gelöscht werden - bitte stattdessen umbenennen",
+      "baby_last_one": "Das letzte verbleibende Kind-Profil kann nicht gelöscht werden"
     },
     "warning": {
       "no_active_nap": "Kein aktives Nickerchen gefunden",

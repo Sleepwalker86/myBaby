@@ -435,7 +435,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.index') }}">{{ _('nav.dashboard') }}</a>
                     </li>
@@ -448,6 +448,27 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('settings.settings') }}">{{ _('nav.settings') }}</a>
                     </li>
+                    {% if all_babies and all_babies|length > 1 %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="babySwitcherDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-people"></i>
+                            {% for b in all_babies %}{% if b.id == active_baby_id %}{{ b.name or _('settings.name_placeholder') }}{% endif %}{% endfor %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="babySwitcherDropdown">
+                            {% for b in all_babies %}
+                            <li>
+                                <form method="POST" action="{{ url_for('baby.switch', baby_id=b.id) }}">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between{% if b.id == active_baby_id %} active{% endif %}">
+                                        {{ b.name or _('settings.name_placeholder') }}
+                                        {% if b.id == active_baby_id %}<i class="bi bi-check-lg"></i>{% endif %}
+                                    </button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

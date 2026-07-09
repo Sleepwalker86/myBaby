@@ -232,6 +232,12 @@
     "gender_boy": "Niño",
     "gender_girl": "Niña",
     "gender_hint": "Necesario para las curvas de percentiles de la OMS en Tendencias (peso/talla)",
+    "manage_babies": "Gestionar niños",
+    "manage_babies_desc": "Añade más perfiles de niños para hermanos o gemelos. Todas las entradas, tendencias y sugerencias se refieren siempre al niño actualmente activo (ver el selector arriba en la navegación).",
+    "active_baby": "Actualmente activo",
+    "add_baby": "Añadir niño",
+    "delete_baby_confirm": "¿Eliminar realmente este perfil de niño?",
+    "delete_baby_last_hint": "No se puede eliminar el último perfil de niño restante",
     "age": "Edad",
     "month": "Mes",
     "months": "Meses",
@@ -331,7 +337,10 @@
       "medicine_deleted": "Registro de medicación eliminado",
       "porridge_deleted": "Registro de papilla eliminado",
       "illness_deleted": "Registro de enfermedad eliminado",
-      "night_waking_deleted": "Despertar nocturno eliminado"
+      "night_waking_deleted": "Despertar nocturno eliminado",
+      "baby_created": "Perfil de niño creado",
+      "baby_updated": "Perfil de niño actualizado",
+      "baby_deleted": "Perfil de niño eliminado"
     },
     "error": {
       "birth_date_required": "Por favor, introduce una fecha de nacimiento",
@@ -345,7 +354,9 @@
       "medicine_required": "El nombre del medicamento y la dosis son obligatorios",
       "all_fields_required": "Todos los campos son obligatorios",
       "update_error": "Error al actualizar la entrada",
-      "delete_error": "Error al eliminar la entrada"
+      "delete_error": "Error al eliminar la entrada",
+      "baby_has_data": "No se puede eliminar un niño con entradas existentes - cámbiale el nombre en su lugar",
+      "baby_last_one": "No se puede eliminar el último perfil de niño restante"
     },
     "warning": {
       "no_active_nap": "No se encontró ninguna siesta activa",
