@@ -3,10 +3,14 @@ import os
 from datetime import datetime
 from flask import g
 
+def get_database_path():
+    """Gibt den konfigurierten Pfad zur SQLite-Datenbankdatei zurück"""
+    return os.environ.get('DATABASE_PATH', '/data/baby_tracking.db')
+
 def get_db():
     """Holt die Datenbankverbindung aus dem Flask-Kontext"""
     if 'db' not in g:
-        db_path = os.environ.get('DATABASE_PATH', '/data/baby_tracking.db')
+        db_path = get_database_path()
         # Stelle sicher, dass das Verzeichnis existiert
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         g.db = sqlite3.connect(db_path)
