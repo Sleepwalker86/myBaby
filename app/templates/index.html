@@ -255,7 +255,12 @@
         
         // Funktion zum Abrufen der Hintergrundfarbe der Kreise
         function getCircleBgColor() {
-            return isDarkMode() ? '#2d2d2d' : '#ffffff';
+            if (!isDarkMode()) {
+                return '#ffffff';
+            }
+            const rootStyles = getComputedStyle(document.documentElement);
+            const cardBg = rootStyles.getPropertyValue('--bg-card').trim();
+            return cardBg || '#182125';
         }
         
         // Funktion zum Erstellen von SVG-Icons
