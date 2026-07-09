@@ -4,7 +4,7 @@ from datetime import datetime, date, timedelta
 import bisect
 import json
 
-from app.timezone import tz_berlin
+from app.timezone import tz_berlin, normalize_to_berlin
 
 # Issue #44: Zeitfenster, innerhalb dessen ein inhaltlich identischer Eintrag als
 # Doppel-Submit (statt als bewusst zweiter Eintrag) gewertet wird.
@@ -18,14 +18,8 @@ def _format_wake_duration(prev_end_str, current_start_str):
     try:
         prev_dt = datetime.fromisoformat(str(prev_end_str).replace('Z', '+00:00'))
         cur_dt = datetime.fromisoformat(str(current_start_str).replace('Z', '+00:00'))
-        if prev_dt.tzinfo is None:
-            prev_dt = tz_berlin.localize(prev_dt.replace(tzinfo=None))
-        else:
-            prev_dt = prev_dt.astimezone(tz_berlin)
-        if cur_dt.tzinfo is None:
-            cur_dt = tz_berlin.localize(cur_dt.replace(tzinfo=None))
-        else:
-            cur_dt = cur_dt.astimezone(tz_berlin)
+        prev_dt = normalize_to_berlin(prev_dt)
+        cur_dt = normalize_to_berlin(cur_dt)
         if cur_dt <= prev_dt:
             return None
         total_minutes = int((cur_dt - prev_dt).total_seconds() // 60)
@@ -229,7 +223,7 @@ class Sleep:
                 return None
             
             # Konvertiere zu Berliner Zeitzone (immer, da DB keine Zeitzone hat)
-            dt = tz_berlin.localize(dt)
+            dt = normalize_to_berlin(dt)
             
             return dt
         
@@ -250,16 +244,10 @@ class Sleep:
                     # Manchmal sind die Werte bereits datetime-Objekte
                     if isinstance(row['start_time'], datetime):
                         start_dt = row['start_time']
-                        if start_dt.tzinfo is None:
-                            start_dt = tz_berlin.localize(start_dt)
-                        else:
-                            start_dt = start_dt.astimezone(tz_berlin)
+                        start_dt = normalize_to_berlin(start_dt)
                     if isinstance(row['end_time'], datetime):
                         end_dt = row['end_time']
-                        if end_dt.tzinfo is None:
-                            end_dt = tz_berlin.localize(end_dt)
-                        else:
-                            end_dt = end_dt.astimezone(tz_berlin)
+                        end_dt = normalize_to_berlin(end_dt)
                     
                     if start_dt is None or end_dt is None:
                         continue
@@ -294,8 +282,8 @@ class Sleep:
                    WHERE end_time IS NULL'''
             ).fetchall()
             
-            day_start_dt = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time()))
-            day_end_dt = tz_berlin.localize(datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59)))
+            day_start_dt = normalize_to_berlin(datetime.combine(selected_date, datetime.min.time()))
+            day_end_dt = normalize_to_berlin(datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59)))
             
             for row in active_sleep_rows:
                 try:
@@ -431,15 +419,9 @@ class Sleep:
                 end = datetime.fromisoformat(row['end_time'].replace('Z', '+00:00'))
                 
                 # Konvertiere zu Berliner Zeitzone falls nötig
-                if start.tzinfo is None:
-                    start = tz_berlin.localize(start.replace(tzinfo=None))
-                elif start.tzinfo != tz_berlin:
-                    start = start.astimezone(tz_berlin)
+                start = normalize_to_berlin(start)
                 
-                if end.tzinfo is None:
-                    end = tz_berlin.localize(end.replace(tzinfo=None))
-                elif end.tzinfo != tz_berlin:
-                    end = end.astimezone(tz_berlin)
+                end = normalize_to_berlin(end)
                 
                 # Gesamtdauer berechnen
                 duration_hours = (end - start).total_seconds() / 3600
@@ -503,15 +485,9 @@ class Sleep:
                 end = datetime.fromisoformat(row['end_time'].replace('Z', '+00:00'))
                 
                 # Konvertiere zu Berliner Zeitzone falls nötig
-                if start.tzinfo is None:
-                    start = tz_berlin.localize(start.replace(tzinfo=None))
-                elif start.tzinfo != tz_berlin:
-                    start = start.astimezone(tz_berlin)
+                start = normalize_to_berlin(start)
                 
-                if end.tzinfo is None:
-                    end = tz_berlin.localize(end.replace(tzinfo=None))
-                elif end.tzinfo != tz_berlin:
-                    end = end.astimezone(tz_berlin)
+                end = normalize_to_berlin(end)
                 
                 # Gesamtdauer berechnen
                 duration_hours = (end - start).total_seconds() / 3600
@@ -534,13 +510,13 @@ class Sleep:
                         daily_sleep[day_key] += duration_hours
                 else:
                     # Nickerchen: Nur der Teil im Zeitraum
-                    start_of_period = tz_berlin.localize(datetime.combine(start_date_obj, datetime.min.time()))
+                    start_of_period = normalize_to_berlin(datetime.combine(start_date_obj, datetime.min.time()))
                     if start < start_of_period:
                         # Nur der Teil im Zeitraum zählen
                         day_key = end.date().isoformat()
                         # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
                         if start_date_obj <= end.date() <= end_date_obj:
-                            day_start = tz_berlin.localize(datetime.combine(end.date(), datetime.min.time()))
+                            day_start = normalize_to_berlin(datetime.combine(end.date(), datetime.min.time()))
                             day_duration = (end - day_start).total_seconds() / 3600
                             if day_key not in daily_sleep:
                                 daily_sleep[day_key] = 0
@@ -668,11 +644,9 @@ class NightWaking:
         # exakte Prüfung danach zeitzonen-bewusst mit echten datetime-Objekten gemacht.
         try:
             sleep_start = datetime.fromisoformat(str(night_sleep_start).replace('Z', '+00:00'))
-            if sleep_start.tzinfo is None:
-                sleep_start = tz_berlin.localize(sleep_start.replace(tzinfo=None))
+            sleep_start = normalize_to_berlin(sleep_start)
             sleep_end = datetime.fromisoformat(str(night_sleep_end).replace('Z', '+00:00'))
-            if sleep_end.tzinfo is None:
-                sleep_end = tz_berlin.localize(sleep_end.replace(tzinfo=None))
+            sleep_end = normalize_to_berlin(sleep_end)
         except (ValueError, AttributeError):
             sleep_start = sleep_end = None
 
@@ -698,14 +672,12 @@ class NightWaking:
         for row in rows:
             try:
                 start_time = datetime.fromisoformat(str(row['start_time']).replace('Z', '+00:00'))
-                if start_time.tzinfo is None:
-                    start_time = tz_berlin.localize(start_time.replace(tzinfo=None))
+                start_time = normalize_to_berlin(start_time)
                 if not (sleep_start <= start_time <= sleep_end):
                     continue
                 if row['end_time']:
                     end_time = datetime.fromisoformat(str(row['end_time']).replace('Z', '+00:00'))
-                    if end_time.tzinfo is None:
-                        end_time = tz_berlin.localize(end_time.replace(tzinfo=None))
+                    end_time = normalize_to_berlin(end_time)
                     if not (sleep_start <= end_time <= sleep_end):
                         continue
             except (ValueError, AttributeError):
@@ -725,43 +697,28 @@ class NightWaking:
                 now = datetime.now(tz_berlin)
                 try:
                     end_dt = datetime.fromisoformat(night_sleep_end.replace('Z', '+00:00'))
-                    if end_dt.tzinfo is None:
-                        end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
-                    elif end_dt.tzinfo != tz_berlin:
-                        end_dt = end_dt.astimezone(tz_berlin)
+                    end_dt = normalize_to_berlin(end_dt)
                     end_time = min(now, end_dt)
                 except (ValueError, AttributeError):
                     end_time = now
             else:
                 try:
                     end_time = datetime.fromisoformat(waking['end_time'].replace('Z', '+00:00'))
-                    if end_time.tzinfo is None:
-                        end_time = tz_berlin.localize(end_time.replace(tzinfo=None))
-                    elif end_time.tzinfo != tz_berlin:
-                        end_time = end_time.astimezone(tz_berlin)
+                    end_time = normalize_to_berlin(end_time)
                 except (ValueError, AttributeError):
                     continue
             
             try:
                 start_time = datetime.fromisoformat(waking['start_time'].replace('Z', '+00:00'))
-                if start_time.tzinfo is None:
-                    start_time = tz_berlin.localize(start_time.replace(tzinfo=None))
-                elif start_time.tzinfo != tz_berlin:
-                    start_time = start_time.astimezone(tz_berlin)
+                start_time = normalize_to_berlin(start_time)
                 
                 # Prüfe ob das Aufwachen innerhalb des Nachtschlafs liegt
                 try:
                     sleep_start = datetime.fromisoformat(night_sleep_start.replace('Z', '+00:00'))
-                    if sleep_start.tzinfo is None:
-                        sleep_start = tz_berlin.localize(sleep_start.replace(tzinfo=None))
-                    elif sleep_start.tzinfo != tz_berlin:
-                        sleep_start = sleep_start.astimezone(tz_berlin)
+                    sleep_start = normalize_to_berlin(sleep_start)
                     
                     sleep_end = datetime.fromisoformat(night_sleep_end.replace('Z', '+00:00'))
-                    if sleep_end.tzinfo is None:
-                        sleep_end = tz_berlin.localize(sleep_end.replace(tzinfo=None))
-                    elif sleep_end.tzinfo != tz_berlin:
-                        sleep_end = sleep_end.astimezone(tz_berlin)
+                    sleep_end = normalize_to_berlin(sleep_end)
                     
                     # Nur Aufwachen innerhalb des Nachtschlafs zählen
                     if start_time >= sleep_start and end_time <= sleep_end:
@@ -2161,10 +2118,7 @@ class BabyInfo:
                     start_time_str = active_sleep.get('start_time')
                     if start_time_str:
                         start_dt = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
-                        if start_dt.tzinfo is None:
-                            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-                        elif start_dt.tzinfo != tz_berlin:
-                            start_dt = start_dt.astimezone(tz_berlin)
+                        start_dt = normalize_to_berlin(start_dt)
                         
                         # Wenn der Nachtschlaf heute gestartet wurde oder noch läuft und es ist heute,
                         # dann noch kein Nickerchen-Vorschlag
@@ -2201,10 +2155,8 @@ class BabyInfo:
             try:
                 start_dt = datetime.fromisoformat(nap['start_time'].replace('Z', '+00:00'))
                 end_dt = datetime.fromisoformat(nap['end_time'].replace('Z', '+00:00'))
-                if start_dt.tzinfo is None:
-                    start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-                if end_dt.tzinfo is None:
-                    end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                start_dt = normalize_to_berlin(start_dt)
+                end_dt = normalize_to_berlin(end_dt)
                 duration = (end_dt - start_dt).total_seconds() / 3600.0
                 total_day_sleep_hours += duration
             except (ValueError, AttributeError):
@@ -2229,10 +2181,7 @@ class BabyInfo:
                         night_sleep_dt = datetime.fromisoformat(suggested_night_sleep_time.replace('Z', '+00:00'))
                     else:
                         night_sleep_dt = suggested_night_sleep_time
-                    if night_sleep_dt.tzinfo is None:
-                        night_sleep_dt = tz_berlin.localize(night_sleep_dt.replace(tzinfo=None))
-                    elif night_sleep_dt.tzinfo != tz_berlin:
-                        night_sleep_dt = night_sleep_dt.astimezone(tz_berlin)
+                    night_sleep_dt = normalize_to_berlin(night_sleep_dt)
                     
                     # Finde letztes Aufwachen für Berechnung
                     now = datetime.now(tz_berlin)
@@ -2248,8 +2197,7 @@ class BabyInfo:
                     if last_sleep_end:
                         try:
                             last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
-                            if last_wake_time.tzinfo is None:
-                                last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
+                            last_wake_time = normalize_to_berlin(last_wake_time)
                         except (ValueError, AttributeError):
                             pass
                     
@@ -2294,10 +2242,7 @@ class BabyInfo:
                     start_time_str = active_sleep.get('start_time')
                     if start_time_str:
                         start_dt = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
-                        if start_dt.tzinfo is None:
-                            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-                        elif start_dt.tzinfo != tz_berlin:
-                            start_dt = start_dt.astimezone(tz_berlin)
+                        start_dt = normalize_to_berlin(start_dt)
                         
                         # Wenn der Nachtschlaf heute noch läuft (gestartet heute oder gestern, aber noch aktiv),
                         # dann kein Nickerchen-Vorschlag bis zum Aufwachen
@@ -2321,8 +2266,7 @@ class BabyInfo:
             if last_sleep_end:
                 try:
                     last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
-                    if last_wake_time.tzinfo is None:
-                        last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
+                    last_wake_time = normalize_to_berlin(last_wake_time)
                 except (ValueError, AttributeError):
                     pass
             
@@ -2345,8 +2289,7 @@ class BabyInfo:
                 # Verwende die bereits berechnete Zeit (verhindert Verschiebung nach hinten)
                 try:
                     suggested_time = datetime.fromisoformat(existing_suggestion['suggested_time'].replace('Z', '+00:00'))
-                    if suggested_time.tzinfo is None:
-                        suggested_time = tz_berlin.localize(suggested_time.replace(tzinfo=None))
+                    suggested_time = normalize_to_berlin(suggested_time)
                     # Prüfe ob die Zeit noch in der Zukunft liegt
                     if suggested_time > now:
                         # Verwende die alte Zeit, aber aktualisiere die restlichen Werte
@@ -2390,10 +2333,8 @@ class BabyInfo:
                     try:
                         start_dt = datetime.fromisoformat(nap['start_time'].replace('Z', '+00:00'))
                         end_dt = datetime.fromisoformat(nap['end_time'].replace('Z', '+00:00'))
-                        if start_dt.tzinfo is None:
-                            start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-                        if end_dt.tzinfo is None:
-                            end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                        start_dt = normalize_to_berlin(start_dt)
+                        end_dt = normalize_to_berlin(end_dt)
                         sorted_naps.append((start_dt, end_dt))
                     except (ValueError, AttributeError):
                         continue
@@ -2567,10 +2508,7 @@ class BabyInfo:
         if last_sleep_end:
             try:
                 last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
-                if last_wake_time.tzinfo is None:
-                    last_wake_time = tz_berlin.localize(last_wake_time.replace(tzinfo=None))
-                elif last_wake_time.tzinfo != tz_berlin:
-                    last_wake_time = last_wake_time.astimezone(tz_berlin)
+                last_wake_time = normalize_to_berlin(last_wake_time)
             except (ValueError, AttributeError):
                 pass
         
@@ -2597,10 +2535,8 @@ class BabyInfo:
             try:
                 start_dt = datetime.fromisoformat(nap['start_time'].replace('Z', '+00:00'))
                 end_dt = datetime.fromisoformat(nap['end_time'].replace('Z', '+00:00'))
-                if start_dt.tzinfo is None:
-                    start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-                if end_dt.tzinfo is None:
-                    end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                start_dt = normalize_to_berlin(start_dt)
+                end_dt = normalize_to_berlin(end_dt)
                 duration = (end_dt - start_dt).total_seconds() / 3600.0
                 total_day_sleep_hours += duration
             except (ValueError, AttributeError):
@@ -2624,10 +2560,8 @@ class BabyInfo:
             try:
                 start_dt = datetime.fromisoformat(night_sleep['start_time'].replace('Z', '+00:00'))
                 end_dt = datetime.fromisoformat(night_sleep['end_time'].replace('Z', '+00:00'))
-                if start_dt.tzinfo is None:
-                    start_dt = tz_berlin.localize(start_dt.replace(tzinfo=None))
-                if end_dt.tzinfo is None:
-                    end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                start_dt = normalize_to_berlin(start_dt)
+                end_dt = normalize_to_berlin(end_dt)
                 
                 # Berechne Dauer (kann über Mitternacht gehen)
                 if end_dt < start_dt:
@@ -2699,8 +2633,7 @@ class BabyInfo:
             for night_sleep in recent_night_sleeps:
                 try:
                     end_dt = datetime.fromisoformat(night_sleep['end_time'].replace('Z', '+00:00'))
-                    if end_dt.tzinfo is None:
-                        end_dt = tz_berlin.localize(end_dt.replace(tzinfo=None))
+                    end_dt = normalize_to_berlin(end_dt)
                     # Nur Stunden und Minuten für Durchschnitt
                     wake_times.append(end_dt.hour + end_dt.minute / 60.0)
                 except (ValueError, AttributeError):
@@ -2710,7 +2643,7 @@ class BabyInfo:
                 avg_wake_hour = sum(wake_times) / len(wake_times)
                 # Erstelle Ziel-Aufwachzeit für morgen
                 tomorrow = selected_date + timedelta(days=1)
-                desired_wake_time = tz_berlin.localize(
+                desired_wake_time = normalize_to_berlin(
                     datetime.combine(tomorrow, datetime.min.time().replace(
                         hour=int(avg_wake_hour), 
                         minute=int((avg_wake_hour - int(avg_wake_hour)) * 60)
@@ -2720,7 +2653,7 @@ class BabyInfo:
         # Fallback: Wenn keine Daten vorhanden, verwende Standard (07:00 Uhr)
         if desired_wake_time is None:
             tomorrow = selected_date + timedelta(days=1)
-            desired_wake_time = tz_berlin.localize(
+            desired_wake_time = normalize_to_berlin(
                 datetime.combine(tomorrow, datetime.min.time().replace(hour=7, minute=0))
             )
         
@@ -2742,9 +2675,9 @@ class BabyInfo:
         # Anpassung 2: Tagschlaf-Status
         # Wenn noch viel Tagschlaf fehlt, könnte etwas später schlafen (aber nicht zu spät)
         # Wenn genug Tagschlaf, kann etwas früher schlafen
-        min_sleep_time = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=18, minute=0)))
-        max_sleep_time_normal = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=0)))
-        max_sleep_time_late = tz_berlin.localize(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=30)))
+        min_sleep_time = normalize_to_berlin(datetime.combine(selected_date, datetime.min.time().replace(hour=18, minute=0)))
+        max_sleep_time_normal = normalize_to_berlin(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=0)))
+        max_sleep_time_late = normalize_to_berlin(datetime.combine(selected_date, datetime.min.time().replace(hour=21, minute=30)))
         
         if remaining_day_sleep > 1.0:
             # Noch viel Tagschlaf fehlt - könnte bis zu 30 Minuten später schlafen

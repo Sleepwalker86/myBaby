@@ -3,7 +3,7 @@ from app.models.models import get_all_entries_today, get_all_entries_date_range,
 from datetime import datetime, date, timedelta
 from app.i18n import get_language, _
 
-from app.timezone import tz_berlin, to_berlin
+from app.timezone import normalize_to_berlin, to_berlin
 
 bp = Blueprint('entries', __name__, url_prefix='/entries')
 
@@ -14,7 +14,7 @@ def _get_entry_time(entry):
     try:
         return to_berlin(time_str)
     except (ValueError, AttributeError):
-        return tz_berlin.localize(datetime(2000, 1, 1))
+        return normalize_to_berlin(datetime(2000, 1, 1))
 
 
 @bp.route('/')
