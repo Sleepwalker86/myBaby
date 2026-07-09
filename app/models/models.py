@@ -1,10 +1,18 @@
 """Datenmodelle für die Baby-Tracking App"""
-from app.models.database import get_db
+from app.models.database import get_db, get_active_baby_id
 from datetime import datetime, date, timedelta
 import bisect
 import json
 
 from app.timezone import tz_berlin, normalize_to_berlin
+
+# Tracking-Tabellen mit baby_id-Spalte (Issue #33). Bewusst ohne baby_info
+# (das ist die Profiltabelle selbst) und ohne nap_suggestions (interner Cache,
+# keine Nutzerdaten) - relevant für die Lösch-Sperre in BabyInfo.delete_baby().
+TRACKING_TABLES_WITH_BABY_ID = [
+    'sleep', 'feeding', 'bottle', 'diaper', 'temperature', 'medicine',
+    'night_waking', 'porridge', 'illness', 'weight', 'height', 'head_circumference',
+]
 
 # Issue #44: Zeitfenster, innerhalb dessen ein inhaltlich identischer Eintrag als
 # Doppel-Submit (statt als bewusst zweiter Eintrag) gewertet wird.
@@ -1799,41 +1807,92 @@ def get_latest_activities(limit=3):
 
 class BabyInfo:
     """Baby-Informationen für Nickerchen-Vorschläge"""
-    
+
     @staticmethod
-    def get_birth_date():
-        """Holt das Geburtsdatum des Babys"""
+    def get_all_babies():
+        """Liefert alle Kind-Profile, sortiert nach Anlage-Reihenfolge (id)."""
         db = get_db()
-        row = db.execute('SELECT birth_date FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        rows = db.execute(
+            'SELECT id, name, birth_date, gender FROM baby_info ORDER BY id'
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    @staticmethod
+    def create_baby(name, birth_date):
+        """Legt ein neues Kind-Profil an und gibt dessen id zurück."""
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO baby_info (name, birth_date) VALUES (?, ?)',
+            (name, birth_date.isoformat())
+        )
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def delete_baby(baby_id):
+        """Löscht ein Kind-Profil.
+
+        Aus Datenschutz-/Datenverlust-Gründen wird ein Profil mit vorhandenen
+        Tracking-Daten NICHT gelöscht, sondern die Löschung verweigert - Nutzer:innen
+        sollen stattdessen umbenennen. Ebenso wird das letzte verbleibende Profil
+        nie gelöscht (die App braucht immer mindestens ein aktives Kind).
+
+        Raises:
+            ValueError: wenn das Profil Tracking-Daten hat oder das letzte verbleibende ist.
+        """
+        db = get_db()
+        remaining = db.execute('SELECT COUNT(*) AS c FROM baby_info').fetchone()['c']
+        if remaining <= 1:
+            raise ValueError('last_baby')
+
+        for table in TRACKING_TABLES_WITH_BABY_ID:
+            has_data = db.execute(
+                f'SELECT 1 FROM {table} WHERE baby_id = ? LIMIT 1', (baby_id,)
+            ).fetchone()
+            if has_data:
+                raise ValueError('has_data')
+
+        db.execute('DELETE FROM baby_info WHERE id = ?', (baby_id,))
+        db.commit()
+
+    @staticmethod
+    def get_birth_date(baby_id=None):
+        """Holt das Geburtsdatum des Babys"""
+        baby_id = baby_id or get_active_baby_id()
+        db = get_db()
+        row = db.execute('SELECT birth_date FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row:
             return date.fromisoformat(row['birth_date'])
         return None
-    
+
     @staticmethod
-    def get_name():
+    def get_name(baby_id=None):
         """Holt den Namen des Babys"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT name FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        row = db.execute('SELECT name FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row and row['name']:
             return row['name']
         return None
 
     @staticmethod
-    def get_gender():
+    def get_gender(baby_id=None):
         """Holt das Geschlecht des Babys ('m'/'f') oder None, falls nicht gesetzt.
         Voraussetzung für die WHO-Perzentilkurven, da diese je nach Geschlecht abweichen."""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT gender FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        row = db.execute('SELECT gender FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row and row['gender'] in ('m', 'f'):
             return row['gender']
         return None
 
     @staticmethod
-    def set_birth_date(birth_date):
+    def set_birth_date(birth_date, baby_id=None):
         """Setzt das Geburtsdatum des Babys"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         # Prüfe ob bereits ein Eintrag existiert
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if existing:
             db.execute(
                 'UPDATE baby_info SET birth_date = ?, updated_at = ? WHERE id = ?',
@@ -1845,13 +1904,14 @@ class BabyInfo:
                 (birth_date.isoformat(),)
             )
         db.commit()
-    
+
     @staticmethod
-    def set_name(name):
+    def set_name(name, baby_id=None):
         """Setzt den Namen des Babys"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         # Prüfe ob bereits ein Eintrag existiert
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if existing:
             db.execute(
                 'UPDATE baby_info SET name = ?, updated_at = ? WHERE id = ?',
@@ -1864,13 +1924,14 @@ class BabyInfo:
                 (name, default_birth)
             )
         db.commit()
-    
+
     @staticmethod
-    def set_baby_info(name=None, birth_date=None, gender=None):
+    def set_baby_info(name=None, birth_date=None, gender=None, baby_id=None):
         """Setzt Name, Geburtsdatum und/oder Geschlecht des Babys.
         gender darf 'm', 'f' oder '' (= zurücksetzen auf NULL) sein."""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         updates = []
         values = []
 
@@ -1908,9 +1969,9 @@ class BabyInfo:
             db.commit()
     
     @staticmethod
-    def get_age_months():
+    def get_age_months(baby_id=None):
         """Berechnet das Alter des Babys in Monaten"""
-        birth_date = BabyInfo.get_birth_date()
+        birth_date = BabyInfo.get_birth_date(baby_id)
         if not birth_date:
             return 6  # Standard: 6 Monate
         today = date.today()
@@ -1918,22 +1979,24 @@ class BabyInfo:
         if today.day < birth_date.day:
             months -= 1
         return max(0, months)
-    
+
     @staticmethod
-    def get_sleep_meta_settings():
+    def get_sleep_meta_settings(baby_id=None):
         """
         Liefert konfigurierbare Optionen für Einschlaf-Qualität und -Ort
         sowie die Standardauswahl für die Modals.
         """
+        baby_id = baby_id or get_active_baby_id()
         # Standardwerte, falls nichts konfiguriert ist
         default_qualities = ['leicht', 'schwer', 'mit Weinen']
         default_locations = ['im eigenen Bett', 'im Elternbett', 'auf dem Arm', 'in der Federwiege']
-        
+
         db = get_db()
         row = db.execute(
             '''SELECT sleep_quality_options, sleep_location_options,
                       default_sleep_quality, default_sleep_location
-               FROM baby_info ORDER BY id LIMIT 1'''
+               FROM baby_info WHERE id = ?''',
+            (baby_id,)
         ).fetchone()
         
         qualities = default_qualities
@@ -1981,13 +2044,14 @@ class BabyInfo:
         }
     
     @staticmethod
-    def set_sleep_meta_settings(qualities, locations, default_quality, default_location):
+    def set_sleep_meta_settings(qualities, locations, default_quality, default_location, baby_id=None):
         """
         Speichert konfigurierbare Optionen und Standardwerte für Schlaf-Metadaten.
         qualities/locations: Listen von Strings.
         """
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         
         # Aufräumen der Listen
         qualities = [q.strip() for q in (qualities or []) if q.strip()]
@@ -2031,10 +2095,11 @@ class BabyInfo:
         db.commit()
 
     @staticmethod
-    def get_show_audio_player():
+    def get_show_audio_player(baby_id=None):
         """Gibt zurück, ob der Audio-Player auf der Startseite angezeigt werden soll (Standard: True)"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT show_audio_player FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        row = db.execute('SELECT show_audio_player FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row is None:
             return True
         val = row['show_audio_player']
@@ -2043,10 +2108,11 @@ class BabyInfo:
         return bool(val)
 
     @staticmethod
-    def set_show_audio_player(show: bool):
+    def set_show_audio_player(show: bool, baby_id=None):
         """Setzt, ob der Audio-Player auf der Startseite angezeigt werden soll"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         now_str = datetime.now(tz_berlin).isoformat()
         if existing:
             db.execute(
