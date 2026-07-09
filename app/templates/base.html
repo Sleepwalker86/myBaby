@@ -46,15 +46,15 @@
         
         [data-theme="dark"] {
             /* Dark Mode Colors */
-            --bg-primary: #1a1a1a;
-            --bg-card: #2d2d2d;
-            --bg-hover: #3a3a3a;
+            --bg-primary: #101518;
+            --bg-card: #182125;
+            --bg-hover: #202b30;
             --text-primary: #e9ecef;
             --text-secondary: #adb5bd;
             --text-muted: #868e96;
-            --border-color: #404040;
-            --shadow: rgba(0,0,0,0.3);
-            --shadow-hover: rgba(0,0,0,0.4);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow: rgba(0, 0, 0, 0.38);
+            --shadow-hover: rgba(0, 0, 0, 0.48);
         }
         
         body {
@@ -295,6 +295,18 @@
             overflow: hidden;
             background: var(--bg-card);
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        [data-theme="dark"] .card-modern {
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: linear-gradient(180deg, rgba(31, 43, 48, 0.96), rgba(21, 30, 34, 0.96));
+            box-shadow:
+                0 10px 28px rgba(0, 0, 0, 0.32),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .card-modern .card-body {
+            background: transparent;
         }
         
         .activity-card {
@@ -728,4 +740,3 @@
     {% block scripts %}{% endblock %}
 </body>
 </html>
-
