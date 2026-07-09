@@ -3,7 +3,9 @@
     "dashboard": "Dashboard",
     "entries": "Entries",
     "trends": "Trends",
-    "settings": "Settings"
+    "settings": "Settings",
+    "main_navigation": "Main navigation",
+    "header_navigation": "Header"
   },
   "status": {
     "sleep_status": "Sleep Status",
