@@ -112,8 +112,11 @@ def _g(row, key, default=''):
 
 @bp.route('/export/csv')
 def export_csv():
-    """Exportiert alle Einträge als CSV"""
+    """Exportiert alle Einträge des aktiven Kindes als CSV (Issue #33: CSV ist ein
+    Einzelkind-Export für externe Weitergabe/Analyse; für ein vollständiges,
+    kindübergreifendes Backup siehe export_backup)."""
     db = get_db()
+    baby_id = get_active_baby_id()
     output = io.StringIO()
     writer = csv.writer(output)
 
@@ -123,67 +126,69 @@ def export_csv():
                      'head_circumference_cm'])
 
     # Schlaf (start_time = timestamp)
-    for r in db.execute('SELECT * FROM sleep ORDER BY start_time').fetchall():
+    for r in db.execute('SELECT * FROM sleep WHERE baby_id = ? ORDER BY start_time', (baby_id,)).fetchall():
         writer.writerow(['sleep', r['id'], r['start_time'], _g(r, 'end_time'), r['type'],
                          '', '', '', '', '', '', '', '', '', _g(r, 'sleep_comment'),
                          _g(r, 'sleep_quality'), _g(r, 'sleep_location'), ''])
 
     # Stillen (timestamp, side, end_time)
-    for r in db.execute('SELECT * FROM feeding ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM feeding WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['feeding', r['id'], r['timestamp'], _g(r, 'end_time'), '',
                          '', '', '', r['side'], '', '', '', '', '', '', '', '', ''])
 
     # Flasche
-    for r in db.execute('SELECT * FROM bottle ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM bottle WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['bottle', r['id'], r['timestamp'], '', '',
                          r['amount'], '', '', '', '', '', '', '', '', _g(r, 'notes'), '', '', ''])
 
     # Windel
-    for r in db.execute('SELECT * FROM diaper ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM diaper WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['diaper', r['id'], r['timestamp'], '', r['type'],
                          '', '', '', '', '', '', '', '', '', '', '', '', ''])
 
     # Temperatur
-    for r in db.execute('SELECT * FROM temperature ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM temperature WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['temperature', r['id'], r['timestamp'], '', '',
                          '', '', '', '', r['value'], '', '', '', '', '', '', '', ''])
 
     # Medizin
-    for r in db.execute('SELECT * FROM medicine ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM medicine WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['medicine', r['id'], r['timestamp'], '', '',
                          '', '', '', '', '', r['name'], r['dose'], '', '', '', '', '', ''])
 
     # Brei
-    for r in db.execute('SELECT * FROM porridge ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM porridge WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['porridge', r['id'], r['timestamp'], '', '',
                          '', r['amount'], _g(r, 'food'), '', '', '', '', '', '', _g(r, 'notes'), '', '', ''])
 
     # Gewicht
-    for r in db.execute('SELECT * FROM weight ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM weight WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['weight', r['id'], r['timestamp'], '', '',
                          '', '', '', '', '', '', '', r['weight_kg'], '', _g(r, 'notes'), '', '', ''])
 
     # Größe
-    for r in db.execute('SELECT * FROM height ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM height WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['height', r['id'], r['timestamp'], '', '',
                          '', '', '', '', '', '', '', '', r['height_cm'], _g(r, 'notes'), '', '', ''])
 
     # Kopfumfang
-    for r in db.execute('SELECT * FROM head_circumference ORDER BY timestamp').fetchall():
+    for r in db.execute('SELECT * FROM head_circumference WHERE baby_id = ? ORDER BY timestamp', (baby_id,)).fetchall():
         writer.writerow(['head_circumference', r['id'], r['timestamp'], '', '',
                          '', '', '', '', '', '', '', '', '', _g(r, 'notes'), '', '', r['head_circumference_cm']])
 
     # Erkrankungen
-    for r in db.execute('SELECT * FROM illness ORDER BY start_time').fetchall():
+    for r in db.execute('SELECT * FROM illness WHERE baby_id = ? ORDER BY start_time', (baby_id,)).fetchall():
         writer.writerow(['illness', r['id'], r['start_time'], _g(r, 'end_time'), _g(r, 'type'),
                          '', '', '', '', '', '', '', '', '', _g(r, 'notes'), '', '', ''])
 
     # Nächtliches Aufwachen
-    for r in db.execute('SELECT * FROM night_waking ORDER BY start_time').fetchall():
+    for r in db.execute('SELECT * FROM night_waking WHERE baby_id = ? ORDER BY start_time', (baby_id,)).fetchall():
         writer.writerow(['night_waking', r['id'], r['start_time'], _g(r, 'end_time'), '',
                          '', '', '', '', '', '', '', '', '', '', '', '', ''])
 
-    filename = f"mybaby_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    baby_name = BabyInfo.get_name(baby_id) or f"baby{baby_id}"
+    safe_name = ''.join(c if c.isalnum() else '_' for c in baby_name)
+    filename = f"mybaby_export_{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     return Response(
         '﻿' + output.getvalue(),  # BOM für Excel-Kompatibilität
         mimetype='text/csv; charset=utf-8',
@@ -192,7 +197,10 @@ def export_csv():
 
 
 def _build_backup_snapshot(db):
-    """Baut ein vollständiges Backup-Dict aus allen Tabellen"""
+    """Baut ein vollständiges Backup-Dict aus allen Tabellen und allen Kind-Profilen
+    (Issue #33: anders als der CSV-Export ist das JSON-Backup bewusst kind-übergreifend,
+    da es der vollständigen Wiederherstellung der Instanz dienen soll - jede Zeile trägt
+    bereits ihre eigene baby_id-Spalte)."""
     def rows_to_list(rows):
         return [dict(r) for r in rows]
 
@@ -217,7 +225,7 @@ def _build_backup_snapshot(db):
 
 @bp.route('/export/backup')
 def export_backup():
-    """Erstellt ein vollständiges JSON-Backup aller Daten"""
+    """Erstellt ein vollständiges JSON-Backup aller Daten aller Kind-Profile"""
     db = get_db()
     backup = _build_backup_snapshot(db)
 
@@ -230,7 +238,13 @@ def export_backup():
 
 
 def _restore_table(db, table_name, rows):
-    """Löscht Tabelle und füllt sie mit Backup-Daten. Nur vorhandene Spalten werden eingefügt."""
+    """Löscht Tabelle und füllt sie mit Backup-Daten. Nur vorhandene Spalten werden eingefügt.
+
+    Da jede Zeile ihre eigene baby_id aus dem Backup mitbringt (bzw. bei einem älteren
+    Backup ohne baby_id-Spalte automatisch auf den Schema-Default 1 zurückfällt, siehe
+    Migration 019), bleibt die Kind-Zuordnung beim Restore ohne weiteres Zutun erhalten
+    (Issue #33). Ein Restore ersetzt IMMER alle Kind-Profile mitsamt ihren Daten - das
+    Zusammenführen mit einer bestehenden Installation ist bewusst kein Ziel dieses Issues."""
     db.execute(f'DELETE FROM {table_name}')
     if not rows:
         return
@@ -244,8 +258,11 @@ def _restore_table(db, table_name, rows):
         db.execute(f'INSERT INTO {table_name} ({cols}) VALUES ({placeholders})', list(filtered.values()))
 
 
-BACKUP_TABLES = ['sleep', 'feeding', 'bottle', 'diaper', 'temperature', 'medicine',
-                 'porridge', 'weight', 'height', 'head_circumference', 'illness', 'night_waking', 'baby_info']
+# baby_info zuerst, damit die Kind-Profile existieren, bevor die Tracking-Tabellen mit
+# ihrer baby_id-Spalte befüllt werden (rein deklarativ, SQLite erzwingt hier keine FKs -
+# siehe fehlendes PRAGMA foreign_keys -, aber so bleibt die Reihenfolge nachvollziehbar).
+BACKUP_TABLES = ['baby_info', 'sleep', 'feeding', 'bottle', 'diaper', 'temperature', 'medicine',
+                 'porridge', 'weight', 'height', 'head_circumference', 'illness', 'night_waking']
 
 RESTORE_POINTS_KEEP = 5  # Anzahl der aufbewahrten automatischen Sicherungspunkte
 
