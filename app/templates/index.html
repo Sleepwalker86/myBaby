@@ -763,37 +763,43 @@
     </script>
     {% endif %}
 
-    <!-- Schnellaktionen - 3 Spalten -->
+    <!-- Schnellaktionen - nach Kategorie gruppiert -->
     <div class="row mb-4">
         <div class="col-12">
             <h6 class="section-title">
                 <i class="bi bi-lightning-fill"></i> {{ _('common.quick_actions') }}
             </h6>
         </div>
-        
-        <!-- Spalte 1 -->
-        <div class="col-4 mb-3">
+
+        <div class="row g-2">
             <!-- Schlaf -->
             {% if active_sleep %}
-            <form id="endSleepFormDirect" method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="mb-2 client-tz-submit" data-inject-client-now="end_time">
+            <div class="col-4 col-lg-3 d-flex">
+            <form id="endSleepFormDirect" method="POST" action="{{ url_for('sleep.end_nap') if active_sleep.type == 'nap' else url_for('sleep.end_night_sleep') }}" class="d-flex w-100 client-tz-submit" data-inject-client-now="end_time">
                 <button type="button" class="btn btn-sleep btn-large w-100 sleep-action-btn" data-form-id="endSleepFormDirect" data-modal="#endSleepModal">
                     <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
                     <small>{{ _('sleep.end_sleep') }}</small>
                 </button>
             </form>
+            </div>
             {% endif %}
             <!-- Buttons zum Starten eines neuen Schlafs sind immer sichtbar (auch für nachträgliche Einträge) -->
-            <button type="button" class="btn btn-nap btn-large w-100 mb-2 sleep-action-btn" data-action-url="{{ url_for('sleep.start_nap') }}" data-action-field="start_time" data-modal="#startNapModal">
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-nap btn-large w-100 sleep-action-btn" data-action-url="{{ url_for('sleep.start_nap') }}" data-action-field="start_time" data-modal="#startNapModal">
                 <i class="bi bi-moon" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('sleep.nap') }}</small>
             </button>
-            <button type="button" class="btn btn-sleep btn-large w-100 mb-2 sleep-action-btn" data-action-url="{{ url_for('sleep.start_night_sleep') }}" data-action-field="start_time" data-modal="#startNightSleepModal">
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-sleep btn-large w-100 sleep-action-btn" data-action-url="{{ url_for('sleep.start_night_sleep') }}" data-action-field="start_time" data-modal="#startNightSleepModal">
                 <i class="bi bi-moon-stars" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('sleep.night_sleep') }}</small>
             </button>
+            </div>
             <!-- Nächtliches Aufwachen -->
             {% if active_night_waking %}
-            <button type="button" class="btn btn-warning btn-large w-100 mb-2 sleep-action-btn" data-action-url="{{ url_for('sleep.end_night_waking') }}" data-action-field="end_time" data-modal="#endNightWakingModal">
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-warning btn-large w-100 sleep-action-btn" data-action-url="{{ url_for('sleep.end_night_waking') }}" data-action-field="end_time" data-modal="#endNightWakingModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; color: var(--color-warning);">
                     <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
                     <path d="M20.6,32.28C21.17,31.18,23,31,24,31a4.5,4.5,0,0,1,.57.85,1,1,0,0,0,.89.55,1,1,0,0,0,.45-.1,1,1,0,0,0,.44-1.34,6,6,0,0,0-1.08-1.55.47.47,0,0,0-.1-.1c-2.29-2.31-5.83-2.05-7.64-1.47a1,1,0,1,0,.6,1.9,7.82,7.82,0,0,1,3-.25,4,4,0,0,0-2.29,1.91,1,1,0,0,0,.43,1.34.91.91,0,0,0,.45.11A1,1,0,0,0,20.6,32.28Z" fill="currentColor"/>
@@ -804,7 +810,9 @@
                 </svg><br>
                 <small>{{ _('sleep.end_night_waking') }}</small>
             </button>
-            {% endif %}
+            </div>
+            {% else %}
+            <div class="col-4 col-lg-3 d-flex">
             <button type="button" class="btn btn-danger btn-large w-100 sleep-action-btn" data-action-url="{{ url_for('sleep.start_night_waking') }}" data-action-field="start_time" data-modal="#startNightWakingModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; color: var(--color-warning);">
                     <path d="M54.65,27h-.1c-2.14-5.93-7.31-10.83-14.2-13.09a6.52,6.52,0,0,0-5.51-3.67,6.06,6.06,0,0,0-5.7,2.5c-9.45,1-17,6.69-19.7,14.26H9.35C6.4,27,4,29.76,4,33.15S6.4,39.3,9.35,39.3h.08A19.4,19.4,0,0,0,11.23,43c-1.16,1.2-2.53,3.1-2.18,5.16a2.39,2.39,0,0,0,2.37,2.12,3.08,3.08,0,0,0,2.2-1,4.56,4.56,0,0,0,1.09-2.05A25.23,25.23,0,0,0,32,53.78,25.21,25.21,0,0,0,49.53,47a4.69,4.69,0,0,0,1.08,2,3.13,3.13,0,0,0,2.2,1,2.35,2.35,0,0,0,2.37-2.12c.36-2.08-1-4-2.22-5.21a19.42,19.42,0,0,0,1.62-3.42h.07c3,0,5.35-2.76,5.35-6.15S57.6,27,54.65,27Zm-20-14.76a4.49,4.49,0,0,1,4,2.79,3.77,3.77,0,0,1,.18,1.17c0,2-.59,3.4-1.8,4.21-2.52,1.69-7.36.65-10.19-.26l.44-.5a15.43,15.43,0,0,0,3.05-4.88,3.73,3.73,0,0,1,.26-.61A4,4,0,0,1,34.66,12.24ZM6,33.15a4,4,0,0,1,2.83-4.09,18.72,18.72,0,0,0-.48,4.12,17.87,17.87,0,0,0,.47,4.06A4,4,0,0,1,6,33.15ZM12.18,47.9a1,1,0,0,1-.88.38c-.14,0-.24-.19-.28-.43-.21-1.24.8-2.61,1.75-3.55C13.22,46.56,12.46,47.6,12.18,47.9ZM32,51.78A22.94,22.94,0,0,1,14.82,44.5h0a11,11,0,0,0-.58-2.31,1,1,0,0,0-.64-.62,1,1,0,0,0-.84.13,16.56,16.56,0,0,1-2.41-8.51c0-9.1,7.54-16.73,17.79-18.3l-.09.18a1.24,1.24,0,0,1-.1.2c-.05.11-.11.21-.16.31l-.11.19-.19.32-.1.16-.27.4,0,.06-.33.46-.06.07-.27.36-.11.12a3.2,3.2,0,0,1-.22.27l-.12.15-.2.22-.13.15-.17.19-.12.13-.16.17-.11.12a1.85,1.85,0,0,0-.14.14l-.1.1-.11.11-.09.08-.09.09-.05.05-.07.06,0,0,0,0a1,1,0,0,0-.31.91,1,1,0,0,0,.6.76l.13.05.07,0,.25.1.06,0,.44.16.12,0,.45.15.16.05.66.21.14,0,.62.17.23.06.84.21h0l.85.17L30,23l.8.13.16,0c.31.05.63.08.95.11h.25c.26,0,.52,0,.79,0h.63l.85,0,.43-.05.77-.13L36,23a6.7,6.7,0,0,0,.76-.24l.35-.13a5.78,5.78,0,0,0,1-.54,5.49,5.49,0,0,0,1.63-1.66h0a4.35,4.35,0,0,0,.29-.52l.09-.18c.07-.15.13-.32.19-.49s.08-.18.11-.28.07-.3.11-.46.07-.25.1-.38,0-.35.07-.53l.06-.38c0-.17,0-.35,0-.52s0-.3,0-.46c7.72,3,12.81,9.63,12.81,17a16.52,16.52,0,0,1-2.24,8.22,1,1,0,0,0-.77-.1,1,1,0,0,0-.65.62,12.28,12.28,0,0,0-.58,2.3l-.36.41A23,23,0,0,1,32,51.78Zm21.21-4.19c0,.24-.13.39-.27.43a1,1,0,0,1-.88-.38c-.28-.29-1-1.33-.59-3.6C52.4,45,53.42,46.36,53.21,47.59Zm2-10.35a17.49,17.49,0,0,0,0-8.18A4,4,0,0,1,58,33.15,4,4,0,0,1,55.18,37.24Z" fill="currentColor"/>
@@ -816,12 +824,12 @@
                 </svg><br>
                 <small>{{ _('sleep.night_waking') }}</small>
             </button>
-        </div>
-        
-        <!-- Spalte 2 -->
-        <div class="col-4 mb-3">
+            </div>
+            {% endif %}
+
             <!-- Stillen -->
-            <button type="button" class="btn btn-feeding btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startFeedingLeftModal">
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-feeding btn-large w-100" data-bs-toggle="modal" data-bs-target="#startFeedingLeftModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                     <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="currentColor" stroke-width="15" stroke-linejoin="round">
                         <path d="M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z"/>
@@ -829,7 +837,9 @@
                 </svg><br>
                 <small>{{ _('feeding.left') }}</small>
             </button>
-            <button type="button" class="btn btn-feeding btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startFeedingRightModal">
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-feeding btn-large w-100" data-bs-toggle="modal" data-bs-target="#startFeedingRightModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px; transform: scaleX(-1);">
                     <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
                         <path d="M3409 9165 c-218 -44 -423 -247 -484 -480 -20 -77 -20 -243 0 -320 46 -177 167 -331 337 -429 l48 -28 -8 -56 c-12 -93 -8 -450 6 -527 64 -349 197 -641 385 -842 74 -79 219 -202 277 -234 l42 -24 -4 -155 c-3 -143 -5 -158 -28 -200 -36 -64 -106 -104 -223 -125 -535 -97 -798 -266 -1059 -683 -73 -117 -204 -368 -295 -567 -88 -190 -359 -754 -544 -1132 -218 -446 -256 -558 -265 -793 -5 -101 -2 -153 9 -206 57 -265 234 -486 489 -611 139 -68 183 -84 1028 -367 744 -249 802 -267 904 -277 264 -28 471 53 632 246 109 130 151 311 114 490 -26 130 -117 269 -233 360 -93 71 -150 98 -349 166 -103 35 -184 67 -180 71 4 3 45 18 92 31 164 48 725 218 765 231 22 8 105 33 185 56 213 61 219 75 111 258 -116 198 -176 319 -262 522 -73 174 -82 203 -87 273 -3 59 0 88 13 123 38 101 120 156 230 156 109 1 182 -57 254 -199 67 -135 140 -255 214 -353 88 -119 311 -347 437 -448 52 -42 126 -102 163 -133 112 -94 301 -181 424 -196 29 -3 53 -9 53 -12 0 -6 -286 -177 -420 -250 -101 -56 -215 -177 -266 -281 -50 -102 -64 -163 -64 -278 0 -154 56 -299 157 -411 148 -164 333 -239 563 -228 206 10 273 38 780 325 435 246 865 515 949 595 276 264 338 678 154 1029 -21 40 -91 143 -156 228 -146 192 -485 662 -599 830 -46 69 -120 177 -164 240 -43 64 -101 148 -129 188 -357 519 -366 532 -471 632 -228 218 -506 354 -897 440 -143 32 -304 55 -455 66 -92 7 -120 17 -83 29 11 3 55 29 97 56 246 161 453 391 578 644 235 474 247 1008 34 1500 -155 357 -469 683 -803 835 -439 199 -910 204 -1308 15 l-57 -27 -81 77 c-154 147 -341 202 -550 160z m298 -235 c33 -15 81 -47 106 -69 l45 -42 -122 -122 c-160 -159 -266 -321 -343 -522 -15 -38 -28 -72 -30 -74 -7 -10 -132 112 -166 161 -109 159 -104 369 13 524 126 168 320 224 497 144z m1212 -40 c206 -26 519 -157 676 -283 81 -65 200 -185 231 -232 16 -24 15 -29 -16 -108 -267 -666 -1107 -1150 -1855 -1067 -109 13 -143 2 -165 -50 -20 -47 2 -293 38 -442 16 -65 27 -118 25 -118 -19 0 -163 201 -206 287 -121 243 -173 492 -164 783 6 184 26 292 79 425 84 213 175 347 346 509 159 150 360 251 577 290 96 17 319 20 434 6z m1114 -847 c55 -116 105 -270 127 -388 44 -245 8 -580 -88 -827 -100 -257 -325 -546 -533 -683 -103 -68 -259 -140 -355 -164 -277 -70 -566 -14 -819 160 -105 72 -166 135 -217 225 -107 187 -172 397 -179 586 l-3 58 195 3 c212 4 345 23 525 75 411 119 786 365 1041 682 86 108 187 266 220 345 10 25 21 45 24 45 3 0 31 -53 62 -117z m-1753 -2064 c121 -81 283 -150 442 -186 107 -24 344 -21 463 5 l90 20 40 -38 c65 -61 96 -72 235 -81 445 -31 810 -136 1075 -311 158 -104 280 -231 408 -423 33 -49 81 -119 107 -155 26 -36 134 -193 240 -350 244 -359 518 -745 713 -1004 177 -235 215 -295 251 -395 74 -204 44 -434 -77 -603 -60 -84 -92 -112 -222 -199 -233 -156 -384 -248 -767 -467 -489 -279 -587 -322 -735 -322 -95 0 -163 15 -248 56 -179 84 -299 301 -266 481 16 84 70 190 127 249 48 48 176 129 554 347 85 49 187 111 225 137 39 26 93 55 120 64 125 42 286 159 377 275 231 292 261 692 76 1020 -57 100 -215 262 -315 320 -93 55 -206 99 -300 117 -99 19 -261 18 -364 -2 -347 -66 -634 -343 -705 -683 -17 -83 -20 -290 -5 -353 5 -21 5 -38 1 -38 -12 0 -160 185 -222 277 -30 44 -83 138 -119 209 -124 245 -248 332 -458 322 -111 -5 -195 -43 -268 -121 -60 -64 -88 -114 -108 -199 -30 -130 -19 -202 65 -400 28 -68 68 -161 87 -208 45 -108 97 -211 161 -322 l51 -88 -102 -31 c-56 -17 -255 -78 -442 -136 -187 -58 -383 -118 -435 -134 -52 -15 -128 -39 -169 -53 l-74 -26 -71 38 c-146 76 -285 243 -330 395 -30 101 -34 121 -45 227 -10 101 1 205 27 257 10 21 86 160 169 308 282 506 279 500 228 550 -27 28 -88 34 -116 12 -14 -10 -99 -151 -99 -163 0 -3 -21 -42 -47 -87 -42 -74 -85 -153 -228 -422 -26 -49 -80 -148 -120 -220 -40 -71 -92 -168 -117 -215 -66 -123 -151 -278 -203 -370 -49 -86 -54 -116 -27 -150 11 -13 109 -57 272 -121 437 -172 605 -233 920 -339 332 -111 392 -139 477 -228 175 -183 173 -430 -4 -606 -105 -104 -239 -152 -393 -143 -77 5 -150 27 -820 250 -967 322 -1028 345 -1167 438 -146 98 -239 219 -289 374 -22 66 -26 101 -27 195 -2 207 37 329 240 740 86 173 197 403 248 510 52 107 109 227 129 267 19 39 91 190 160 335 175 371 205 430 276 543 241 383 456 531 902 624 232 48 290 73 369 158 57 61 88 140 96 244 4 53 9 76 17 72 6 -4 36 -23 66 -44z m2647 -1632 c225 -65 408 -240 491 -469 25 -67 27 -85 27 -228 0 -147 -2 -159 -29 -235 -70 -190 -198 -335 -373 -424 -198 -101 -483 -91 -687 23 -115 64 -239 194 -299 311 -65 130 -94 323 -67 457 48 246 228 462 458 548 144 54 329 60 479 17z m-3692 -1468 c14 -36 46 -96 70 -134 25 -37 44 -69 42 -71 -3 -3 -324 120 -332 127 -5 5 90 189 138 268 l21 35 17 -79 c10 -44 29 -109 44 -146z"/>
@@ -837,8 +847,11 @@
                 </svg><br>
                 <small>{{ _('feeding.right') }}</small>
             </button>
-            <!-- Flasche -->
-            <button type="button" class="btn btn-bottle btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#bottleModal">
+            </div>
+
+            <!-- Nahrung: Flasche & Brei -->
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-bottle btn-large w-100" data-bs-toggle="modal" data-bs-target="#bottleModal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" style="width: 32px; height: 32px; margin-bottom: 4px;">
                     <path d="M288.209,331.768c-13.486,0-25.843-2.991-37.793-5.891c-11.956-2.888-24.313-5.885-37.688-5.885
                         c-10.64,0-20.838,1.883-31.166,5.753l-4.05,1.509V445.54c0,3.696,1.032,7.11,3.08,10.156c1.974,2.907,4.811,5.254,8.003,6.604
@@ -862,22 +875,17 @@
                 </svg><br>
                 <small>{{ _('bottle.title') }}</small>
             </button>
-            <!-- Brei -->
-            <button type="button" class="btn btn-bottle btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#porridgeModal">
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-bottle btn-large w-100" data-bs-toggle="modal" data-bs-target="#porridgeModal">
                 <i class="bi bi-egg-fried" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('porridge.title') }}</small>
             </button>
-            <!-- Medizin -->
-            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
-                <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
-                <small>{{ _('medicine.title') }}</small>
-            </button>
-        </div>
-        
-        <!-- Spalte 3 -->
-        <div class="col-4 mb-3">
+            </div>
+
             <!-- Windel -->
-            <button type="button" class="btn btn-diaper btn-large w-100 mb-2 diaper-action-btn"
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-diaper btn-large w-100 diaper-action-btn"
                 data-form-id="diaperFormNass"
                 data-diaper-type="nass"
                 data-modal="#diaperTimeModal">
@@ -886,7 +894,9 @@
                 </svg><br>
                 <small>{{ _('diaper.wet') }}</small>
             </button>
-            <button type="button" class="btn btn-diaper btn-large w-100 mb-2 diaper-action-btn"
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-diaper btn-large w-100 diaper-action-btn"
                 data-form-id="diaperFormGross"
                 data-diaper-type="groß"
                 data-modal="#diaperTimeModal">
@@ -895,7 +905,9 @@
                 </svg><br>
                 <small>{{ _('diaper.solid') }}</small>
             </button>
-            <button type="button" class="btn btn-diaper btn-large w-100 mb-2 diaper-action-btn"
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-diaper btn-large w-100 diaper-action-btn"
                 data-form-id="diaperFormBeides"
                 data-diaper-type="beides"
                 data-modal="#diaperTimeModal">
@@ -904,31 +916,47 @@
                 </svg><br>
                 <small>{{ _('diaper.both') }}</small>
             </button>
-            <!-- Temperatur -->
-            <button type="button" class="btn btn-temperature btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#temperatureModal">
+            </div>
+
+            <!-- Gesundheit: Temperatur, Medizin & Erkrankung -->
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-temperature btn-large w-100" data-bs-toggle="modal" data-bs-target="#temperatureModal">
                 <i class="bi bi-thermometer-half" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('temperature.title') }}</small>
             </button>
-            <!-- Erkrankung -->
-            <button type="button" class="btn btn-medicine btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#illnessModal">
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#medicineModal">
+                <i class="bi bi-capsule" style="font-size: 1.5rem;"></i><br>
+                <small>{{ _('medicine.title') }}</small>
+            </button>
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-medicine btn-large w-100" data-bs-toggle="modal" data-bs-target="#illnessModal">
                 <i class="bi bi-hospital" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('illness.title') }}</small>
             </button>
-            <!-- Gewicht -->
-            <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#weightModal">
+            </div>
+
+            <!-- Wachstum: Gewicht, Größe & Kopfumfang -->
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-sleep btn-large w-100" data-bs-toggle="modal" data-bs-target="#weightModal">
                 <i class="bi bi-graph-up" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('weight.title') }}</small>
             </button>
-            <!-- Größe -->
-            <button type="button" class="btn btn-sleep btn-large w-100 mb-2" data-bs-toggle="modal" data-bs-target="#heightModal">
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
+            <button type="button" class="btn btn-sleep btn-large w-100" data-bs-toggle="modal" data-bs-target="#heightModal">
                 <i class="bi bi-rulers" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('height.title') }}</small>
             </button>
-            <!-- Kopfumfang -->
+            </div>
+            <div class="col-4 col-lg-3 d-flex">
             <button type="button" class="btn btn-sleep btn-large w-100" data-bs-toggle="modal" data-bs-target="#headModal">
                 <i class="bi bi-circle" style="font-size: 1.5rem;"></i><br>
                 <small>{{ _('head.title') }}</small>
             </button>
+            </div>
         </div>
     </div>
 
