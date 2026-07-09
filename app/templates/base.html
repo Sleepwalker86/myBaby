@@ -75,16 +75,28 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 2px;
             width: 100%;
-            min-height: 80px;
+            height: 84px;
+            padding: 0.5rem;
             font-size: 1rem;
             font-weight: 600;
+            line-height: 1.15;
             border-radius: 12px;
             border: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
         }
-        
+
+        .btn-large br {
+            display: none;
+        }
+
+        .btn-large svg,
+        .btn-large i {
+            margin-bottom: 0 !important;
+        }
+
         .btn-large:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
