@@ -4,7 +4,8 @@
     "entries": "Registros",
     "trends": "Tendencias",
     "settings": "Configuración",
-    "main_navigation": "Navegación principal"
+    "main_navigation": "Navegación principal",
+    "header_navigation": "Cabecera"
   },
   "status": {
     "sleep_status": "Estado del sueño",

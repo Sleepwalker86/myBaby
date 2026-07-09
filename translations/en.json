@@ -4,7 +4,8 @@
     "entries": "Entries",
     "trends": "Trends",
     "settings": "Settings",
-    "main_navigation": "Main navigation"
+    "main_navigation": "Main navigation",
+    "header_navigation": "Header"
   },
   "status": {
     "sleep_status": "Sleep Status",

@@ -4,7 +4,8 @@
     "entries": "Einträge",
     "trends": "Trends",
     "settings": "Einstellungen",
-    "main_navigation": "Hauptnavigation"
+    "main_navigation": "Hauptnavigation",
+    "header_navigation": "Kopfzeile"
   },
   "status": {
     "sleep_status": "Schlafstatus",

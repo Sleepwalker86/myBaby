@@ -68,6 +68,7 @@
         .navbar {
             background: var(--color-teal-darker) !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding-top: calc(0.5rem + env(safe-area-inset-top));
         }
         
         .btn-large {
@@ -434,6 +435,8 @@
             background: var(--color-teal-darker);
             box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
             padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         .bottom-nav-link {
@@ -444,12 +447,20 @@
             justify-content: center;
             gap: 2px;
             min-height: 56px;
+            min-width: 0;
             padding: 10px 4px;
             color: rgba(255, 255, 255, 0.65);
             text-decoration: none;
             font-size: 0.7rem;
             font-weight: 600;
             transition: color 0.2s ease;
+        }
+
+        .bottom-nav-link span {
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .bottom-nav-link i {
@@ -479,7 +490,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4" aria-label="{{ _('nav.header_navigation') }}">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 MyBaby{% if baby_name %} - {{ baby_name }}{% endif %}
@@ -507,6 +518,23 @@
         </div>
     </nav>
 
+    <div class="container-fluid">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bottom-Tab-Bar bewusst nach dem Hauptinhalt im DOM: position:fixed sorgt für die visuelle
+         Platzierung, aber so bleibt der Seiteninhalt vor der Navigation in der Tab-Reihenfolge (Issue #76). -->
     <nav class="bottom-nav" aria-label="{{ _('nav.main_navigation') }}">
         <a class="bottom-nav-link {{ 'active' if request.blueprint == 'main' else '' }}"
            href="{{ url_for('main.index') }}"
@@ -533,21 +561,6 @@
             <span>{{ _('nav.settings') }}</span>
         </a>
     </nav>
-
-    <div class="container-fluid">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
-    </div>
 
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script>
