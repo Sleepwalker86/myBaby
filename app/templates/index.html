@@ -18,7 +18,7 @@
                             <span class="status-badge {{ 'sleeping' if active_sleep else 'awake' }}">
                                 {{ sleep_status }}
                             </span>
-                            <button type="button" class="btn btn-new-event btn-lg" data-bs-toggle="modal" data-bs-target="#quickEntryModal">
+                            <button type="button" class="btn btn-new-event btn-lg quick-entry-trigger" data-bs-toggle="modal" data-bs-target="#quickEntryModal" aria-label="{{ _('common.quick_entry') }}">
                                 <i class="bi bi-plus-circle"></i>
                             </button>
                         </div>

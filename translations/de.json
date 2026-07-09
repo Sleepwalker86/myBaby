@@ -1,9 +1,10 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard": "Home",
     "entries": "Einträge",
     "trends": "Trends",
     "settings": "Einstellungen",
+    "action": "Aktion",
     "main_navigation": "Hauptnavigation",
     "header_navigation": "Kopfzeile"
   },

@@ -1,9 +1,10 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard": "Home",
     "entries": "Entries",
     "trends": "Trends",
     "settings": "Settings",
+    "action": "Action",
     "main_navigation": "Main navigation",
     "header_navigation": "Header"
   },

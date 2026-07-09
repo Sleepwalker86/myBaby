@@ -351,15 +351,34 @@
             color: var(--text-primary);
         }
         
+        /* Modal-Optik an die schwebende Bottom-Tab-Bar angeglichen: stark gerundete
+           Ecken, dezenter Glass-Rand/Schatten und ein Teal-Header im Navbar-Farbton,
+           sodass Navbar, Modals und Bottom-Nav wie ein zusammengehöriges Set wirken. */
+        .modal-content {
+            --bs-modal-border-radius: 22px;
+            --bs-modal-inner-border-radius: 22px;
+            --bs-modal-border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            background: var(--color-teal-darker);
+            border-bottom-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .modal-header .modal-title {
+            color: white;
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
         [data-theme="dark"] .modal-content {
             background-color: var(--bg-card);
             color: var(--text-primary);
         }
-        
-        [data-theme="dark"] .modal-header {
-            border-bottom-color: var(--border-color);
-        }
-        
+
         [data-theme="dark"] .modal-footer {
             border-top-color: var(--border-color);
         }
@@ -478,6 +497,12 @@
             background: rgba(255, 255, 255, 0.14);
         }
 
+        button.bottom-nav-link {
+            background: transparent;
+            border: none;
+            font-family: inherit;
+        }
+
         @media (max-width: 991.98px) {
             /* Burger-Menü entfällt, nur noch die schmale Brand-Leiste oben bleibt */
             #navbarNav,
@@ -491,6 +516,12 @@
 
             .bottom-nav {
                 display: flex;
+            }
+
+            /* Der "+"-Button wird auf Mobile durch den Schnelleintrag-Tab in der
+               Bottom-Tab-Bar ersetzt (Issue: Button-Funktion in Menüleiste verschieben). */
+            .quick-entry-trigger {
+                display: none !important;
             }
         }
     </style>
@@ -575,6 +606,17 @@
             <i class="bi bi-list-ul"></i>
             <span>{{ _('nav.entries') }}</span>
         </a>
+        {% if request.blueprint == 'main' %}
+        <button type="button" class="bottom-nav-link" data-bs-toggle="modal" data-bs-target="#quickEntryModal">
+            <i class="bi bi-plus-circle"></i>
+            <span>{{ _('nav.action') }}</span>
+        </button>
+        {% else %}
+        <a class="bottom-nav-link" href="{{ url_for('main.index', quickEntry=1) }}">
+            <i class="bi bi-plus-circle"></i>
+            <span>{{ _('nav.action') }}</span>
+        </a>
+        {% endif %}
         <a class="bottom-nav-link {{ 'active' if request.blueprint == 'trends' else '' }}"
            href="{{ url_for('trends.trends') }}"
            {% if request.blueprint == 'trends' %}aria-current="page"{% endif %}>
@@ -590,6 +632,23 @@
     </nav>
 
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Öffnet den Schnelleintrag-Dialog automatisch, wenn die "Aktion"-Kachel der mobilen
+        // Menüleiste von einer anderen Seite auf die Startseite verlinkt hat (das Modal existiert
+        // nur dort, da es aktive Schlaf-/Aufwach-Daten der Startseite benötigt).
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('quickEntry') !== '1') return;
+            const modalEl = document.getElementById('quickEntryModal');
+            params.delete('quickEntry');
+            const newSearch = params.toString();
+            const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+            window.history.replaceState({}, '', newUrl);
+            if (modalEl) {
+                new bootstrap.Modal(modalEl).show();
+            }
+        })();
+    </script>
     <script>
         // Dark Mode Toggle
         (function() {
