@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response, current_app
 from app.models.models import BabyInfo, Weight, Height, Sleep, Feeding, Diaper, Temperature
-from app.models.database import get_db, get_database_path
+from app.models.database import get_db, get_database_path, get_active_baby_id
 from app.i18n import _
 from datetime import date, datetime, timedelta
 from fpdf import FPDF
@@ -557,23 +557,24 @@ def export_report():
         start_date_obj, end_date_obj = end_date_obj, start_date_obj
 
     db = get_db()
+    baby_id = get_active_baby_id()
     range_start_str = datetime.combine(start_date_obj, datetime.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
     range_end_str = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
 
     illness_rows = [dict(r) for r in db.execute(
-        '''SELECT * FROM illness WHERE start_time <= ? AND (end_time IS NULL OR end_time >= ?)
+        '''SELECT * FROM illness WHERE start_time <= ? AND (end_time IS NULL OR end_time >= ?) AND baby_id = ?
            ORDER BY start_time''',
-        (range_end_str, range_start_str)
+        (range_end_str, range_start_str, baby_id)
     ).fetchall()]
 
     medicine_rows = [dict(r) for r in db.execute(
-        'SELECT * FROM medicine WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp',
-        (range_start_str, range_end_str)
+        'SELECT * FROM medicine WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ? ORDER BY timestamp',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()]
 
     bottle_rows = db.execute(
-        'SELECT amount FROM bottle WHERE timestamp >= ? AND timestamp <= ?',
-        (range_start_str, range_end_str)
+        'SELECT amount FROM bottle WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     bottle_total_ml = sum(r['amount'] for r in bottle_rows)
     bottle_count = len(bottle_rows)

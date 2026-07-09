@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from app.models.models import (
     Sleep, Feeding, Bottle, Porridge, Diaper, get_all_entries_today, BabyInfo, NightWaking, Illness
 )
-from app.models.database import get_db
+from app.models.database import get_db, get_active_baby_id
 from app.i18n import _
 from datetime import datetime, date, timedelta
 import os
@@ -106,7 +106,8 @@ def index():
             # Baby ist wach - berechne Zeit seit letztem Aufwachen
             db = get_db()
             last_sleep = db.execute(
-                'SELECT end_time FROM sleep WHERE end_time IS NOT NULL ORDER BY end_time DESC LIMIT 1'
+                'SELECT end_time FROM sleep WHERE end_time IS NOT NULL AND baby_id = ? ORDER BY end_time DESC LIMIT 1',
+                (get_active_baby_id(),)
             ).fetchone()
             if last_sleep:
                 awake_since = format_time_ago(last_sleep['end_time'])
