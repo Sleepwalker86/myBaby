@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
 from app.models.models import BabyInfo, Weight, Height, Sleep, Feeding, Diaper, Temperature
-from app.models.database import get_db
+from app.models.database import get_db, get_database_path
 from app.i18n import _
 from datetime import date, datetime, timedelta
 from fpdf import FPDF
@@ -191,15 +191,12 @@ def export_csv():
     )
 
 
-@bp.route('/export/backup')
-def export_backup():
-    """Erstellt ein vollständiges JSON-Backup aller Daten"""
-    db = get_db()
-
+def _build_backup_snapshot(db):
+    """Baut ein vollständiges Backup-Dict aus allen Tabellen"""
     def rows_to_list(rows):
         return [dict(r) for r in rows]
 
-    backup = {
+    return {
         'exported_at': datetime.now().isoformat(),
         'version': get_current_version(),
         'baby_info': rows_to_list(db.execute('SELECT * FROM baby_info').fetchall()),
@@ -216,6 +213,13 @@ def export_backup():
         'illness': rows_to_list(db.execute('SELECT * FROM illness ORDER BY start_time').fetchall()),
         'night_waking': rows_to_list(db.execute('SELECT * FROM night_waking ORDER BY start_time').fetchall()),
     }
+
+
+@bp.route('/export/backup')
+def export_backup():
+    """Erstellt ein vollständiges JSON-Backup aller Daten"""
+    db = get_db()
+    backup = _build_backup_snapshot(db)
 
     filename = f"mybaby_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     return Response(
@@ -242,6 +246,28 @@ def _restore_table(db, table_name, rows):
 
 BACKUP_TABLES = ['sleep', 'feeding', 'bottle', 'diaper', 'temperature', 'medicine',
                  'porridge', 'weight', 'height', 'head_circumference', 'illness', 'night_waking', 'baby_info']
+
+RESTORE_POINTS_KEEP = 5  # Anzahl der aufbewahrten automatischen Sicherungspunkte
+
+
+def _create_restore_point(db):
+    """Erstellt vor einem Restore automatisch einen internen Sicherungspunkt der aktuellen Daten,
+    damit ein fehlerhafter Restore rückgängig gemacht werden kann. Rotiert alte Sicherungspunkte."""
+    restore_points_dir = os.path.join(os.path.dirname(get_database_path()), 'restore_points')
+    os.makedirs(restore_points_dir, exist_ok=True)
+
+    snapshot = _build_backup_snapshot(db)
+    filename = f"pre_restore_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+    with open(os.path.join(restore_points_dir, filename), 'w', encoding='utf-8') as f:
+        json.dump(snapshot, f, ensure_ascii=False)
+
+    existing = sorted(f for f in os.listdir(restore_points_dir)
+                       if f.startswith('pre_restore_') and f.endswith('.json'))
+    for old_file in existing[:-RESTORE_POINTS_KEEP]:
+        try:
+            os.remove(os.path.join(restore_points_dir, old_file))
+        except OSError:
+            pass
 
 
 @bp.route('/restore', methods=['POST'])
@@ -271,8 +297,23 @@ def restore_backup():
         flash(_('settings.restore_error_invalid_format'), 'error')
         return redirect(url_for('settings.settings'))
 
+    missing_tables = [t for t in BACKUP_TABLES if t not in backup]
+    if missing_tables:
+        flash(f"{_('settings.restore_error_missing_tables')}: {', '.join(missing_tables)}", 'error')
+        return redirect(url_for('settings.settings'))
+
     db = get_db()
+
+    tables_losing_data = [
+        table for table in BACKUP_TABLES
+        if not backup.get(table) and db.execute(f'SELECT 1 FROM {table} LIMIT 1').fetchone()
+    ]
+    if tables_losing_data and not request.form.get('confirm_empty_tables'):
+        flash(f"{_('settings.restore_error_empty_tables')}: {', '.join(tables_losing_data)}", 'error')
+        return redirect(url_for('settings.settings'))
+
     try:
+        _create_restore_point(db)
         for table in BACKUP_TABLES:
             _restore_table(db, table, backup.get(table, []))
         db.commit()
