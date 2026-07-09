@@ -13,10 +13,9 @@ Ein naiver SQL-String-Vergleich schließt das Aufwachen fälschlich aus dem Zeit
 des Nachtschlafs aus, was die Wachzeit- und damit die Schlafdauer-Berechnung verfälscht.
 """
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
-import pytz
-
-TZ_BERLIN = pytz.timezone('Europe/Berlin')
+TZ_BERLIN = ZoneInfo('Europe/Berlin')
 
 
 def insert_night_waking(app, start_time, end_time=None):

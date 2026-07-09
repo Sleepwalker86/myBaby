@@ -17,16 +17,16 @@ def test_defaults_to_europe_berlin_without_env_var(monkeypatch):
     monkeypatch.delenv('APP_TIMEZONE', raising=False)
     tz_module = _reload_timezone_module()
 
-    assert tz_module.get_app_timezone().zone == 'Europe/Berlin'
-    assert tz_module.tz_berlin.zone == 'Europe/Berlin'
+    assert tz_module.get_app_timezone().key == 'Europe/Berlin'
+    assert tz_module.tz_berlin.key == 'Europe/Berlin'
 
 
 def test_respects_app_timezone_env_var(monkeypatch):
     monkeypatch.setenv('APP_TIMEZONE', 'Europe/Vienna')
     tz_module = _reload_timezone_module()
 
-    assert tz_module.get_app_timezone().zone == 'Europe/Vienna'
-    assert tz_module.tz_berlin.zone == 'Europe/Vienna'
+    assert tz_module.get_app_timezone().key == 'Europe/Vienna'
+    assert tz_module.tz_berlin.key == 'Europe/Vienna'
 
     # Aufräumen, damit nachfolgende Tests wieder die Standard-Zeitzone sehen.
     monkeypatch.delenv('APP_TIMEZONE', raising=False)

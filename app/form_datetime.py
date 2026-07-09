@@ -19,7 +19,7 @@ def normalize_form_datetime(value):
     except ValueError:
         return None
     if dt.tzinfo is None:
-        dt = TZ_BERLIN.localize(dt)
+        dt = dt.replace(tzinfo=TZ_BERLIN)
     else:
         dt = dt.astimezone(TZ_BERLIN)
     # Issue #46: Mikrosekunden konsequent verwerfen, damit alle gespeicherten
