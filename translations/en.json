@@ -344,8 +344,8 @@
       "invalid_diaper_type": "Invalid diaper type",
       "medicine_required": "Medicine name and dose are required",
       "all_fields_required": "All fields are required",
-      "update_error": "Error updating: {error}",
-      "delete_error": "Error deleting: {error}"
+      "update_error": "Error updating entry",
+      "delete_error": "Error deleting entry"
     },
     "warning": {
       "no_active_nap": "No active nap found",

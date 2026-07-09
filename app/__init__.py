@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from app.models.database import init_db, close_db
@@ -13,6 +14,16 @@ def create_app():
     app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
     app.config['DATABASE'] = '/data/baby_tracking.db'
     csrf.init_app(app)
+
+    # Strukturiertes Logging, damit Exceptions serverseitig nachvollziehbar sind,
+    # ohne Details an den Client durchzureichen (Issue #49)
+    if not app.logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s [%(name)s] %(message)s'
+        ))
+        app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
 
     # Gemeinsame Template-Filter einmalig registrieren (Issue #48)
     register_template_filters(app)

@@ -344,8 +344,8 @@
       "invalid_diaper_type": "Ungültiger Windeltyp",
       "medicine_required": "Medikamentenname und Dosis sind erforderlich",
       "all_fields_required": "Alle Felder sind erforderlich",
-      "update_error": "Fehler beim Aktualisieren: {error}",
-      "delete_error": "Fehler beim Löschen: {error}"
+      "update_error": "Fehler beim Aktualisieren des Eintrags",
+      "delete_error": "Fehler beim Löschen des Eintrags"
     },
     "warning": {
       "no_active_nap": "Kein aktives Nickerchen gefunden",
