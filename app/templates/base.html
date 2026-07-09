@@ -2,7 +2,7 @@
 <html lang="{{ current_language }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>MyBaby{% if baby_name %} - {{ baby_name }}{% endif %}</title>
     <meta name="lang" content="{{ current_language }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -422,6 +422,60 @@
                 font-size: 0.7rem;
             }
         }
+
+        /* Bottom-Tab-Bar ersetzt auf Mobile das Burger-Menü (Issue #76) */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            background: var(--color-teal-darker);
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .bottom-nav-link {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            min-height: 56px;
+            padding: 10px 4px;
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .bottom-nav-link i {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .bottom-nav-link.active {
+            color: white;
+        }
+
+        @media (max-width: 991.98px) {
+            /* Burger-Menü entfällt, nur noch die schmale Brand-Leiste oben bleibt */
+            #navbarNav,
+            .navbar-toggler {
+                display: none !important;
+            }
+
+            body {
+                padding-bottom: calc(76px + env(safe-area-inset-bottom));
+            }
+
+            .bottom-nav {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
@@ -451,6 +505,33 @@
                 </ul>
             </div>
         </div>
+    </nav>
+
+    <nav class="bottom-nav" aria-label="{{ _('nav.main_navigation') }}">
+        <a class="bottom-nav-link {{ 'active' if request.blueprint == 'main' else '' }}"
+           href="{{ url_for('main.index') }}"
+           {% if request.blueprint == 'main' %}aria-current="page"{% endif %}>
+            <i class="bi bi-house"></i>
+            <span>{{ _('nav.dashboard') }}</span>
+        </a>
+        <a class="bottom-nav-link {{ 'active' if request.blueprint == 'entries' else '' }}"
+           href="{{ url_for('entries.entries') }}"
+           {% if request.blueprint == 'entries' %}aria-current="page"{% endif %}>
+            <i class="bi bi-list-ul"></i>
+            <span>{{ _('nav.entries') }}</span>
+        </a>
+        <a class="bottom-nav-link {{ 'active' if request.blueprint == 'trends' else '' }}"
+           href="{{ url_for('trends.trends') }}"
+           {% if request.blueprint == 'trends' %}aria-current="page"{% endif %}>
+            <i class="bi bi-graph-up"></i>
+            <span>{{ _('nav.trends') }}</span>
+        </a>
+        <a class="bottom-nav-link {{ 'active' if request.blueprint == 'settings' else '' }}"
+           href="{{ url_for('settings.settings') }}"
+           {% if request.blueprint == 'settings' %}aria-current="page"{% endif %}>
+            <i class="bi bi-gear"></i>
+            <span>{{ _('nav.settings') }}</span>
+        </a>
     </nav>
 
     <div class="container-fluid">
