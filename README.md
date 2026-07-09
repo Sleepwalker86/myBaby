@@ -26,6 +26,7 @@ MyBaby hilft dir dabei, den Überblick über alle wichtigen Aktivitäten deines 
 - **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken, Temperaturverlauf sowie die kombinierte Wachstumskurve für Gewicht, Größe & Kopfumfang (mobil optimiert: Schnellfilter 7/30/90 Tage, einklappbare Bereiche, wischbare Chart-Reihe, größere Grafiken)
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
+- **Mehrere Kinder**: Lege für Geschwister oder Zwillinge mehrere Kind-Profile in derselben Instanz an und wechsle jederzeit über die Navigation zwischen ihnen – alle Einträge, Vorschläge und Trends beziehen sich immer auf das gerade aktive Kind
 
 ### Screenshots
 
@@ -106,7 +107,11 @@ Gehe zu **Einstellungen** und trage ein:
 - **Sprache**: Wähle zwischen Deutsch, Englisch oder Spanisch
 - **Dark Mode**: Aktiviere für schonende Nutzung in der Nacht
 
-### 2. Erste Einträge erfassen
+### 2. Mehrere Kinder (Geschwister/Zwillinge)
+
+Falls du mehr als ein Kind trackst, kannst du in den **Einstellungen** unter „Kinder verwalten" weitere Kind-Profile anlegen (Name + Geburtsdatum). Sobald mehr als ein Profil existiert, erscheint oben in der Navigation ein Umschalter, mit dem du jederzeit zwischen den Kindern wechselst. Alle Einträge, Vorschläge, Trends und der CSV-Export beziehen sich immer auf das gerade aktive Kind; das JSON-Backup sichert dagegen immer alle Kind-Profile auf einmal. Ein Kind-Profil mit vorhandenen Einträgen kann nicht gelöscht werden, nur umbenannt.
+
+### 3. Erste Einträge erfassen
 
 Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
 
@@ -123,7 +128,7 @@ Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
 - **Medizin**: Erfasse Medikamentenname und Dosis
 - **Erkrankung**: Dokumentiere Krankheitsphasen mit Start, Ende, Typ und Symptomen
 
-### 3. Dashboard verstehen
+### 4. Dashboard verstehen
 
 Das Dashboard zeigt dir:
 
@@ -134,7 +139,7 @@ Das Dashboard zeigt dir:
 - **Schlaf-Vorschläge**: Wann das nächste Nickerchen und der optimale Nachtschlaf empfohlen werden
 - **Heutige Einträge**: Chronologische Liste aller Aktivitäten
 
-### 4. Einträge durchsuchen
+### 5. Einträge durchsuchen
 
 Die Seite **Einträge** bietet:
 
@@ -186,10 +191,13 @@ Ja, sobald die App gestartet ist, funktioniert sie komplett offline. Nur für de
 Alle Daten werden lokal in einer SQLite-Datenbank gespeichert. Bei Docker-Nutzung im `./data` Verzeichnis.
 
 **Kann ich die Daten exportieren?**
-Die Datenbank-Datei kann direkt kopiert werden. Sie liegt im `./data` Verzeichnis. In den Einstellungen gibt es außerdem drei Export-Optionen: ein vollständiger CSV-Export aller Einträge, ein vollständiges JSON-Backup (inkl. Wiederherstellung) sowie ein PDF-Arztbericht für einen frei wählbaren Zeitraum (z.B. letzte 7/30/90 Tage) – eine kompakte, lesbare Zusammenfassung von Schlaf, Wachstum, Fütterung, Windel, Temperatur, Krankheiten und Medikamenten, gedacht zum Zeigen beim Kinderarzt/der Kinderärztin.
+Die Datenbank-Datei kann direkt kopiert werden. Sie liegt im `./data` Verzeichnis. In den Einstellungen gibt es außerdem drei Export-Optionen: ein CSV-Export aller Einträge des gerade aktiven Kindes, ein vollständiges JSON-Backup aller Kind-Profile (inkl. Wiederherstellung) sowie ein PDF-Arztbericht für das aktive Kind über einen frei wählbaren Zeitraum (z.B. letzte 7/30/90 Tage) – eine kompakte, lesbare Zusammenfassung von Schlaf, Wachstum, Fütterung, Windel, Temperatur, Krankheiten und Medikamenten, gedacht zum Zeigen beim Kinderarzt/der Kinderärztin.
 
 **Welche Sprachen werden unterstützt?**
 Die App unterstützt Deutsch (Standard), Englisch und Spanisch. Die Sprache kann in den Einstellungen umgeschaltet werden.
+
+**Kann ich mehrere Kinder verwalten?**
+Ja. Unter Einstellungen → „Kinder verwalten" kannst du weitere Kind-Profile für Geschwister oder Zwillinge anlegen. Ab dem zweiten Profil erscheint ein Umschalter in der Navigation. Es gibt weiterhin keine Benutzerkonten – alle Kinder sind für jede Person mit Zugriff auf die Instanz sichtbar, die Trennung erfolgt ausschließlich über die Kind-Auswahl.
 
 ## Support
 
