@@ -1,7 +1,7 @@
 import logging
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
-from app.models.database import init_db, close_db
+from app.models.database import init_db, close_db, get_active_baby_id
 from app.models.models import BabyInfo
 from app.i18n import _, get_language
 from app.template_filters import register_template_filters
@@ -47,12 +47,16 @@ def create_app():
         return {
             'baby_name': BabyInfo.get_name(),
             '_': translate,  # Übersetzungsfunktion für Jinja2
-            'current_language': get_language()
+            'current_language': get_language(),
+            # Umschalter im Template nur bei mehr als einem Profil anzeigen (Issue #33)
+            'all_babies': BabyInfo.get_all_babies(),
+            'active_baby_id': get_active_baby_id(),
         }
     
     # Routes registrieren
-    from app.routes import main, sleep, feeding, bottle, porridge, diaper, temperature, medicine, illness, edit, trends, entries, settings, i18n, weight, height, head
+    from app.routes import main, sleep, feeding, bottle, porridge, diaper, temperature, medicine, illness, edit, trends, entries, settings, i18n, weight, height, head, baby
     app.register_blueprint(main.bp)
+    app.register_blueprint(baby.bp)
     app.register_blueprint(sleep.bp)
     app.register_blueprint(feeding.bp)
     app.register_blueprint(bottle.bp)

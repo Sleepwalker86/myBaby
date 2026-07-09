@@ -42,7 +42,7 @@ def test_waking_across_dst_fallback_is_not_dropped_by_string_ordering(app):
     waking_end = "2026-10-25T02:50:00+02:00"
     insert_night_waking(app, waking_start, waking_end)
 
-    with app.app_context():
+    with app.test_request_context():
         from app.models.models import NightWaking
 
         wakings = NightWaking.get_wakings_for_night_sleep(night_sleep_start, night_sleep_end)
@@ -59,7 +59,7 @@ def test_total_sleep_duration_accounts_for_waking_across_dst_fallback(app):
     waking_end = "2026-10-25T02:50:00+02:00"
     insert_night_waking(app, waking_start, waking_end)
 
-    with app.app_context():
+    with app.test_request_context():
         from app.models.models import NightWaking
 
         start_dt = datetime.fromisoformat(night_sleep_start)

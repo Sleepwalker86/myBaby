@@ -1,10 +1,18 @@
 """Datenmodelle für die Baby-Tracking App"""
-from app.models.database import get_db
+from app.models.database import get_db, get_active_baby_id
 from datetime import datetime, date, timedelta
 import bisect
 import json
 
 from app.timezone import tz_berlin, normalize_to_berlin
+
+# Tracking-Tabellen mit baby_id-Spalte (Issue #33). Bewusst ohne baby_info
+# (das ist die Profiltabelle selbst) und ohne nap_suggestions (interner Cache,
+# keine Nutzerdaten) - relevant für die Lösch-Sperre in BabyInfo.delete_baby().
+TRACKING_TABLES_WITH_BABY_ID = [
+    'sleep', 'feeding', 'bottle', 'diaper', 'temperature', 'medicine',
+    'night_waking', 'porridge', 'illness', 'weight', 'height', 'head_circumference',
+]
 
 # Issue #44: Zeitfenster, innerhalb dessen ein inhaltlich identischer Eintrag als
 # Doppel-Submit (statt als bewusst zweiter Eintrag) gewertet wird.
@@ -35,7 +43,7 @@ def _format_wake_duration(prev_end_str, current_start_str):
         return None
 
 
-def _load_sorted_sleep_end_times(db, upper_bound_str):
+def _load_sorted_sleep_end_times(db, upper_bound_str, baby_id):
     """Lädt alle sleep.end_time-Werte bis zu einer oberen Grenze einmalig sortiert.
 
     Vermeidet das N+1-Query-Problem (Issue #45): statt pro Eintrag erneut nach dem
@@ -44,9 +52,9 @@ def _load_sorted_sleep_end_times(db, upper_bound_str):
     """
     rows = db.execute(
         '''SELECT end_time FROM sleep
-           WHERE end_time IS NOT NULL AND end_time <= ?
+           WHERE end_time IS NOT NULL AND end_time <= ? AND baby_id = ?
            ORDER BY end_time ASC''',
-        (upper_bound_str,)
+        (upper_bound_str, baby_id)
     ).fetchall()
     return [row['end_time'] for row in rows]
 
@@ -67,19 +75,29 @@ def _parse_ts(value):
         return None
 
 
-def _is_recent_duplicate(db, table, timestamp_column, timestamp, match_fields):
+def _is_recent_duplicate(db, table, timestamp_column, timestamp, match_fields, baby_id=None):
     """Erkennt Doppel-Submits: Prüft, ob der zuletzt in `table` angelegte Eintrag in
     allen `match_fields` übereinstimmt und sein Zeitstempel höchstens
     DEDUP_WINDOW_SECONDS vom neuen Zeitstempel entfernt liegt. Solche Wiederholungen
-    entstehen z. B. durch Touch-Delay bei übermüdeten Eltern (Issue #44)."""
+    entstehen z. B. durch Touch-Delay bei übermüdeten Eltern (Issue #44).
+
+    baby_id schränkt den Vergleich auf den zuletzt angelegten Eintrag DIESES Kindes ein
+    (Issue #33) - sonst würde ein frisches Kind-Profil fälschlich mit dem letzten
+    Eintrag eines anderen Kindes verglichen."""
     new_ts = _parse_ts(timestamp)
     if new_ts is None:
         return False
 
     columns = ', '.join([timestamp_column] + list(match_fields.keys()))
-    row = db.execute(
-        f'SELECT {columns} FROM {table} ORDER BY id DESC LIMIT 1'
-    ).fetchone()
+    if baby_id is not None:
+        row = db.execute(
+            f'SELECT {columns} FROM {table} WHERE baby_id = ? ORDER BY id DESC LIMIT 1',
+            (baby_id,)
+        ).fetchone()
+    else:
+        row = db.execute(
+            f'SELECT {columns} FROM {table} ORDER BY id DESC LIMIT 1'
+        ).fetchone()
     if row is None:
         return False
 
@@ -93,70 +111,77 @@ def _is_recent_duplicate(db, table, timestamp_column, timestamp, match_fields):
 class Sleep:
     """Schlaf-Tracking"""
     @staticmethod
-    def create_nap(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
+    def create_nap(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None, baby_id=None):
         """Erstellt ein Nickerchen"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         match_fields = {'type': 'nap', 'end_time': end_time, 'sleep_quality': sleep_quality,
                          'sleep_location': sleep_location, 'sleep_comment': sleep_comment}
-        if _is_recent_duplicate(db, 'sleep', 'start_time', start_time, match_fields):
+        if _is_recent_duplicate(db, 'sleep', 'start_time', start_time, match_fields, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment) VALUES (?, ?, ?, ?, ?, ?)',
-            ('nap', start_time, end_time, sleep_quality, sleep_location, sleep_comment)
+            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment, baby_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            ('nap', start_time, end_time, sleep_quality, sleep_location, sleep_comment, baby_id)
         )
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def create_night_sleep(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
+    def create_night_sleep(start_time, end_time=None, sleep_quality=None, sleep_location=None, sleep_comment=None, baby_id=None):
         """Erstellt einen Nachtschlaf"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         match_fields = {'type': 'night', 'end_time': end_time, 'sleep_quality': sleep_quality,
                          'sleep_location': sleep_location, 'sleep_comment': sleep_comment}
-        if _is_recent_duplicate(db, 'sleep', 'start_time', start_time, match_fields):
+        if _is_recent_duplicate(db, 'sleep', 'start_time', start_time, match_fields, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment) VALUES (?, ?, ?, ?, ?, ?)',
-            ('night', start_time, end_time, sleep_quality, sleep_location, sleep_comment)
+            'INSERT INTO sleep (type, start_time, end_time, sleep_quality, sleep_location, sleep_comment, baby_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            ('night', start_time, end_time, sleep_quality, sleep_location, sleep_comment, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def end_sleep(sleep_id, end_time):
+    def end_sleep(sleep_id, end_time, baby_id=None):
         """Beendet einen Schlaf"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE sleep SET end_time = ? WHERE id = ?',
-            (end_time, sleep_id)
+            'UPDATE sleep SET end_time = ? WHERE id = ? AND baby_id = ?',
+            (end_time, sleep_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def get_active_sleep():
+    def get_active_sleep(baby_id=None):
         """Gibt den aktiven Schlaf zurück (falls vorhanden) – neuesten ohne Endzeit"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         row = db.execute(
-            'SELECT * FROM sleep WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1'
+            'SELECT * FROM sleep WHERE end_time IS NULL AND baby_id = ? ORDER BY start_time DESC LIMIT 1',
+            (baby_id,)
         ).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def get_active_sleep_by_type(sleep_type):
+    def get_active_sleep_by_type(sleep_type, baby_id=None):
         """Gibt den aktiven Schlaf eines bestimmten Typs zurück ('nap' oder 'night').
         Verhindert, dass ein offenes Nickerchen einen aktiven Nachtschlaf überdeckt."""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         row = db.execute(
-            'SELECT * FROM sleep WHERE end_time IS NULL AND type = ? ORDER BY start_time DESC LIMIT 1',
-            (sleep_type,)
+            'SELECT * FROM sleep WHERE end_time IS NULL AND type = ? AND baby_id = ? ORDER BY start_time DESC LIMIT 1',
+            (sleep_type, baby_id)
         ).fetchone()
         return dict(row) if row else None
     
     @staticmethod
-    def get_today_sleep_duration(selected_date=None):
+    def get_today_sleep_duration(selected_date=None, baby_id=None):
         """Berechnet die Schlafdauer für einen bestimmten Tag in Stunden"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        
+
         # Normalisiere selected_date zu einem date-Objekt
         if selected_date is None:
             selected_date = date.today()
@@ -178,10 +203,11 @@ class Sleep:
         # Hole nur Einträge, die am ausgewählten Tag enden
         # Dies nutzt den Index auf end_time viel besser als date(end_time)
         all_rows = db.execute(
-            '''SELECT type, start_time, end_time FROM sleep 
-               WHERE end_time IS NOT NULL 
-               AND end_time >= ? AND end_time <= ?''',
-            (day_start_str, day_end_str)
+            '''SELECT type, start_time, end_time FROM sleep
+               WHERE end_time IS NOT NULL
+               AND end_time >= ? AND end_time <= ?
+               AND baby_id = ?''',
+            (day_start_str, day_end_str, baby_id)
         ).fetchall()
         
         # Hilfsfunktion zum Parsen von Zeitstempeln - EINFACH und DIREKT
@@ -265,10 +291,10 @@ class Sleep:
                     # Für Nachtschlaf: Ziehe nächtliches Aufwachen ab
                     if sleep_type == 'night':
                         waking_duration = NightWaking.get_total_waking_duration(
-                            start_str, end_str
+                            start_str, end_str, baby_id=baby_id
                         )
                         duration_seconds = max(0, duration_seconds - (waking_duration * 3600))
-                    
+
                     total_seconds += duration_seconds
                             
             except Exception as e:
@@ -278,8 +304,9 @@ class Sleep:
         # Aktive Schlaf-Einträge (noch nicht beendet) - nur für heute relevant
         if selected_date == date.today():
             active_sleep_rows = db.execute(
-                '''SELECT type, start_time FROM sleep 
-                   WHERE end_time IS NULL'''
+                '''SELECT type, start_time FROM sleep
+                   WHERE end_time IS NULL AND baby_id = ?''',
+                (baby_id,)
             ).fetchall()
             
             day_start_dt = normalize_to_berlin(datetime.combine(selected_date, datetime.min.time()))
@@ -320,7 +347,7 @@ class Sleep:
                                 # Verwende die aktuelle Zeit als Endzeit für die Berechnung
                                 now_str = datetime.now(tz_berlin).isoformat()
                                 waking_duration = NightWaking.get_total_waking_duration(
-                                    row['start_time'], now_str
+                                    row['start_time'], now_str, baby_id=baby_id
                                 )
                                 duration_seconds = max(0, duration_seconds - (waking_duration * 3600))
                                 
@@ -331,46 +358,50 @@ class Sleep:
         return round(total_seconds / 3600, 1) if total_seconds > 0 else 0.0
     
     @staticmethod
-    def get_by_id(sleep_id):
+    def get_by_id(sleep_id, baby_id=None):
         """Holt einen Schlaf-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM sleep WHERE id = ?', (sleep_id,)).fetchone()
+        row = db.execute('SELECT * FROM sleep WHERE id = ? AND baby_id = ?', (sleep_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def update(sleep_id, start_time, end_time=None, sleep_type=None, sleep_quality=None, sleep_location=None, sleep_comment=None):
+    def update(sleep_id, start_time, end_time=None, sleep_type=None, sleep_quality=None, sleep_location=None, sleep_comment=None, baby_id=None):
         """Aktualisiert einen Schlaf-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         if sleep_type:
             db.execute(
-                '''UPDATE sleep 
-                   SET type = ?, start_time = ?, end_time = ?, 
+                '''UPDATE sleep
+                   SET type = ?, start_time = ?, end_time = ?,
                        sleep_quality = ?, sleep_location = ?, sleep_comment = ?
-                   WHERE id = ?''',
-                (sleep_type, start_time, end_time, sleep_quality, sleep_location, sleep_comment, sleep_id)
+                   WHERE id = ? AND baby_id = ?''',
+                (sleep_type, start_time, end_time, sleep_quality, sleep_location, sleep_comment, sleep_id, baby_id)
             )
         else:
             db.execute(
-                '''UPDATE sleep 
-                   SET start_time = ?, end_time = ?, 
+                '''UPDATE sleep
+                   SET start_time = ?, end_time = ?,
                        sleep_quality = ?, sleep_location = ?, sleep_comment = ?
-                   WHERE id = ?''',
-                (start_time, end_time, sleep_quality, sleep_location, sleep_comment, sleep_id)
+                   WHERE id = ? AND baby_id = ?''',
+                (start_time, end_time, sleep_quality, sleep_location, sleep_comment, sleep_id, baby_id)
             )
         db.commit()
-    
+
     @staticmethod
-    def delete(sleep_id):
+    def delete(sleep_id, baby_id=None):
         """Löscht einen Schlaf-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM sleep WHERE id = ?', (sleep_id,))
+        db.execute('DELETE FROM sleep WHERE id = ? AND baby_id = ?', (sleep_id, baby_id))
         db.commit()
-    
+
     @staticmethod
-    def get_sleep_statistics(start_date, end_date):
+    def get_sleep_statistics(start_date, end_date, baby_id=None):
         """Gibt Schlaf-Statistiken für einen Zeitraum zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        
+
         # PERFORMANCE-OPTIMIERUNG: Range-Queries statt date() für bessere Index-Nutzung
         # Konvertiere Datums-Strings zu datetime für Range-Queries
         if isinstance(start_date, str):
@@ -389,18 +420,18 @@ class Sleep:
         
         # Alle Schlaf-Einträge, die im Zeitraum gestartet haben
         rows = db.execute(
-            '''SELECT type, start_time, end_time FROM sleep 
-               WHERE start_time >= ? AND start_time <= ? AND end_time IS NOT NULL
+            '''SELECT type, start_time, end_time FROM sleep
+               WHERE start_time >= ? AND start_time <= ? AND end_time IS NOT NULL AND baby_id = ?
                ORDER BY start_time''',
-            (range_start_str, range_end_str)
+            (range_start_str, range_end_str, baby_id)
         ).fetchall()
-        
+
         # Schlaf-Einträge, die vor dem Zeitraum gestartet haben, aber im Zeitraum enden
         rows_prev = db.execute(
-            '''SELECT type, start_time, end_time FROM sleep 
-               WHERE start_time < ? AND end_time >= ? AND end_time <= ? AND end_time IS NOT NULL
+            '''SELECT type, start_time, end_time FROM sleep
+               WHERE start_time < ? AND end_time >= ? AND end_time <= ? AND end_time IS NOT NULL AND baby_id = ?
                ORDER BY start_time''',
-            (range_start_str, range_start_str, range_end_str)
+            (range_start_str, range_start_str, range_end_str, baby_id)
         ).fetchall()
         
         daily_sleep = {}  # {date: total_hours}
@@ -432,10 +463,10 @@ class Sleep:
                     # Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen
                     # Ziehe nächtliches Aufwachen ab
                     waking_duration = NightWaking.get_total_waking_duration(
-                        row['start_time'], row['end_time']
+                        row['start_time'], row['end_time'], baby_id=baby_id
                     )
                     duration_hours = max(0, duration_hours - waking_duration)
-                    
+
                     day_key = end.date().isoformat()
                     # PERFORMANCE: Direkter Vergleich statt String-Konvertierung
                     if start_date_obj <= end.date() <= end_date_obj:
@@ -498,7 +529,7 @@ class Sleep:
                     # Nachtschlaf: Gesamte Dauer dem Aufwach-Tag zurechnen (auch wenn vor Zeitraum gestartet)
                     # Ziehe nächtliches Aufwachen ab
                     waking_duration = NightWaking.get_total_waking_duration(
-                        row['start_time'], row['end_time']
+                        row['start_time'], row['end_time'], baby_id=baby_id
                     )
                     duration_hours = max(0, duration_hours - waking_duration)
                     
@@ -545,19 +576,19 @@ class Sleep:
         range_end_q = range_end_str
         quality_rows = db.execute(
             '''SELECT sleep_quality FROM sleep
-               WHERE start_time >= ? AND start_time <= ? AND sleep_quality IS NOT NULL''',
-            (range_start_q, range_end_q)
+               WHERE start_time >= ? AND start_time <= ? AND sleep_quality IS NOT NULL AND baby_id = ?''',
+            (range_start_q, range_end_q, baby_id)
         ).fetchall()
         for row in quality_rows:
             q = (row['sleep_quality'] or '').strip()
             if not q:
                 continue
             quality_counts[q] = quality_counts.get(q, 0) + 1
-        
+
         location_rows = db.execute(
             '''SELECT sleep_location FROM sleep
-               WHERE start_time >= ? AND start_time <= ? AND sleep_location IS NOT NULL''',
-            (range_start_q, range_end_q)
+               WHERE start_time >= ? AND start_time <= ? AND sleep_location IS NOT NULL AND baby_id = ?''',
+            (range_start_q, range_end_q, baby_id)
         ).fetchall()
         for row in location_rows:
             loc = (row['sleep_location'] or '').strip()
@@ -592,47 +623,53 @@ class Sleep:
 class NightWaking:
     """Nächtliches Aufwachen-Tracking"""
     @staticmethod
-    def create(start_time, end_time=None):
+    def create(start_time, end_time=None, baby_id=None):
         """Erstellt einen nächtliches Aufwachen-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'night_waking', 'start_time', start_time, {'end_time': end_time}):
+        if _is_recent_duplicate(db, 'night_waking', 'start_time', start_time, {'end_time': end_time}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO night_waking (start_time, end_time) VALUES (?, ?)',
-            (start_time, end_time)
+            'INSERT INTO night_waking (start_time, end_time, baby_id) VALUES (?, ?, ?)',
+            (start_time, end_time, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def get_active():
+    def get_active(baby_id=None):
         """Gibt das aktive nächtliche Aufwachen zurück (falls vorhanden)"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         row = db.execute(
-            'SELECT * FROM night_waking WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1'
+            'SELECT * FROM night_waking WHERE end_time IS NULL AND baby_id = ? ORDER BY start_time DESC LIMIT 1',
+            (baby_id,)
         ).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def end_waking(waking_id, end_time):
+    def end_waking(waking_id, end_time, baby_id=None):
         """Beendet ein nächtliches Aufwachen"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE night_waking SET end_time = ? WHERE id = ?',
-            (end_time, waking_id)
+            'UPDATE night_waking SET end_time = ? WHERE id = ? AND baby_id = ?',
+            (end_time, waking_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def get_by_id(waking_id):
+    def get_by_id(waking_id, baby_id=None):
         """Holt einen nächtliches Aufwachen-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM night_waking WHERE id = ?', (waking_id,)).fetchone()
+        row = db.execute('SELECT * FROM night_waking WHERE id = ? AND baby_id = ?', (waking_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def get_wakings_for_night_sleep(night_sleep_start, night_sleep_end):
+    def get_wakings_for_night_sleep(night_sleep_start, night_sleep_end, baby_id=None):
         """Gibt alle nächtlichen Aufwachen für einen bestimmten Nachtschlaf zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
 
         # Issue #46: night_sleep_start/-end tragen ein Zeitzonen-Offset (+01:00/+02:00),
@@ -661,8 +698,9 @@ class NightWaking:
             '''SELECT * FROM night_waking
                WHERE start_time >= ? AND start_time <= ?
                AND (end_time IS NULL OR (end_time >= ? AND end_time <= ?))
+               AND baby_id = ?
                ORDER BY start_time''',
-            (query_start, query_end, query_start, query_end)
+            (query_start, query_end, query_start, query_end, baby_id)
         ).fetchall()
 
         if sleep_start is None:
@@ -686,9 +724,9 @@ class NightWaking:
         return result
     
     @staticmethod
-    def get_total_waking_duration(night_sleep_start, night_sleep_end):
+    def get_total_waking_duration(night_sleep_start, night_sleep_end, baby_id=None):
         """Berechnet die Gesamtdauer des nächtlichen Aufwachens für einen Nachtschlaf in Stunden"""
-        wakings = NightWaking.get_wakings_for_night_sleep(night_sleep_start, night_sleep_end)
+        wakings = NightWaking.get_wakings_for_night_sleep(night_sleep_start, night_sleep_end, baby_id=baby_id)
         total_seconds = 0.0
         
         for waking in wakings:
@@ -732,75 +770,84 @@ class NightWaking:
         return round(total_seconds / 3600, 2) if total_seconds > 0 else 0.0
     
     @staticmethod
-    def update(waking_id, start_time, end_time=None):
+    def update(waking_id, start_time, end_time=None, baby_id=None):
         """Aktualisiert einen nächtliches Aufwachen-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE night_waking SET start_time = ?, end_time = ? WHERE id = ?',
-            (start_time, end_time, waking_id)
+            'UPDATE night_waking SET start_time = ?, end_time = ? WHERE id = ? AND baby_id = ?',
+            (start_time, end_time, waking_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(waking_id):
+    def delete(waking_id, baby_id=None):
         """Löscht einen nächtliches Aufwachen-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM night_waking WHERE id = ?', (waking_id,))
+        db.execute('DELETE FROM night_waking WHERE id = ? AND baby_id = ?', (waking_id, baby_id))
         db.commit()
 
 class Feeding:
     """Stillen-Tracking"""
     @staticmethod
-    def create(timestamp, side, end_time=None):
+    def create(timestamp, side, end_time=None, baby_id=None):
         """Erstellt einen Still-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'feeding', 'timestamp', timestamp, {'side': side, 'end_time': end_time}):
+        if _is_recent_duplicate(db, 'feeding', 'timestamp', timestamp, {'side': side, 'end_time': end_time}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO feeding (timestamp, side, end_time) VALUES (?, ?, ?)',
-            (timestamp, side, end_time)
+            'INSERT INTO feeding (timestamp, side, end_time, baby_id) VALUES (?, ?, ?, ?)',
+            (timestamp, side, end_time, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
         """Gibt die letzte Stillzeit zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         row = db.execute(
-            'SELECT * FROM feeding ORDER BY timestamp DESC LIMIT 1'
+            'SELECT * FROM feeding WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1',
+            (baby_id,)
         ).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def get_by_id(feeding_id):
+    def get_by_id(feeding_id, baby_id=None):
         """Holt einen Still-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM feeding WHERE id = ?', (feeding_id,)).fetchone()
+        row = db.execute('SELECT * FROM feeding WHERE id = ? AND baby_id = ?', (feeding_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def update(feeding_id, timestamp, side, end_time=None):
+    def update(feeding_id, timestamp, side, end_time=None, baby_id=None):
         """Aktualisiert einen Still-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE feeding SET timestamp = ?, side = ?, end_time = ? WHERE id = ?',
-            (timestamp, side, end_time, feeding_id)
+            'UPDATE feeding SET timestamp = ?, side = ?, end_time = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, side, end_time, feeding_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(feeding_id):
+    def delete(feeding_id, baby_id=None):
         """Löscht einen Still-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM feeding WHERE id = ?', (feeding_id,))
+        db.execute('DELETE FROM feeding WHERE id = ? AND baby_id = ?', (feeding_id, baby_id))
         db.commit()
-    
+
     @staticmethod
-    def get_feeding_statistics(start_date, end_date):
+    def get_feeding_statistics(start_date, end_date, baby_id=None):
         """Gibt Still-Statistiken für einen Zeitraum zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        
+
         # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
         if isinstance(start_date, str):
             start_date_obj = date.fromisoformat(start_date)
@@ -810,17 +857,17 @@ class Feeding:
             end_date_obj = date.fromisoformat(end_date)
         else:
             end_date_obj = end_date
-        
+
         range_start = datetime.combine(start_date_obj, datetime.min.time())
         range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
         range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
         range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
-        
+
         # Alle Still-Einträge im Zeitraum
         rows = db.execute(
-            '''SELECT id FROM feeding 
-               WHERE timestamp >= ? AND timestamp <= ?''',
-            (range_start_str, range_end_str)
+            '''SELECT id FROM feeding
+               WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+            (range_start_str, range_end_str, baby_id)
         ).fetchall()
         
         total_count = len(rows)
@@ -840,146 +887,164 @@ class Feeding:
 class Bottle:
     """Flasche-Tracking"""
     @staticmethod
-    def create(timestamp, amount):
+    def create(timestamp, amount, baby_id=None):
         """Erstellt einen Flaschen-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'bottle', 'timestamp', timestamp, {'amount': amount}):
+        if _is_recent_duplicate(db, 'bottle', 'timestamp', timestamp, {'amount': amount}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO bottle (timestamp, amount) VALUES (?, ?)',
-            (timestamp, amount)
+            'INSERT INTO bottle (timestamp, amount, baby_id) VALUES (?, ?, ?)',
+            (timestamp, amount, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
         """Gibt die letzte Flasche zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         row = db.execute(
-            'SELECT * FROM bottle ORDER BY timestamp DESC LIMIT 1'
+            'SELECT * FROM bottle WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1',
+            (baby_id,)
         ).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def get_by_id(bottle_id):
+    def get_by_id(bottle_id, baby_id=None):
         """Holt einen Flaschen-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM bottle WHERE id = ?', (bottle_id,)).fetchone()
+        row = db.execute('SELECT * FROM bottle WHERE id = ? AND baby_id = ?', (bottle_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def update(bottle_id, timestamp, amount):
+    def update(bottle_id, timestamp, amount, baby_id=None):
         """Aktualisiert einen Flaschen-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE bottle SET timestamp = ?, amount = ? WHERE id = ?',
-            (timestamp, amount, bottle_id)
+            'UPDATE bottle SET timestamp = ?, amount = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, amount, bottle_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(bottle_id):
+    def delete(bottle_id, baby_id=None):
         """Löscht einen Flaschen-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM bottle WHERE id = ?', (bottle_id,))
+        db.execute('DELETE FROM bottle WHERE id = ? AND baby_id = ?', (bottle_id, baby_id))
         db.commit()
 
 class Porridge:
     """Brei-Tracking"""
     @staticmethod
-    def create(timestamp, amount, food=None):
+    def create(timestamp, amount, food=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'porridge', 'timestamp', timestamp, {'amount': amount, 'food': food}):
+        if _is_recent_duplicate(db, 'porridge', 'timestamp', timestamp, {'amount': amount, 'food': food}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO porridge (timestamp, amount, food) VALUES (?, ?, ?)',
-            (timestamp, amount, food)
+            'INSERT INTO porridge (timestamp, amount, food, baby_id) VALUES (?, ?, ?, ?)',
+            (timestamp, amount, food, baby_id)
         )
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM porridge ORDER BY timestamp DESC LIMIT 1').fetchone()
+        row = db.execute('SELECT * FROM porridge WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1', (baby_id,)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def get_by_id(porridge_id):
+    def get_by_id(porridge_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM porridge WHERE id = ?', (porridge_id,)).fetchone()
+        row = db.execute('SELECT * FROM porridge WHERE id = ? AND baby_id = ?', (porridge_id, baby_id)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def update(porridge_id, timestamp, amount, food=None):
+    def update(porridge_id, timestamp, amount, food=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE porridge SET timestamp = ?, amount = ?, food = ? WHERE id = ?',
-            (timestamp, amount, food, porridge_id)
+            'UPDATE porridge SET timestamp = ?, amount = ?, food = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, amount, food, porridge_id, baby_id)
         )
         db.commit()
 
     @staticmethod
-    def delete(porridge_id):
+    def delete(porridge_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM porridge WHERE id = ?', (porridge_id,))
+        db.execute('DELETE FROM porridge WHERE id = ? AND baby_id = ?', (porridge_id, baby_id))
         db.commit()
 
 
 class Diaper:
     """Windel-Tracking"""
     @staticmethod
-    def create(timestamp, type):
+    def create(timestamp, type, baby_id=None):
         """Erstellt einen Windel-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'diaper', 'timestamp', timestamp, {'type': type}):
+        if _is_recent_duplicate(db, 'diaper', 'timestamp', timestamp, {'type': type}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO diaper (timestamp, type) VALUES (?, ?)',
-            (timestamp, type)
+            'INSERT INTO diaper (timestamp, type, baby_id) VALUES (?, ?, ?)',
+            (timestamp, type, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
         """Gibt die letzte Windel zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         row = db.execute(
-            'SELECT * FROM diaper ORDER BY timestamp DESC LIMIT 1'
+            'SELECT * FROM diaper WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1',
+            (baby_id,)
         ).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def get_by_id(diaper_id):
+    def get_by_id(diaper_id, baby_id=None):
         """Holt einen Windel-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM diaper WHERE id = ?', (diaper_id,)).fetchone()
+        row = db.execute('SELECT * FROM diaper WHERE id = ? AND baby_id = ?', (diaper_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def update(diaper_id, timestamp, diaper_type):
+    def update(diaper_id, timestamp, diaper_type, baby_id=None):
         """Aktualisiert einen Windel-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE diaper SET timestamp = ?, type = ? WHERE id = ?',
-            (timestamp, diaper_type, diaper_id)
+            'UPDATE diaper SET timestamp = ?, type = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, diaper_type, diaper_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(diaper_id):
+    def delete(diaper_id, baby_id=None):
         """Löscht einen Windel-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM diaper WHERE id = ?', (diaper_id,))
+        db.execute('DELETE FROM diaper WHERE id = ? AND baby_id = ?', (diaper_id, baby_id))
         db.commit()
-    
+
     @staticmethod
-    def get_diaper_statistics(start_date, end_date):
+    def get_diaper_statistics(start_date, end_date, baby_id=None):
         """Gibt Windel-Statistiken für einen Zeitraum zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        
+
         # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
         if isinstance(start_date, str):
             start_date_obj = date.fromisoformat(start_date)
@@ -989,17 +1054,17 @@ class Diaper:
             end_date_obj = date.fromisoformat(end_date)
         else:
             end_date_obj = end_date
-        
+
         range_start = datetime.combine(start_date_obj, datetime.min.time())
         range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
         range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
         range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
-        
+
         # Alle Windel-Einträge im Zeitraum
         rows = db.execute(
-            '''SELECT type FROM diaper 
-               WHERE timestamp >= ? AND timestamp <= ?''',
-            (range_start_str, range_end_str)
+            '''SELECT type FROM diaper
+               WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+            (range_start_str, range_end_str, baby_id)
         ).fetchall()
         
         total_count = len(rows)
@@ -1038,47 +1103,52 @@ class Diaper:
 class Temperature:
     """Temperatur-Tracking"""
     @staticmethod
-    def create(timestamp, value):
+    def create(timestamp, value, baby_id=None):
         """Erstellt einen Temperatur-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'temperature', 'timestamp', timestamp, {'value': value}):
+        if _is_recent_duplicate(db, 'temperature', 'timestamp', timestamp, {'value': value}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO temperature (timestamp, value) VALUES (?, ?)',
-            (timestamp, value)
+            'INSERT INTO temperature (timestamp, value, baby_id) VALUES (?, ?, ?)',
+            (timestamp, value, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def get_by_id(temp_id):
+    def get_by_id(temp_id, baby_id=None):
         """Holt einen Temperatur-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM temperature WHERE id = ?', (temp_id,)).fetchone()
+        row = db.execute('SELECT * FROM temperature WHERE id = ? AND baby_id = ?', (temp_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def update(temp_id, timestamp, value):
+    def update(temp_id, timestamp, value, baby_id=None):
         """Aktualisiert einen Temperatur-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE temperature SET timestamp = ?, value = ? WHERE id = ?',
-            (timestamp, value, temp_id)
+            'UPDATE temperature SET timestamp = ?, value = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, value, temp_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(temp_id):
+    def delete(temp_id, baby_id=None):
         """Löscht einen Temperatur-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM temperature WHERE id = ?', (temp_id,))
+        db.execute('DELETE FROM temperature WHERE id = ? AND baby_id = ?', (temp_id, baby_id))
         db.commit()
-    
+
     @staticmethod
-    def get_temperature_statistics(start_date, end_date):
+    def get_temperature_statistics(start_date, end_date, baby_id=None):
         """Gibt Temperatur-Statistiken für einen Zeitraum zurück"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        
+
         # Alle Temperatur-Einträge im Zeitraum
         # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
         if isinstance(start_date, str):
@@ -1089,17 +1159,17 @@ class Temperature:
             end_date_obj = date.fromisoformat(end_date)
         else:
             end_date_obj = end_date
-        
+
         range_start = datetime.combine(start_date_obj, datetime.min.time())
         range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
         range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
         range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
-        
+
         rows = db.execute(
-            '''SELECT timestamp, value FROM temperature 
-               WHERE timestamp >= ? AND timestamp <= ?
+            '''SELECT timestamp, value FROM temperature
+               WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?
                ORDER BY timestamp''',
-            (range_start_str, range_end_str)
+            (range_start_str, range_end_str, baby_id)
         ).fetchall()
         
         daily_temps = {}  # {date: [temperatures]}
@@ -1151,78 +1221,87 @@ class Temperature:
 class Medicine:
     """Medizin-Tracking"""
     @staticmethod
-    def create(timestamp, name, dose):
+    def create(timestamp, name, dose, baby_id=None):
         """Erstellt einen Medizin-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        if _is_recent_duplicate(db, 'medicine', 'timestamp', timestamp, {'name': name, 'dose': dose}):
+        if _is_recent_duplicate(db, 'medicine', 'timestamp', timestamp, {'name': name, 'dose': dose}, baby_id=baby_id):
             return None
         cursor = db.execute(
-            'INSERT INTO medicine (timestamp, name, dose) VALUES (?, ?, ?)',
-            (timestamp, name, dose)
+            'INSERT INTO medicine (timestamp, name, dose, baby_id) VALUES (?, ?, ?, ?)',
+            (timestamp, name, dose, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def get_by_id(med_id):
+    def get_by_id(med_id, baby_id=None):
         """Holt einen Medizin-Eintrag nach ID"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM medicine WHERE id = ?', (med_id,)).fetchone()
+        row = db.execute('SELECT * FROM medicine WHERE id = ? AND baby_id = ?', (med_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def update(med_id, timestamp, name, dose):
+    def update(med_id, timestamp, name, dose, baby_id=None):
         """Aktualisiert einen Medizin-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE medicine SET timestamp = ?, name = ?, dose = ? WHERE id = ?',
-            (timestamp, name, dose, med_id)
+            'UPDATE medicine SET timestamp = ?, name = ?, dose = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, name, dose, med_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(med_id):
+    def delete(med_id, baby_id=None):
         """Löscht einen Medizin-Eintrag"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM medicine WHERE id = ?', (med_id,))
+        db.execute('DELETE FROM medicine WHERE id = ? AND baby_id = ?', (med_id, baby_id))
         db.commit()
 
 class Illness:
     """Erkrankungen-Tracking"""
     @staticmethod
-    def create(start_time, end_time, illness_type, symptoms=None, notes=None):
+    def create(start_time, end_time, illness_type, symptoms=None, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO illness (start_time, end_time, type, symptoms, notes) VALUES (?, ?, ?, ?, ?)',
-            (start_time, end_time, illness_type, symptoms, notes)
+            'INSERT INTO illness (start_time, end_time, type, symptoms, notes, baby_id) VALUES (?, ?, ?, ?, ?, ?)',
+            (start_time, end_time, illness_type, symptoms, notes, baby_id)
         )
         db.commit()
         return cursor.lastrowid
-    
+
     @staticmethod
-    def update(illness_id, start_time, end_time, illness_type, symptoms=None, notes=None):
+    def update(illness_id, start_time, end_time, illness_type, symptoms=None, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE illness SET start_time = ?, end_time = ?, type = ?, symptoms = ?, notes = ? WHERE id = ?',
-            (start_time, end_time, illness_type, symptoms, notes, illness_id)
+            'UPDATE illness SET start_time = ?, end_time = ?, type = ?, symptoms = ?, notes = ? WHERE id = ? AND baby_id = ?',
+            (start_time, end_time, illness_type, symptoms, notes, illness_id, baby_id)
         )
         db.commit()
-    
+
     @staticmethod
-    def delete(illness_id):
+    def delete(illness_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM illness WHERE id = ?', (illness_id,))
+        db.execute('DELETE FROM illness WHERE id = ? AND baby_id = ?', (illness_id, baby_id))
         db.commit()
-    
+
     @staticmethod
-    def get_by_id(illness_id):
+    def get_by_id(illness_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM illness WHERE id = ?', (illness_id,)).fetchone()
+        row = db.execute('SELECT * FROM illness WHERE id = ? AND baby_id = ?', (illness_id, baby_id)).fetchone()
         return dict(row) if row else None
-    
+
     @staticmethod
-    def get_illness_statistics(start_date, end_date):
+    def get_illness_statistics(start_date, end_date, baby_id=None):
         """Einfache Statistik: Anzahl Erkrankungs-Episoden im Zeitraum"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         if isinstance(start_date, str):
             start_date_obj = date.fromisoformat(start_date)
@@ -1232,22 +1311,22 @@ class Illness:
             end_date_obj = date.fromisoformat(end_date)
         else:
             end_date_obj = end_date
-        
+
         range_start = datetime.combine(start_date_obj, datetime.min.time())
         range_end = datetime.combine(end_date_obj, datetime.max.time().replace(hour=23, minute=59, second=59))
         range_start_str = range_start.strftime('%Y-%m-%dT%H:%M:%S')
         range_end_str = range_end.strftime('%Y-%m-%dT%H:%M:%S')
-        
+
         rows = db.execute(
             '''SELECT id FROM illness
-               WHERE start_time <= ? AND (end_time IS NULL OR end_time >= ?)''',
-            (range_end_str, range_start_str)
+               WHERE start_time <= ? AND (end_time IS NULL OR end_time >= ?) AND baby_id = ?''',
+            (range_end_str, range_start_str, baby_id)
         ).fetchall()
-        
+
         total_count = len(rows)
         days_count = (end_date_obj - start_date_obj).days + 1
         avg_count = round(total_count / days_count, 2) if days_count > 0 else 0
-        
+
         return {
             'total_count': total_count,
             'avg_count': avg_count,
@@ -1258,57 +1337,64 @@ class Weight:
     """Gewichtstracking"""
 
     @staticmethod
-    def create(timestamp, weight_kg, notes=None):
+    def create(timestamp, weight_kg, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO weight (timestamp, weight_kg, notes) VALUES (?, ?, ?)',
-            (timestamp, weight_kg, notes)
+            'INSERT INTO weight (timestamp, weight_kg, notes, baby_id) VALUES (?, ?, ?, ?)',
+            (timestamp, weight_kg, notes, baby_id)
         )
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def get_all():
+    def get_all(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        rows = db.execute('SELECT * FROM weight ORDER BY timestamp ASC').fetchall()
+        rows = db.execute('SELECT * FROM weight WHERE baby_id = ? ORDER BY timestamp ASC', (baby_id,)).fetchall()
         return [dict(r) for r in rows]
 
     @staticmethod
-    def get_by_id(weight_id):
+    def get_by_id(weight_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM weight WHERE id = ?', (weight_id,)).fetchone()
+        row = db.execute('SELECT * FROM weight WHERE id = ? AND baby_id = ?', (weight_id, baby_id)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM weight ORDER BY timestamp DESC LIMIT 1').fetchone()
+        row = db.execute('SELECT * FROM weight WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1', (baby_id,)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def update(weight_id, timestamp, weight_kg, notes=None):
+    def update(weight_id, timestamp, weight_kg, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE weight SET timestamp = ?, weight_kg = ?, notes = ? WHERE id = ?',
-            (timestamp, weight_kg, notes, weight_id)
+            'UPDATE weight SET timestamp = ?, weight_kg = ?, notes = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, weight_kg, notes, weight_id, baby_id)
         )
         db.commit()
 
     @staticmethod
-    def delete(weight_id):
+    def delete(weight_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM weight WHERE id = ?', (weight_id,))
+        db.execute('DELETE FROM weight WHERE id = ? AND baby_id = ?', (weight_id, baby_id))
         db.commit()
 
     @staticmethod
-    def get_in_range(start_date, end_date):
+    def get_in_range(start_date, end_date, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         from datetime import datetime as _dt
         start_str = _dt.combine(start_date, _dt.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
         end_str = _dt.combine(end_date, _dt.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
         rows = db.execute(
-            'SELECT * FROM weight WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
-            (start_str, end_str)
+            'SELECT * FROM weight WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ? ORDER BY timestamp ASC',
+            (start_str, end_str, baby_id)
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1317,57 +1403,64 @@ class Height:
     """Größen-Tracking"""
 
     @staticmethod
-    def create(timestamp, height_cm, notes=None):
+    def create(timestamp, height_cm, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO height (timestamp, height_cm, notes) VALUES (?, ?, ?)',
-            (timestamp, height_cm, notes)
+            'INSERT INTO height (timestamp, height_cm, notes, baby_id) VALUES (?, ?, ?, ?)',
+            (timestamp, height_cm, notes, baby_id)
         )
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def get_all():
+    def get_all(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        rows = db.execute('SELECT * FROM height ORDER BY timestamp ASC').fetchall()
+        rows = db.execute('SELECT * FROM height WHERE baby_id = ? ORDER BY timestamp ASC', (baby_id,)).fetchall()
         return [dict(r) for r in rows]
 
     @staticmethod
-    def get_by_id(height_id):
+    def get_by_id(height_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM height WHERE id = ?', (height_id,)).fetchone()
+        row = db.execute('SELECT * FROM height WHERE id = ? AND baby_id = ?', (height_id, baby_id)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM height ORDER BY timestamp DESC LIMIT 1').fetchone()
+        row = db.execute('SELECT * FROM height WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1', (baby_id,)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def update(height_id, timestamp, height_cm, notes=None):
+    def update(height_id, timestamp, height_cm, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE height SET timestamp = ?, height_cm = ?, notes = ? WHERE id = ?',
-            (timestamp, height_cm, notes, height_id)
+            'UPDATE height SET timestamp = ?, height_cm = ?, notes = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, height_cm, notes, height_id, baby_id)
         )
         db.commit()
 
     @staticmethod
-    def delete(height_id):
+    def delete(height_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM height WHERE id = ?', (height_id,))
+        db.execute('DELETE FROM height WHERE id = ? AND baby_id = ?', (height_id, baby_id))
         db.commit()
 
     @staticmethod
-    def get_in_range(start_date, end_date):
+    def get_in_range(start_date, end_date, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         from datetime import datetime as _dt
         start_str = _dt.combine(start_date, _dt.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
         end_str = _dt.combine(end_date, _dt.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
         rows = db.execute(
-            'SELECT * FROM height WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
-            (start_str, end_str)
+            'SELECT * FROM height WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ? ORDER BY timestamp ASC',
+            (start_str, end_str, baby_id)
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1376,57 +1469,64 @@ class HeadCircumference:
     """Kopfumfang-Tracking"""
 
     @staticmethod
-    def create(timestamp, head_circumference_cm, notes=None):
+    def create(timestamp, head_circumference_cm, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         cursor = db.execute(
-            'INSERT INTO head_circumference (timestamp, head_circumference_cm, notes) VALUES (?, ?, ?)',
-            (timestamp, head_circumference_cm, notes)
+            'INSERT INTO head_circumference (timestamp, head_circumference_cm, notes, baby_id) VALUES (?, ?, ?, ?)',
+            (timestamp, head_circumference_cm, notes, baby_id)
         )
         db.commit()
         return cursor.lastrowid
 
     @staticmethod
-    def get_all():
+    def get_all(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        rows = db.execute('SELECT * FROM head_circumference ORDER BY timestamp ASC').fetchall()
+        rows = db.execute('SELECT * FROM head_circumference WHERE baby_id = ? ORDER BY timestamp ASC', (baby_id,)).fetchall()
         return [dict(r) for r in rows]
 
     @staticmethod
-    def get_by_id(head_circumference_id):
+    def get_by_id(head_circumference_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM head_circumference WHERE id = ?', (head_circumference_id,)).fetchone()
+        row = db.execute('SELECT * FROM head_circumference WHERE id = ? AND baby_id = ?', (head_circumference_id, baby_id)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def get_latest():
+    def get_latest(baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT * FROM head_circumference ORDER BY timestamp DESC LIMIT 1').fetchone()
+        row = db.execute('SELECT * FROM head_circumference WHERE baby_id = ? ORDER BY timestamp DESC LIMIT 1', (baby_id,)).fetchone()
         return dict(row) if row else None
 
     @staticmethod
-    def update(head_circumference_id, timestamp, head_circumference_cm, notes=None):
+    def update(head_circumference_id, timestamp, head_circumference_cm, notes=None, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         db.execute(
-            'UPDATE head_circumference SET timestamp = ?, head_circumference_cm = ?, notes = ? WHERE id = ?',
-            (timestamp, head_circumference_cm, notes, head_circumference_id)
+            'UPDATE head_circumference SET timestamp = ?, head_circumference_cm = ?, notes = ? WHERE id = ? AND baby_id = ?',
+            (timestamp, head_circumference_cm, notes, head_circumference_id, baby_id)
         )
         db.commit()
 
     @staticmethod
-    def delete(head_circumference_id):
+    def delete(head_circumference_id, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        db.execute('DELETE FROM head_circumference WHERE id = ?', (head_circumference_id,))
+        db.execute('DELETE FROM head_circumference WHERE id = ? AND baby_id = ?', (head_circumference_id, baby_id))
         db.commit()
 
     @staticmethod
-    def get_in_range(start_date, end_date):
+    def get_in_range(start_date, end_date, baby_id=None):
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         from datetime import datetime as _dt
         start_str = _dt.combine(start_date, _dt.min.time()).strftime('%Y-%m-%dT%H:%M:%S')
         end_str = _dt.combine(end_date, _dt.max.time().replace(hour=23, minute=59, second=59)).strftime('%Y-%m-%dT%H:%M:%S')
         rows = db.execute(
-            'SELECT * FROM head_circumference WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
-            (start_str, end_str)
+            'SELECT * FROM head_circumference WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ? ORDER BY timestamp ASC',
+            (start_str, end_str, baby_id)
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1448,7 +1548,7 @@ def _entry_belongs_to_day(entry, day):
         return end_dt.date() == day
     return False
 
-def get_all_entries_today(selected_date=None):
+def get_all_entries_today(selected_date=None, baby_id=None):
     """Gibt alle Einträge eines bestimmten Tages chronologisch zurück (neueste zuerst),
     inklusive Übernacht-Einträgen (Schlaf/Aufwachen), die am Vortag beginnen und an
     diesem Tag enden."""
@@ -1458,30 +1558,31 @@ def get_all_entries_today(selected_date=None):
         selected_date = date.fromisoformat(selected_date)
 
     entries = [
-        entry for entry in get_all_entries_range(selected_date, selected_date)
+        entry for entry in get_all_entries_range(selected_date, selected_date, baby_id=baby_id)
         if _entry_belongs_to_day(entry, selected_date)
     ]
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
     return entries
 
-def get_all_entries_date_range(start_date, end_date):
+def get_all_entries_date_range(start_date, end_date, baby_id=None):
     """Gibt alle Einträge für einen Datumsbereich zurück (unsortiert). Der Bereich wird
     um je einen Tag vor/nach erweitert, damit über Mitternacht gehende Einträge erfasst
     werden; die Zuordnung zu einem konkreten Tag erfolgt beim Aufrufer."""
-    return get_all_entries_range(start_date, end_date)
+    return get_all_entries_range(start_date, end_date, baby_id=baby_id)
 
-def get_all_entries_range(start_date, end_date):
+def get_all_entries_range(start_date, end_date, baby_id=None):
     """
     PERFORMANCE-OPTIMIERUNG: Gemeinsamer Kern für get_all_entries_today() und
     get_all_entries_date_range() (Issue #48). Holt alle Einträge für einen Datumsbereich
     in einer Query pro Kategorie statt mehrfach für einzelne Tage.
     """
+    baby_id = baby_id or get_active_baby_id()
     db = get_db()
     if isinstance(start_date, str):
         start_date = date.fromisoformat(start_date)
     if isinstance(end_date, str):
         end_date = date.fromisoformat(end_date)
-    
+
     # Erweitere den Bereich um einen Tag vor/nach für Einträge, die über Mitternacht gehen
     extended_start = start_date - timedelta(days=1)
     extended_end = end_date + timedelta(days=1)
@@ -1495,16 +1596,17 @@ def get_all_entries_range(start_date, end_date):
 
     # PERFORMANCE (Issue #45): Alle relevanten Schlafenden einmalig sortiert laden,
     # statt pro Eintrag eine eigene Query für die Wachzeit-Berechnung abzusetzen.
-    sorted_sleep_ends = _load_sorted_sleep_end_times(db, range_end_str)
+    sorted_sleep_ends = _load_sorted_sleep_end_times(db, range_end_str, baby_id)
 
     # PERFORMANCE: Eine Query für alle Schlaf-Einträge im Bereich
     sleep_rows = db.execute(
         '''SELECT id, "sleep" as category, type, start_time as timestamp, end_time,
                   sleep_quality, sleep_location, sleep_comment
            FROM sleep
-           WHERE (start_time >= ? AND start_time <= ?)
-           OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL)''',
-        (range_start_str, range_end_str, range_start_str, range_end_str)
+           WHERE ((start_time >= ? AND start_time <= ?)
+           OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL))
+           AND baby_id = ?''',
+        (range_start_str, range_end_str, range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in sleep_rows:
         # Wachzeit seit letztem Schlaf
@@ -1527,11 +1629,12 @@ def get_all_entries_range(start_date, end_date):
     
     # Nächtliches Aufwachen im Bereich
     waking_rows = db.execute(
-        '''SELECT id, start_time as timestamp, end_time 
-           FROM night_waking 
-           WHERE (start_time >= ? AND start_time <= ?)
-           OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL)''',
-        (range_start_str, range_end_str, range_start_str, range_end_str)
+        '''SELECT id, start_time as timestamp, end_time
+           FROM night_waking
+           WHERE ((start_time >= ? AND start_time <= ?)
+           OR (end_time >= ? AND end_time <= ? AND end_time IS NOT NULL))
+           AND baby_id = ?''',
+        (range_start_str, range_end_str, range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in waking_rows:
         entries.append({
@@ -1544,10 +1647,10 @@ def get_all_entries_range(start_date, end_date):
     
     # Stillen im Bereich
     feeding_rows = db.execute(
-        '''SELECT id, "feeding" as category, timestamp, side 
-           FROM feeding 
-           WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+        '''SELECT id, "feeding" as category, timestamp, side
+           FROM feeding
+           WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in feeding_rows:
         entries.append({
@@ -1560,10 +1663,10 @@ def get_all_entries_range(start_date, end_date):
     
     # Flasche im Bereich
     bottle_rows = db.execute(
-        '''SELECT id, "bottle" as category, timestamp, amount 
-           FROM bottle 
-           WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+        '''SELECT id, "bottle" as category, timestamp, amount
+           FROM bottle
+           WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in bottle_rows:
         entries.append({
@@ -1576,10 +1679,10 @@ def get_all_entries_range(start_date, end_date):
     
     # Windel im Bereich
     diaper_rows = db.execute(
-        '''SELECT id, "diaper" as category, timestamp, type 
-           FROM diaper 
-           WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+        '''SELECT id, "diaper" as category, timestamp, type
+           FROM diaper
+           WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in diaper_rows:
         entries.append({
@@ -1592,10 +1695,10 @@ def get_all_entries_range(start_date, end_date):
     
     # Temperatur im Bereich
     temp_rows = db.execute(
-        '''SELECT id, "temperature" as category, timestamp, value 
-           FROM temperature 
-           WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+        '''SELECT id, "temperature" as category, timestamp, value
+           FROM temperature
+           WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in temp_rows:
         entries.append({
@@ -1608,10 +1711,10 @@ def get_all_entries_range(start_date, end_date):
     
     # Medizin im Bereich
     med_rows = db.execute(
-        '''SELECT id, "medicine" as category, timestamp, name, dose 
-           FROM medicine 
-           WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+        '''SELECT id, "medicine" as category, timestamp, name, dose
+           FROM medicine
+           WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in med_rows:
         entries.append({
@@ -1627,8 +1730,8 @@ def get_all_entries_range(start_date, end_date):
     illness_rows = db.execute(
         '''SELECT id, start_time as timestamp, end_time, type, symptoms, notes
            FROM illness
-           WHERE start_time >= ? AND start_time <= ?''',
-        (range_start_str, range_end_str)
+           WHERE start_time >= ? AND start_time <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in illness_rows:
         entries.append({
@@ -1645,8 +1748,8 @@ def get_all_entries_range(start_date, end_date):
     # Gewicht im Bereich
     weight_rows = db.execute(
         '''SELECT id, timestamp, weight_kg, notes
-           FROM weight WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+           FROM weight WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in weight_rows:
         entries.append({
@@ -1661,8 +1764,8 @@ def get_all_entries_range(start_date, end_date):
     # Größe im Bereich
     height_rows = db.execute(
         '''SELECT id, timestamp, height_cm, notes
-           FROM height WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+           FROM height WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in height_rows:
         entries.append({
@@ -1677,8 +1780,8 @@ def get_all_entries_range(start_date, end_date):
     # Kopfumfang im Bereich
     head_circumference_rows = db.execute(
         '''SELECT id, timestamp, head_circumference_cm, notes
-           FROM head_circumference WHERE timestamp >= ? AND timestamp <= ?''',
-        (range_start_str, range_end_str)
+           FROM head_circumference WHERE timestamp >= ? AND timestamp <= ? AND baby_id = ?''',
+        (range_start_str, range_end_str, baby_id)
     ).fetchall()
     for row in head_circumference_rows:
         entries.append({
@@ -1692,16 +1795,17 @@ def get_all_entries_range(start_date, end_date):
 
     return entries
 
-def get_latest_activities(limit=3):
+def get_latest_activities(limit=3, baby_id=None):
     """Gibt die letzten N Aktivitäten zurück (unabhängig von der Kategorie)"""
+    baby_id = baby_id or get_active_baby_id()
     db = get_db()
-    
+
     all_entries = []
-    
+
     # Schlaf
     sleep_rows = db.execute(
-        'SELECT id, "sleep" as category, type, start_time as timestamp, end_time FROM sleep ORDER BY start_time DESC LIMIT ?',
-        (limit * 2,)  # Mehr holen, da wir später filtern
+        'SELECT id, "sleep" as category, type, start_time as timestamp, end_time FROM sleep WHERE baby_id = ? ORDER BY start_time DESC LIMIT ?',
+        (baby_id, limit * 2)  # Mehr holen, da wir später filtern
     ).fetchall()
     for row in sleep_rows:
         all_entries.append({
@@ -1711,11 +1815,11 @@ def get_latest_activities(limit=3):
             'end_time': row['end_time'],
             'display': f"Schlaf ({row['type']})"
         })
-    
+
     # Stillen
     feeding_rows = db.execute(
-        'SELECT id, "feeding" as category, timestamp, side FROM feeding ORDER BY timestamp DESC LIMIT ?',
-        (limit * 2,)
+        'SELECT id, "feeding" as category, timestamp, side FROM feeding WHERE baby_id = ? ORDER BY timestamp DESC LIMIT ?',
+        (baby_id, limit * 2)
     ).fetchall()
     for row in feeding_rows:
         all_entries.append({
@@ -1724,11 +1828,11 @@ def get_latest_activities(limit=3):
             'side': row['side'],
             'display': f"Stillen ({row['side']})"
         })
-    
+
     # Flasche
     bottle_rows = db.execute(
-        'SELECT id, "bottle" as category, timestamp, amount FROM bottle ORDER BY timestamp DESC LIMIT ?',
-        (limit * 2,)
+        'SELECT id, "bottle" as category, timestamp, amount FROM bottle WHERE baby_id = ? ORDER BY timestamp DESC LIMIT ?',
+        (baby_id, limit * 2)
     ).fetchall()
     for row in bottle_rows:
         all_entries.append({
@@ -1737,11 +1841,11 @@ def get_latest_activities(limit=3):
             'amount': row['amount'],
             'display': f"Flasche ({row['amount']} ml)"
         })
-    
+
     # Windel
     diaper_rows = db.execute(
-        'SELECT id, "diaper" as category, timestamp, type FROM diaper ORDER BY timestamp DESC LIMIT ?',
-        (limit * 2,)
+        'SELECT id, "diaper" as category, timestamp, type FROM diaper WHERE baby_id = ? ORDER BY timestamp DESC LIMIT ?',
+        (baby_id, limit * 2)
     ).fetchall()
     for row in diaper_rows:
         all_entries.append({
@@ -1750,11 +1854,11 @@ def get_latest_activities(limit=3):
             'type': row['type'],
             'display': f"Windel ({row['type']})"
         })
-    
+
     # Temperatur
     temp_rows = db.execute(
-        'SELECT id, "temperature" as category, timestamp, value FROM temperature ORDER BY timestamp DESC LIMIT ?',
-        (limit * 2,)
+        'SELECT id, "temperature" as category, timestamp, value FROM temperature WHERE baby_id = ? ORDER BY timestamp DESC LIMIT ?',
+        (baby_id, limit * 2)
     ).fetchall()
     for row in temp_rows:
         all_entries.append({
@@ -1763,11 +1867,11 @@ def get_latest_activities(limit=3):
             'value': row['value'],
             'display': f"Temperatur ({row['value']}°C)"
         })
-    
+
     # Medizin
     med_rows = db.execute(
-        'SELECT id, "medicine" as category, timestamp, name, dose FROM medicine ORDER BY timestamp DESC LIMIT ?',
-        (limit * 2,)
+        'SELECT id, "medicine" as category, timestamp, name, dose FROM medicine WHERE baby_id = ? ORDER BY timestamp DESC LIMIT ?',
+        (baby_id, limit * 2)
     ).fetchall()
     for row in med_rows:
         all_entries.append({
@@ -1780,8 +1884,8 @@ def get_latest_activities(limit=3):
 
     # Brei
     porridge_rows = db.execute(
-        'SELECT id, "porridge" as category, timestamp, amount, food FROM porridge ORDER BY timestamp DESC LIMIT ?',
-        (limit * 2,)
+        'SELECT id, "porridge" as category, timestamp, amount, food FROM porridge WHERE baby_id = ? ORDER BY timestamp DESC LIMIT ?',
+        (baby_id, limit * 2)
     ).fetchall()
     for row in porridge_rows:
         food_str = f', {row["food"]}' if row['food'] else ''
@@ -1799,41 +1903,92 @@ def get_latest_activities(limit=3):
 
 class BabyInfo:
     """Baby-Informationen für Nickerchen-Vorschläge"""
-    
+
     @staticmethod
-    def get_birth_date():
-        """Holt das Geburtsdatum des Babys"""
+    def get_all_babies():
+        """Liefert alle Kind-Profile, sortiert nach Anlage-Reihenfolge (id)."""
         db = get_db()
-        row = db.execute('SELECT birth_date FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        rows = db.execute(
+            'SELECT id, name, birth_date, gender FROM baby_info ORDER BY id'
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    @staticmethod
+    def create_baby(name, birth_date):
+        """Legt ein neues Kind-Profil an und gibt dessen id zurück."""
+        db = get_db()
+        cursor = db.execute(
+            'INSERT INTO baby_info (name, birth_date) VALUES (?, ?)',
+            (name, birth_date.isoformat())
+        )
+        db.commit()
+        return cursor.lastrowid
+
+    @staticmethod
+    def delete_baby(baby_id):
+        """Löscht ein Kind-Profil.
+
+        Aus Datenschutz-/Datenverlust-Gründen wird ein Profil mit vorhandenen
+        Tracking-Daten NICHT gelöscht, sondern die Löschung verweigert - Nutzer:innen
+        sollen stattdessen umbenennen. Ebenso wird das letzte verbleibende Profil
+        nie gelöscht (die App braucht immer mindestens ein aktives Kind).
+
+        Raises:
+            ValueError: wenn das Profil Tracking-Daten hat oder das letzte verbleibende ist.
+        """
+        db = get_db()
+        remaining = db.execute('SELECT COUNT(*) AS c FROM baby_info').fetchone()['c']
+        if remaining <= 1:
+            raise ValueError('last_baby')
+
+        for table in TRACKING_TABLES_WITH_BABY_ID:
+            has_data = db.execute(
+                f'SELECT 1 FROM {table} WHERE baby_id = ? LIMIT 1', (baby_id,)
+            ).fetchone()
+            if has_data:
+                raise ValueError('has_data')
+
+        db.execute('DELETE FROM baby_info WHERE id = ?', (baby_id,))
+        db.commit()
+
+    @staticmethod
+    def get_birth_date(baby_id=None):
+        """Holt das Geburtsdatum des Babys"""
+        baby_id = baby_id or get_active_baby_id()
+        db = get_db()
+        row = db.execute('SELECT birth_date FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row:
             return date.fromisoformat(row['birth_date'])
         return None
-    
+
     @staticmethod
-    def get_name():
+    def get_name(baby_id=None):
         """Holt den Namen des Babys"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT name FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        row = db.execute('SELECT name FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row and row['name']:
             return row['name']
         return None
 
     @staticmethod
-    def get_gender():
+    def get_gender(baby_id=None):
         """Holt das Geschlecht des Babys ('m'/'f') oder None, falls nicht gesetzt.
         Voraussetzung für die WHO-Perzentilkurven, da diese je nach Geschlecht abweichen."""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT gender FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        row = db.execute('SELECT gender FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row and row['gender'] in ('m', 'f'):
             return row['gender']
         return None
 
     @staticmethod
-    def set_birth_date(birth_date):
+    def set_birth_date(birth_date, baby_id=None):
         """Setzt das Geburtsdatum des Babys"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         # Prüfe ob bereits ein Eintrag existiert
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if existing:
             db.execute(
                 'UPDATE baby_info SET birth_date = ?, updated_at = ? WHERE id = ?',
@@ -1845,13 +2000,14 @@ class BabyInfo:
                 (birth_date.isoformat(),)
             )
         db.commit()
-    
+
     @staticmethod
-    def set_name(name):
+    def set_name(name, baby_id=None):
         """Setzt den Namen des Babys"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
         # Prüfe ob bereits ein Eintrag existiert
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if existing:
             db.execute(
                 'UPDATE baby_info SET name = ?, updated_at = ? WHERE id = ?',
@@ -1864,13 +2020,14 @@ class BabyInfo:
                 (name, default_birth)
             )
         db.commit()
-    
+
     @staticmethod
-    def set_baby_info(name=None, birth_date=None, gender=None):
+    def set_baby_info(name=None, birth_date=None, gender=None, baby_id=None):
         """Setzt Name, Geburtsdatum und/oder Geschlecht des Babys.
         gender darf 'm', 'f' oder '' (= zurücksetzen auf NULL) sein."""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         updates = []
         values = []
 
@@ -1908,9 +2065,9 @@ class BabyInfo:
             db.commit()
     
     @staticmethod
-    def get_age_months():
+    def get_age_months(baby_id=None):
         """Berechnet das Alter des Babys in Monaten"""
-        birth_date = BabyInfo.get_birth_date()
+        birth_date = BabyInfo.get_birth_date(baby_id)
         if not birth_date:
             return 6  # Standard: 6 Monate
         today = date.today()
@@ -1918,22 +2075,24 @@ class BabyInfo:
         if today.day < birth_date.day:
             months -= 1
         return max(0, months)
-    
+
     @staticmethod
-    def get_sleep_meta_settings():
+    def get_sleep_meta_settings(baby_id=None):
         """
         Liefert konfigurierbare Optionen für Einschlaf-Qualität und -Ort
         sowie die Standardauswahl für die Modals.
         """
+        baby_id = baby_id or get_active_baby_id()
         # Standardwerte, falls nichts konfiguriert ist
         default_qualities = ['leicht', 'schwer', 'mit Weinen']
         default_locations = ['im eigenen Bett', 'im Elternbett', 'auf dem Arm', 'in der Federwiege']
-        
+
         db = get_db()
         row = db.execute(
             '''SELECT sleep_quality_options, sleep_location_options,
                       default_sleep_quality, default_sleep_location
-               FROM baby_info ORDER BY id LIMIT 1'''
+               FROM baby_info WHERE id = ?''',
+            (baby_id,)
         ).fetchone()
         
         qualities = default_qualities
@@ -1981,13 +2140,14 @@ class BabyInfo:
         }
     
     @staticmethod
-    def set_sleep_meta_settings(qualities, locations, default_quality, default_location):
+    def set_sleep_meta_settings(qualities, locations, default_quality, default_location, baby_id=None):
         """
         Speichert konfigurierbare Optionen und Standardwerte für Schlaf-Metadaten.
         qualities/locations: Listen von Strings.
         """
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         
         # Aufräumen der Listen
         qualities = [q.strip() for q in (qualities or []) if q.strip()]
@@ -2031,10 +2191,11 @@ class BabyInfo:
         db.commit()
 
     @staticmethod
-    def get_show_audio_player():
+    def get_show_audio_player(baby_id=None):
         """Gibt zurück, ob der Audio-Player auf der Startseite angezeigt werden soll (Standard: True)"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        row = db.execute('SELECT show_audio_player FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        row = db.execute('SELECT show_audio_player FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         if row is None:
             return True
         val = row['show_audio_player']
@@ -2043,10 +2204,11 @@ class BabyInfo:
         return bool(val)
 
     @staticmethod
-    def set_show_audio_player(show: bool):
+    def set_show_audio_player(show: bool, baby_id=None):
         """Setzt, ob der Audio-Player auf der Startseite angezeigt werden soll"""
+        baby_id = baby_id or get_active_baby_id()
         db = get_db()
-        existing = db.execute('SELECT id FROM baby_info ORDER BY id LIMIT 1').fetchone()
+        existing = db.execute('SELECT id FROM baby_info WHERE id = ?', (baby_id,)).fetchone()
         now_str = datetime.now(tz_berlin).isoformat()
         if existing:
             db.execute(
@@ -2061,9 +2223,9 @@ class BabyInfo:
         db.commit()
 
     @staticmethod
-    def get_sleep_recommendations():
+    def get_sleep_recommendations(baby_id=None):
         """Gibt die empfohlenen Schlafzeiten basierend auf dem Alter zurück (nach Irina Kaiser / babyschlaffee.de)"""
-        age_months = BabyInfo.get_age_months()
+        age_months = BabyInfo.get_age_months(baby_id)
         
         # Empfohlene Schlafzeiten basierend auf Alter (nach Irina Kaiser)
         # Format: {'total': Gesamtschlaf, 'night': Nachtschlaf, 'day': Tagschlaf, 'naps': (min, max), 'wake_window': (min, max)}
@@ -2099,13 +2261,14 @@ class BabyInfo:
             return {'total': 11, 'night': 11, 'day': 1, 'naps': (0, 1), 'wake_window': (6.0, 7.0)}
     
     @staticmethod
-    def get_nap_suggestions(selected_date=None):
+    def get_nap_suggestions(selected_date=None, baby_id=None):
         """Berechnet Vorschläge für das nächste Nickerchen"""
+        baby_id = baby_id or get_active_baby_id()
         if selected_date is None:
             selected_date = date.today()
-        
+
         # Prüfe ob ein aktiver Schlaf existiert
-        active_sleep = Sleep.get_active_sleep()
+        active_sleep = Sleep.get_active_sleep(baby_id=baby_id)
         if active_sleep:
             sleep_type = active_sleep.get('type')
             if sleep_type == 'nap':
@@ -2129,22 +2292,23 @@ class BabyInfo:
                     if selected_date == date.today():
                         return [{'waiting_for_night_sleep_end': True}]
         
-        recommendations = BabyInfo.get_sleep_recommendations()
+        recommendations = BabyInfo.get_sleep_recommendations(baby_id)
         min_naps, max_naps = recommendations['naps']
         # Berechne empfohlene Anzahl (Mittelwert, aufgerundet für bessere Empfehlung)
         # Bei 2-3 Nickerchen sollte 3 empfohlen werden, nicht 2
         avg_naps = (min_naps + max_naps) / 2
         target_naps = int(avg_naps + 0.5)  # Aufrunden wenn >= 0.5
         target_day_sleep = recommendations['day']
-        
+
         # Hole alle Nickerchen des Tages
         db = get_db()
         naps_today = db.execute(
-            '''SELECT start_time, end_time FROM sleep 
-               WHERE type = 'nap' 
+            '''SELECT start_time, end_time FROM sleep
+               WHERE type = 'nap'
                AND (date(start_time) = ? OR (date(start_time) = ? AND date(end_time) = ?))
-               AND end_time IS NOT NULL''',
-            (selected_date.isoformat(), (selected_date - timedelta(days=1)).isoformat(), selected_date.isoformat())
+               AND end_time IS NOT NULL
+               AND baby_id = ?''',
+            (selected_date.isoformat(), (selected_date - timedelta(days=1)).isoformat(), selected_date.isoformat(), baby_id)
         ).fetchall()
         
         completed_naps = len(naps_today)
@@ -2170,7 +2334,7 @@ class BabyInfo:
         remaining_day_sleep = target_day_sleep - total_day_sleep_hours
         
         # Hole die empfohlene Nachtschlaf-Zeit, um zu prüfen ob die Zeit bis dahin zu lang ist
-        night_sleep_suggestion = BabyInfo.get_night_sleep_suggestion(selected_date)
+        night_sleep_suggestion = BabyInfo.get_night_sleep_suggestion(selected_date, baby_id=baby_id)
         time_until_night_sleep_too_long = False
         
         if night_sleep_suggestion and not night_sleep_suggestion.get('waiting_for_night_sleep_end'):
@@ -2187,29 +2351,30 @@ class BabyInfo:
                     now = datetime.now(tz_berlin)
                     last_wake_time = None
                     last_sleep_end = db.execute(
-                        '''SELECT end_time FROM sleep 
-                           WHERE end_time IS NOT NULL 
+                        '''SELECT end_time FROM sleep
+                           WHERE end_time IS NOT NULL
                            AND date(end_time) = ?
+                           AND baby_id = ?
                            ORDER BY end_time DESC LIMIT 1''',
-                        (selected_date.isoformat(),)
+                        (selected_date.isoformat(), baby_id)
                     ).fetchone()
-                    
+
                     if last_sleep_end:
                         try:
                             last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
                             last_wake_time = normalize_to_berlin(last_wake_time)
                         except (ValueError, AttributeError):
                             pass
-                    
+
                     if not last_wake_time or last_wake_time.date() != selected_date:
                         last_wake_time = now
-                    
+
                     # Berechne Zeit bis zum Nachtschlaf
                     hours_until_night_sleep = (night_sleep_dt - last_wake_time).total_seconds() / 3600.0
-                    
+
                     # Hole maximale empfohlene Wachzeit für das Alter
-                    age_months = BabyInfo.get_age_months()
-                    recommendations = BabyInfo.get_sleep_recommendations()
+                    age_months = BabyInfo.get_age_months(baby_id)
+                    recommendations = BabyInfo.get_sleep_recommendations(baby_id)
                     min_wake_window, max_wake_window = recommendations.get('wake_window', (2.0, 3.0))
                     
                     # Wenn die Zeit bis zum Nachtschlaf länger als die maximale Wachzeit + 1 Stunde Puffer ist,
@@ -2256,35 +2421,36 @@ class BabyInfo:
             # Finde letztes Aufwachen (Ende eines Nickerchens oder Nachtschlafs)
             # WICHTIG: Dies sollte das tatsächliche Ende eines Schlafs sein, nicht die aktuelle Zeit
             last_sleep_end = db.execute(
-                '''SELECT end_time FROM sleep 
-                   WHERE end_time IS NOT NULL 
+                '''SELECT end_time FROM sleep
+                   WHERE end_time IS NOT NULL
                    AND date(end_time) = ?
+                   AND baby_id = ?
                    ORDER BY end_time DESC LIMIT 1''',
-                (selected_date.isoformat(),)
+                (selected_date.isoformat(), baby_id)
             ).fetchone()
-            
+
             if last_sleep_end:
                 try:
                     last_wake_time = datetime.fromisoformat(last_sleep_end['end_time'].replace('Z', '+00:00'))
                     last_wake_time = normalize_to_berlin(last_wake_time)
                 except (ValueError, AttributeError):
                     pass
-            
+
             # Wenn kein Aufwachen heute gefunden wurde
             if not last_wake_time or last_wake_time.date() != selected_date:
                 # Kein Aufwachen heute = kein Nickerchen-Vorschlag möglich
                 # (Das erste Nickerchen wird erst nach dem Aufwachen aus dem Nachtschlaf berechnet)
                 return []
-            
+
             # Prüfe ob bereits ein Vorschlag für heute existiert (in der Datenbank gespeichert)
             # Dies verhindert, dass die Zeit nach hinten geschoben wird
             existing_suggestion = db.execute(
-                '''SELECT suggested_time FROM nap_suggestions 
-                   WHERE date = ? AND suggested_time > ? 
+                '''SELECT suggested_time FROM nap_suggestions
+                   WHERE date = ? AND suggested_time > ? AND baby_id = ?
                    ORDER BY created_at DESC LIMIT 1''',
-                (selected_date.isoformat(), now.isoformat())
+                (selected_date.isoformat(), now.isoformat(), baby_id)
             ).fetchone()
-            
+
             if existing_suggestion:
                 # Verwende die bereits berechnete Zeit (verhindert Verschiebung nach hinten)
                 try:
@@ -2294,7 +2460,7 @@ class BabyInfo:
                     if suggested_time > now:
                         # Verwende die alte Zeit, aber aktualisiere die restlichen Werte
                         # (z.B. wenn ein neues Nickerchen hinzugefügt wurde)
-                        age_months = BabyInfo.get_age_months()
+                        age_months = BabyInfo.get_age_months(baby_id)
                         if age_months <= 3:
                             max_nap_duration = 1.5
                         elif age_months <= 6:
@@ -2355,9 +2521,9 @@ class BabyInfo:
                 avg_actual_wake_window = sum(actual_wake_windows) / len(actual_wake_windows)
             
             # Empfohlene Wachzeit vor nächstem Nickerchen (nach Irina Kaiser / babyschlaffee.de)
-            recommendations = BabyInfo.get_sleep_recommendations()
+            recommendations = BabyInfo.get_sleep_recommendations(baby_id)
             min_wake_window, max_wake_window = recommendations.get('wake_window', (2.0, 3.0))
-            age_months = BabyInfo.get_age_months()
+            age_months = BabyInfo.get_age_months(baby_id)
             
             # Verwende den Mittelwert der Wachzeit-Spanne als Basis (Tabellenwerte)
             base_wake_window = (min_wake_window + max_wake_window) / 2
@@ -2423,18 +2589,26 @@ class BabyInfo:
             nap_duration = min(max_nap_duration, max(remaining_day_sleep, 0.5))
             
             # Speichere den Vorschlag in der Datenbank (verhindert Verschiebung nach hinten)
+            # Hinweis (Issue #33): Der UNIQUE-Constraint der Tabelle ist weiterhin nur
+            # (date, suggested_time) ohne baby_id (siehe Migration 019) - ein SQLite-Rebuild
+            # dieser reinen Cache-Tabelle wurde bewusst nicht riskiert, da ein naiver Rebuild
+            # bei jedem Neustart dupliziert würde (keine Migrations-Tracking-Tabelle vorhanden).
+            # Kollidieren zwei Kinder auf exakt dieselbe Minute, schlägt der INSERT fehl und
+            # wird hier abgefangen - der Vorschlag wird trotzdem zurückgegeben, nur nicht
+            # gegen Rückwärts-Verschiebung zwischengespeichert. Extrem seltener Fall.
             try:
                 # Lösche alte Vorschläge für heute
-                db.execute('DELETE FROM nap_suggestions WHERE date = ?', (selected_date.isoformat(),))
+                db.execute('DELETE FROM nap_suggestions WHERE date = ? AND baby_id = ?', (selected_date.isoformat(), baby_id))
                 # Füge neuen Vorschlag hinzu
                 db.execute(
-                    '''INSERT INTO nap_suggestions (date, suggested_time, created_at) 
-                       VALUES (?, ?, ?)''',
-                    (selected_date.isoformat(), suggested_time.isoformat(), now.isoformat())
+                    '''INSERT INTO nap_suggestions (date, suggested_time, created_at, baby_id)
+                       VALUES (?, ?, ?, ?)''',
+                    (selected_date.isoformat(), suggested_time.isoformat(), now.isoformat(), baby_id)
                 )
                 db.commit()
             except Exception:
-                # Falls Tabelle noch nicht existiert, ignoriere Fehler
+                # Falls Tabelle noch nicht existiert, oder UNIQUE-Kollision mit einem anderen
+                # Kind (s.o.): ignoriere Fehler
                 pass
             
             suggestions.append({
@@ -2450,60 +2624,65 @@ class BabyInfo:
         return suggestions
     
     @staticmethod
-    def get_night_sleep_suggestion(selected_date=None):
+    def get_night_sleep_suggestion(selected_date=None, baby_id=None):
         """Berechnet einen Vorschlag für die Nachtschlaf-Zeit basierend auf Alter und Schlafmustern"""
+        baby_id = baby_id or get_active_baby_id()
         if selected_date is None:
             selected_date = date.today()
-        
+
         # Prüfe ob ein aktiver Nachtschlaf existiert
-        active_sleep = Sleep.get_active_sleep()
+        active_sleep = Sleep.get_active_sleep(baby_id=baby_id)
         if active_sleep and active_sleep.get('type') == 'night':
             # Wenn Nachtschlaf aktiv ist, gib einen Hinweis zurück
             return {'waiting_for_night_sleep_end': True}
-        
-        recommendations = BabyInfo.get_sleep_recommendations()
+
+        recommendations = BabyInfo.get_sleep_recommendations(baby_id)
         target_night_sleep = recommendations.get('night', 11.0)  # Standard: 11h
         target_day_sleep = recommendations.get('day', 3.0)
-        
+
         db = get_db()
         now = datetime.now(tz_berlin)
-        
+
         # Finde letztes Nachtschlaf-Aufwachen (PRIORITÄT: Nachtschlaf, nicht Nickerchen)
         # PERFORMANCE: Range-Query statt date() für bessere Index-Nutzung
         day_start = datetime.combine(selected_date, datetime.min.time())
         day_end = datetime.combine(selected_date, datetime.max.time().replace(hour=23, minute=59, second=59))
         day_start_str = day_start.strftime('%Y-%m-%dT%H:%M:%S')
         day_end_str = day_end.strftime('%Y-%m-%dT%H:%M:%S')
-        
+
         last_night_sleep_end = db.execute(
-            '''SELECT end_time FROM sleep 
+            '''SELECT end_time FROM sleep
                WHERE type = 'night'
-               AND end_time IS NOT NULL 
+               AND end_time IS NOT NULL
                AND end_time >= ? AND end_time <= ?
+               AND baby_id = ?
                ORDER BY end_time DESC LIMIT 1''',
-            (day_start_str, day_end_str)
+            (day_start_str, day_end_str, baby_id)
         ).fetchone()
-        
+
         # Falls kein Nachtschlaf-Aufwachen heute, suche nach dem letzten Nachtschlaf-Aufwachen generell
         if not last_night_sleep_end:
             last_night_sleep_end = db.execute(
-                '''SELECT end_time FROM sleep 
+                '''SELECT end_time FROM sleep
                    WHERE type = 'night'
-                   AND end_time IS NOT NULL 
+                   AND end_time IS NOT NULL
+                   AND baby_id = ?
                    ORDER BY end_time DESC LIMIT 1''',
+                (baby_id,)
             ).fetchone()
-        
+
         # NEUE LOGIK: Berechne Einschlafzeit basierend auf aktuellem Zustand, nicht auf fester Aufwachzeit
         # Finde letztes Aufwachen (egal ob Nickerchen oder Nachtschlaf) für Wachzeit-Berechnung
         # PERFORMANCE: Range-Query statt date()
         last_sleep_end = db.execute(
-            '''SELECT end_time FROM sleep 
-               WHERE end_time IS NOT NULL 
+            '''SELECT end_time FROM sleep
+               WHERE end_time IS NOT NULL
                AND end_time >= ? AND end_time <= ?
+               AND baby_id = ?
                ORDER BY end_time DESC LIMIT 1''',
-            (day_start_str, day_end_str)
+            (day_start_str, day_end_str, baby_id)
         ).fetchone()
-        
+
         last_wake_time = None
         if last_sleep_end:
             try:
@@ -2511,7 +2690,7 @@ class BabyInfo:
                 last_wake_time = normalize_to_berlin(last_wake_time)
             except (ValueError, AttributeError):
                 pass
-        
+
         # Berechne bereits geschlafene Tagschlafdauer heute (wird für adjusted_night_sleep benötigt)
         # PERFORMANCE: Range-Queries statt date() - nutzt Indizes besser
         prev_date = selected_date - timedelta(days=1)
@@ -2519,15 +2698,16 @@ class BabyInfo:
         prev_day_end = datetime.combine(prev_date, datetime.max.time().replace(hour=23, minute=59, second=59))
         prev_day_start_str = prev_day_start.strftime('%Y-%m-%dT%H:%M:%S')
         prev_day_end_str = prev_day_end.strftime('%Y-%m-%dT%H:%M:%S')
-        
+
         naps_today = db.execute(
-            '''SELECT start_time, end_time FROM sleep 
-               WHERE type = 'nap' 
+            '''SELECT start_time, end_time FROM sleep
+               WHERE type = 'nap'
                AND end_time IS NOT NULL
                AND ((start_time >= ? AND start_time <= ?)
-                    OR (start_time >= ? AND start_time <= ? 
-                        AND end_time >= ? AND end_time <= ?))''',
-            (day_start_str, day_end_str, prev_day_start_str, prev_day_end_str, day_start_str, day_end_str)
+                    OR (start_time >= ? AND start_time <= ?
+                        AND end_time >= ? AND end_time <= ?))
+               AND baby_id = ?''',
+            (day_start_str, day_end_str, prev_day_start_str, prev_day_end_str, day_start_str, day_end_str, baby_id)
         ).fetchall()
         
         total_day_sleep_hours = 0.0
@@ -2548,11 +2728,13 @@ class BabyInfo:
         # Berechne tatsächliche Nachtschlafdauern aus den letzten Nachtschläfen
         # Hole die letzten 7 Nachtschläfe (ca. eine Woche) für Durchschnittsberechnung
         recent_night_sleeps = db.execute(
-            '''SELECT start_time, end_time FROM sleep 
-               WHERE type = 'night' 
-               AND end_time IS NOT NULL 
+            '''SELECT start_time, end_time FROM sleep
+               WHERE type = 'night'
+               AND end_time IS NOT NULL
                AND start_time IS NOT NULL
-               ORDER BY end_time DESC LIMIT 7'''
+               AND baby_id = ?
+               ORDER BY end_time DESC LIMIT 7''',
+            (baby_id,)
         ).fetchall()
         
         actual_night_sleep_durations = []
@@ -2572,10 +2754,10 @@ class BabyInfo:
                 
                 # Ziehe nächtliches Aufwachen ab
                 waking_duration = NightWaking.get_total_waking_duration(
-                    night_sleep['start_time'], night_sleep['end_time']
+                    night_sleep['start_time'], night_sleep['end_time'], baby_id=baby_id
                 )
                 duration = max(0, duration - waking_duration)
-                
+
                 if duration > 0 and duration < 16:  # Plausibilitätsprüfung (max 16h)
                     actual_night_sleep_durations.append(duration)
             except (ValueError, AttributeError):

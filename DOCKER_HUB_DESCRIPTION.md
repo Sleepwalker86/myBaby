@@ -19,9 +19,10 @@ Eine einfache, lokale Web-App zum Tracking von Baby-Aktivitäten wie Schlaf, Sti
 - **Wachstumstracking**: Gewicht, Größe und Kopfumfang in einer kombinierten Wachstumskurve, optional mit WHO-Referenzbereichen (P3–P97) für Gewicht und Größe, sobald das Geschlecht in den Einstellungen gesetzt ist
 - **Einträge-Übersicht**: Sieh alle Einträge in Tages- oder Wochenansicht
 - **Trends & Statistiken**: Analysiere Schlafmuster, Windel- und Still-Statistiken
-- **Export & Arztbericht**: Vollständiger CSV-Export, JSON-Backup (inkl. Wiederherstellung) sowie ein PDF-Arztbericht für einen frei wählbaren Zeitraum – kompakte, lesbare Zusammenfassung von Schlaf, Wachstum, Fütterung, Windel, Temperatur, Krankheiten und Medikamenten für die U-Untersuchung
+- **Export & Arztbericht**: CSV-Export des aktiven Kindes, vollständiges JSON-Backup aller Kind-Profile (inkl. Wiederherstellung) sowie ein PDF-Arztbericht für das aktive Kind über einen frei wählbaren Zeitraum – kompakte, lesbare Zusammenfassung von Schlaf, Wachstum, Fütterung, Windel, Temperatur, Krankheiten und Medikamenten für die U-Untersuchung
 - **Mehrsprachigkeit**: Unterstützung für Deutsch, Englisch und Spanisch
 - **Dark Mode**: Schonende Darstellung für die Nacht
+- **Mehrere Kinder**: Mehrere Kind-Profile für Geschwister oder Zwillinge in einer Instanz, umschaltbar über die Navigation
 
 ### 🎯 Besondere Features
 
@@ -97,7 +98,11 @@ Gehe zu **Einstellungen** und trage ein:
 - **Sprache**: Wähle zwischen Deutsch, Englisch oder Spanisch
 - **Dark Mode**: Aktiviere für schonende Nutzung in der Nacht
 
-### 2. Erste Einträge erfassen
+### 2. Mehrere Kinder (Geschwister/Zwillinge)
+
+Für Geschwister oder Zwillinge kannst du in den **Einstellungen** unter „Kinder verwalten" weitere Kind-Profile anlegen. Ab dem zweiten Profil erscheint ein Umschalter in der Navigation; alle Einträge, Vorschläge und Trends beziehen sich immer auf das gerade aktive Kind.
+
+### 3. Erste Einträge erfassen
 
 Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
 
@@ -110,7 +115,7 @@ Auf dem **Dashboard** findest du große Buttons für alle Aktivitäten:
 - **Temperatur**: Trage die gemessene Temperatur ein
 - **Medizin**: Erfasse Medikamentenname und Dosis
 
-### 3. Dashboard verstehen
+### 4. Dashboard verstehen
 
 Das Dashboard zeigt dir:
 
@@ -169,7 +174,7 @@ Die SQLite-Datenbank wird automatisch beim ersten Start erstellt. Das Schema wir
 
 ### Tabellen
 
-- `baby_info`: Baby-Informationen (Name, Geburtsdatum)
+- `baby_info`: Kind-Profile (Name, Geburtsdatum, Geschlecht) - eine Zeile pro Kind
 - `sleep`: Schlaf-Einträge (Nickerchen/Nachtschlaf)
 - `night_waking`: Nächtliches Aufwachen
 - `feeding`: Stillen-Einträge

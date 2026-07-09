@@ -116,6 +116,79 @@
     </div>
 </div>
 
+<!-- Kinder verwalten (Issue #33) -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card card-modern">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="bi bi-people me-2"></i>{{ _('settings.manage_babies') }}
+                </h5>
+                <p class="text-muted small mb-4">{{ _('settings.manage_babies_desc') }}</p>
+
+                <div class="mb-4 d-flex flex-column gap-3">
+                    {% for b in all_babies %}
+                    <div class="d-flex flex-wrap align-items-end gap-2 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <form method="POST" action="{{ url_for('baby.update', baby_id=b.id) }}" class="d-flex flex-wrap align-items-end gap-2 flex-grow-1">
+                            <div class="flex-shrink-0" style="width: 1.5rem;">
+                                {% if b.id == active_baby_id %}
+                                <i class="bi bi-check-circle-fill text-primary" title="{{ _('settings.active_baby') }}"></i>
+                                {% endif %}
+                            </div>
+                            <div style="min-width: 10rem;">
+                                <label class="form-label small mb-1">{{ _('settings.name') }}</label>
+                                <input type="text" class="form-control form-control-sm" name="name"
+                                       value="{{ b.name or '' }}" placeholder="{{ _('settings.name_placeholder') }}" required>
+                            </div>
+                            <div style="min-width: 9rem;">
+                                <label class="form-label small mb-1">{{ _('settings.birth_date') }}</label>
+                                <input type="date" class="form-control form-control-sm" name="birth_date"
+                                       value="{{ b.birth_date or '' }}" required>
+                            </div>
+                            <div style="min-width: 8rem;">
+                                <label class="form-label small mb-1">{{ _('settings.gender') }}</label>
+                                <select class="form-select form-select-sm" name="gender">
+                                    <option value="" {% if not b.gender %}selected{% endif %}>{{ _('settings.gender_unspecified') }}</option>
+                                    <option value="m" {% if b.gender == 'm' %}selected{% endif %}>{{ _('settings.gender_boy') }}</option>
+                                    <option value="f" {% if b.gender == 'f' %}selected{% endif %}>{{ _('settings.gender_girl') }}</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-save"></i> {{ _('common.save') }}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('baby.delete', baby_id=b.id) }}"
+                              onsubmit="return confirm('{{ _('settings.delete_baby_confirm') }}');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" {% if all_babies|length <= 1 %}disabled title="{{ _('settings.delete_baby_last_hint') }}"{% endif %}>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr>
+
+                <h6 class="mb-3">{{ _('settings.add_baby') }}</h6>
+                <form method="POST" action="{{ url_for('baby.create') }}" class="d-flex flex-wrap align-items-end gap-2">
+                    <div>
+                        <label class="form-label small mb-1">{{ _('settings.name') }}</label>
+                        <input type="text" class="form-control form-control-sm" name="name"
+                               placeholder="{{ _('settings.name_placeholder') }}" required>
+                    </div>
+                    <div>
+                        <label class="form-label small mb-1">{{ _('settings.birth_date') }}</label>
+                        <input type="date" class="form-control form-control-sm" name="birth_date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg"></i> {{ _('settings.add_baby') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Untere Reihe: Version + Export/Backup/Restore + Schlaf-Einstellungen -->
 <div class="row g-4">
     <!-- Version -->
