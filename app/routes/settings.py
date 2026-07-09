@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response, current_app
 from app.models.models import BabyInfo, Weight, Height, Sleep, Feeding, Diaper, Temperature
 from app.models.database import get_db, get_database_path
 from app.i18n import _
@@ -317,9 +317,10 @@ def restore_backup():
         for table in BACKUP_TABLES:
             _restore_table(db, table, backup.get(table, []))
         db.commit()
-    except Exception as e:
+    except Exception:
         db.rollback()
-        flash(f"{_('settings.restore_error_db')}: {e}", 'error')
+        current_app.logger.exception("Fehler beim Wiederherstellen des Backups")
+        flash(_('settings.restore_error_db'), 'error')
         return redirect(url_for('settings.settings'))
 
     flash(_('settings.restore_success'), 'success')
@@ -378,16 +379,18 @@ def check_version():
         _version_cache['ts'] = time.time()
         return jsonify(result)
         
-    except requests.RequestException as e:
+    except requests.RequestException:
+        current_app.logger.exception("Fehler beim Abrufen der Versionsinformationen von Docker Hub")
         return jsonify({
             'success': False,
-            'message': f'Fehler beim Abrufen der Version: {str(e)}',
+            'message': _('settings.unknown_error'),
             'current_version': get_current_version()
         }), 500
-    except Exception as e:
+    except Exception:
+        current_app.logger.exception("Unerwarteter Fehler bei der Versionsprüfung")
         return jsonify({
             'success': False,
-            'message': f'Unerwarteter Fehler: {str(e)}',
+            'message': _('settings.unknown_error'),
             'current_version': get_current_version()
         }), 500
 

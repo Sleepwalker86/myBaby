@@ -344,8 +344,8 @@
       "invalid_diaper_type": "Tipo de pañal no válido",
       "medicine_required": "El nombre del medicamento y la dosis son obligatorios",
       "all_fields_required": "Todos los campos son obligatorios",
-      "update_error": "Error al actualizar: {error}",
-      "delete_error": "Error al eliminar: {error}"
+      "update_error": "Error al actualizar la entrada",
+      "delete_error": "Error al eliminar la entrada"
     },
     "warning": {
       "no_active_nap": "No se encontró ninguna siesta activa",

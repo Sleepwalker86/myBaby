@@ -1,7 +1,8 @@
-from flask import Blueprint, request, redirect, url_for, flash
+from flask import Blueprint, request, redirect, url_for, flash, current_app
 from app.models.models import Sleep, Feeding, Bottle, Diaper, Temperature, Medicine, NightWaking, Porridge
 from app.form_datetime import normalize_form_datetime, is_end_before_start
 from app.form_validation import parse_bounded_number
+from app.i18n import _
 
 bp = Blueprint('edit', __name__, url_prefix='/edit')
 
@@ -30,8 +31,9 @@ def edit_sleep(sleep_id):
 
         Sleep.update(sleep_id, start_time, end_time, sleep_type, sleep_quality, sleep_location, sleep_comment)
         flash('Schlaf-Eintrag aktualisiert', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Schlaf-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -41,8 +43,9 @@ def delete_sleep(sleep_id):
     try:
         Sleep.delete(sleep_id)
         flash('Schlaf-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Schlaf-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -66,8 +69,9 @@ def edit_feeding(feeding_id):
 
         Feeding.update(feeding_id, timestamp, side, end_time)
         flash('Still-Eintrag aktualisiert', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Still-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -77,8 +81,9 @@ def delete_feeding(feeding_id):
     try:
         Feeding.delete(feeding_id)
         flash('Still-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Still-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -98,8 +103,9 @@ def edit_bottle(bottle_id):
         flash('Flasche-Eintrag aktualisiert', 'success')
     except (ValueError, TypeError):
         flash('Ungültige Menge', 'error')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Flaschen-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -109,8 +115,9 @@ def delete_bottle(bottle_id):
     try:
         Bottle.delete(bottle_id)
         flash('Flasche-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Flaschen-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -128,8 +135,9 @@ def edit_diaper(diaper_id):
 
         Diaper.update(diaper_id, timestamp, diaper_type)
         flash('Windel-Eintrag aktualisiert', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Windel-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -139,8 +147,9 @@ def delete_diaper(diaper_id):
     try:
         Diaper.delete(diaper_id)
         flash('Windel-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Windel-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -160,8 +169,9 @@ def edit_temperature(temp_id):
         flash('Temperatur-Eintrag aktualisiert', 'success')
     except (ValueError, TypeError):
         flash('Ungültige Temperatur', 'error')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Temperatur-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -171,8 +181,9 @@ def delete_temperature(temp_id):
     try:
         Temperature.delete(temp_id)
         flash('Temperatur-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Temperatur-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -191,8 +202,9 @@ def edit_medicine(med_id):
 
         Medicine.update(med_id, timestamp, name, dose)
         flash('Medizin-Eintrag aktualisiert', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Medizin-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -202,8 +214,9 @@ def delete_medicine(med_id):
     try:
         Medicine.delete(med_id)
         flash('Medizin-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Medizin-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -226,8 +239,9 @@ def edit_night_waking(waking_id):
 
         NightWaking.update(waking_id, start_time, end_time)
         flash('Nächtliches Aufwachen aktualisiert', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Aktualisieren: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Aktualisieren des Aufwachen-Eintrags')
+        flash(_('messages.error.update_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -237,8 +251,9 @@ def delete_night_waking(waking_id):
     try:
         NightWaking.delete(waking_id)
         flash('Nächtliches Aufwachen gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Aufwachen-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
 
 
@@ -268,6 +283,7 @@ def delete_porridge(porridge_id):
     try:
         Porridge.delete(porridge_id)
         flash('Brei-Eintrag gelöscht', 'success')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {str(e)}', 'error')
+    except Exception:
+        current_app.logger.exception('Fehler beim Löschen des Brei-Eintrags')
+        flash(_('messages.error.delete_error'), 'error')
     return redirect(url_for('main.index'))
