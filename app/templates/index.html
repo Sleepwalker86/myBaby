@@ -2689,6 +2689,7 @@
             let timer = null;
             let didLongPress = false;
             let startX = 0, startY = 0;
+            let startScrollY = 0;
             let scrolled = false;
             const modalId = btn.dataset.modal;
             const formId = btn.dataset.formId;
@@ -2726,19 +2727,20 @@
                     startX = e.touches[0].clientX;
                     startY = e.touches[0].clientY;
                 }
+                startScrollY = window.scrollY;
                 timer = setTimeout(onLongPress, LONG_PRESS_MS);
             }
             function move(e) {
                 if (!e.touches || !e.touches.length) return;
                 const dx = e.touches[0].clientX - startX;
                 const dy = e.touches[0].clientY - startY;
-                if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD_PX) {
+                if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD_PX || window.scrollY !== startScrollY) {
                     scrolled = true;
                     clearTimeout(timer);
                     timer = null;
                 }
             }
-            function end() { clearTimeout(timer); timer = null; if (!didLongPress && !scrolled) onShortPress(); didLongPress = false; scrolled = false; }
+            function end() { clearTimeout(timer); timer = null; if (!didLongPress && !scrolled && window.scrollY === startScrollY) onShortPress(); didLongPress = false; scrolled = false; }
             function cancel() { clearTimeout(timer); timer = null; didLongPress = false; scrolled = false; }
 
             btn.addEventListener('touchstart', start, { passive: true });
@@ -2821,6 +2823,7 @@
             let timer = null;
             let didLongPress = false;
             let startX = 0, startY = 0;
+            let startScrollY = 0;
             let scrolled = false;
             const modalId = btn.dataset.modal;
             const actionUrl = btn.dataset.actionUrl;
@@ -2863,6 +2866,7 @@
                     startX = e.touches[0].clientX;
                     startY = e.touches[0].clientY;
                 }
+                startScrollY = window.scrollY;
                 timer = setTimeout(onLongPress, LONG_PRESS_MS);
             }
 
@@ -2870,7 +2874,7 @@
                 if (!e.touches || !e.touches.length) return;
                 const dx = e.touches[0].clientX - startX;
                 const dy = e.touches[0].clientY - startY;
-                if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD_PX) {
+                if (Math.sqrt(dx * dx + dy * dy) > MOVE_THRESHOLD_PX || window.scrollY !== startScrollY) {
                     scrolled = true;
                     clearTimeout(timer);
                     timer = null;
@@ -2880,7 +2884,7 @@
             function end() {
                 clearTimeout(timer);
                 timer = null;
-                if (!didLongPress && !scrolled) onShortPress();
+                if (!didLongPress && !scrolled && window.scrollY === startScrollY) onShortPress();
                 didLongPress = false;
                 scrolled = false;
             }
@@ -2907,19 +2911,19 @@
         });
     })();
 
-    // Auto-Refresh: Seite alle 60 Sekunden neu laden, aber nicht wenn Audio läuft oder ein Modal geöffnet ist
+    // Auto-Refresh: Seite alle 5 Minuten neu laden, aber nicht wenn Audio läuft oder ein Modal geöffnet ist
     function checkAndReload() {
         const audioPlayer = document.getElementById('audioPlayer');
         const isAudioPlaying = audioPlayer && !audioPlayer.paused;
         const isModalOpen = document.body.classList.contains('modal-open');
 
         if (isAudioPlaying || isModalOpen) {
-            setTimeout(checkAndReload, 60000);
+            setTimeout(checkAndReload, 300000);
         } else {
             window.location.reload();
         }
     }
-    setTimeout(checkAndReload, 60000); // 60000 Millisekunden = 60 Sekunden
+    setTimeout(checkAndReload, 300000); // 300000 Millisekunden = 5 Minuten
 </script>
 
 <!-- Quick Entry Modal -->
