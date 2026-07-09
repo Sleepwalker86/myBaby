@@ -22,7 +22,7 @@ def count_queries(app, func, *args, **kwargs):
     from app.models import database
 
     calls = {'n': 0}
-    with app.app_context():
+    with app.test_request_context():
         db = database.get_db()
 
         def trace(statement):
@@ -62,7 +62,7 @@ def test_wake_duration_values_correct_for_today(app):
     insert_sleep(app, 'nap', f"{day}T11:30:00", f"{day}T12:00:00")
 
     from app.models.models import get_all_entries_today
-    with app.app_context():
+    with app.test_request_context():
         entries = get_all_entries_today(day)
 
     entries_by_start = {e['timestamp']: e for e in entries if e['category'] == 'sleep'}

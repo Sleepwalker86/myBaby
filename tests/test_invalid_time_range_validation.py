@@ -143,7 +143,7 @@ def test_sleep_nap_end_before_start_is_rejected(app, client):
     resp = client.post('/sleep/nap/end', data={'end_time': '2026-07-08T19:00'})
 
     assert resp.status_code == 302
-    with app.app_context():
+    with app.test_request_context():
         from app.models.models import Sleep
         active = Sleep.get_active_sleep_by_type('nap')
     assert active is not None
@@ -156,7 +156,7 @@ def test_sleep_night_end_before_start_is_rejected(app, client):
     resp = client.post('/sleep/night/end', data={'end_time': '2026-07-08T21:00'})
 
     assert resp.status_code == 302
-    with app.app_context():
+    with app.test_request_context():
         from app.models.models import Sleep
         active = Sleep.get_active_sleep_by_type('night')
     assert active is not None
@@ -169,7 +169,7 @@ def test_night_waking_end_before_start_is_rejected(app, client):
     resp = client.post('/sleep/night_waking/end', data={'end_time': '2026-07-08T01:30'})
 
     assert resp.status_code == 302
-    with app.app_context():
+    with app.test_request_context():
         from app.models.models import NightWaking
         active = NightWaking.get_active()
     assert active is not None
