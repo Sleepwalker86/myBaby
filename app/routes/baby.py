@@ -58,6 +58,11 @@ def create():
 @bp.route('/<int:baby_id>/update', methods=['POST'])
 def update(baby_id):
     """Bearbeitet Name/Geburtsdatum/Geschlecht eines (nicht notwendigerweise aktiven) Kind-Profils."""
+    babies = BabyInfo.get_all_babies()
+    if not any(b['id'] == baby_id for b in babies):
+        flash(_('messages.error.invalid_input'), 'danger')
+        return redirect(_safe_redirect_target())
+
     name = request.form.get('name', '').strip()
     birth_date_str = request.form.get('birth_date', '').strip()
     gender = request.form.get('gender', '').strip()
@@ -84,6 +89,11 @@ def update(baby_id):
 def delete(baby_id):
     """Löscht ein Kind-Profil. Wird verweigert, wenn es Tracking-Daten hat oder das letzte
     verbleibende Profil ist (siehe BabyInfo.delete_baby)."""
+    babies = BabyInfo.get_all_babies()
+    if not any(b['id'] == baby_id for b in babies):
+        flash(_('messages.error.invalid_input'), 'danger')
+        return redirect(_safe_redirect_target())
+
     try:
         BabyInfo.delete_baby(baby_id)
     except ValueError as e:
